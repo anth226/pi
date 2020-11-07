@@ -13,7 +13,7 @@
 
 Route::get('/', function () {
 	if(Auth::check()){
-		return redirect('/campaigns');
+		return redirect('/invoices');
 	}
 	else {
 		return view( 'welcome' );
@@ -25,7 +25,7 @@ Auth::routes(['register' => false, 'verify' => true]);
 //Auth::routes(['verify' => true]);
 
 Route::get('/test', 'TestController@index')->name('test');
-Route::get('/campaigns', 'CampaignsController@index')->name('campaigns');
+Route::get('/invoices', 'InvoicesController@index')->name('invoices');
 
 
 

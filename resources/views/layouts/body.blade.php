@@ -37,31 +37,28 @@
 
 
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                @if( Gate::check('view-admin-pages') || Gate::check('view-campaigns-page'))
-                                    <a class="dropdown-item" href="{{ route('campaigns') }}" >
-                                        {{ __('Campaigns') }}
+                                @if( Gate::check('manage-invoices'))
+                                    <a class="dropdown-item" href="{{ route('invoices') }}" >
+                                        {{ __('Invoices') }}
                                     </a>
                                 @endif
 
-                                @if( Gate::check('view-admin-pages'))
+                                @if( Gate::check('edit-email-templates') || Gate::check('create-email-templates') || Gate::check('view-email-templates'))
                                     <a class="dropdown-item bg-emails" href="/email-templates/templates" >
                                         {{ __('Email Templates') }}
                                     </a>
                                 @endif
 
-
-
-
-                                    @can('user-list')
-                                        <a class="dropdown-item" href="/users" >
-                                            {{ __('Users') }}
-                                        </a>
-                                    @endcan
-                                    @can('role-list')
-                                        <a class="dropdown-item" href="/roles" >
-                                            {{ __('Roles') }}
-                                        </a>
-                                    @endcan
+                                @if( Gate::check('user-create') || Gate::check('user-edit') || Gate::check('user-delete') || Gate::check('user-list'))
+                                    <a class="dropdown-item" href="/users" >
+                                        {{ __('Users') }}
+                                    </a>
+                                @endif
+                                @if( Gate::check('role-create') || Gate::check('role-edit') || Gate::check('role-delete') || Gate::check('role-list'))
+                                    <a class="dropdown-item" href="/roles" >
+                                        {{ __('Roles') }}
+                                    </a>
+                                @endif
 
                                 <a class="d-block mx-2 btn btn-info text-white" href="{{ route('logout') }}"
                                    onclick="event.preventDefault();
