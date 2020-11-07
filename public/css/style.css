@@ -1,0 +1,44 @@
+.search_submit_napliv{
+    margin-left: -3px;
+    border-radius: 0 .25rem .25rem 0;
+    /*border-bottom: 2px solid #ced4da;*/
+}
+.navbar-laravel {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+.error{ color:red; }
+#leads_table tbody tr {
+    cursor: pointer;
+}
+.small_col{
+    max-width:200px;
+}
+.spec_col{
+    max-width:600px;
+}
+.container {
+    max-width: 100%;
+}
+.text-primary.edit-template, .text-danger.delete-template, .table-action.remove-item, .save-draft{
+    display:none;
+}
+.bg-emails{
+    background-color: aqua;
+}
+.bg-emails:hover{
+    background-color: cornflowerblue;
+}
+@media (min-width: 1300px){
+
+    .small_col{
+        max-width:300px;
+    }
+
+}
+@media (min-width: 1200px){
+    .container {
+        max-width: 1920px;
+    }
+
+}

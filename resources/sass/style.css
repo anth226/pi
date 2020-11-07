@@ -1,0 +1,84 @@
+.search_submit_napliv{
+    margin-left: -3px;
+    border-radius: 0 .25rem .25rem 0;
+    /*border-bottom: 2px solid #ced4da;*/
+}
+.navbar-laravel {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+.error{ color:red; }
+#leads_table tbody tr {
+    cursor: pointer;
+}
+.small_col{
+    max-width:200px;
+}
+.spec_col{
+    max-width:600px;
+}
+.container {
+    max-width: 100%;
+}
+.text-primary.edit-template, .text-danger.delete-template, .table-action.remove-item, .save-draft{
+    display:none;
+}
+.bg-emails{
+    background-color: aqua;
+}
+.bg-emails:hover{
+    background-color: cornflowerblue;
+}
+
+
+ .chat {
+     list-style: none;
+     margin: 0;
+     padding: 0;
+ }
+
+.chat li {
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px dotted #B3A9A9;
+}
+
+.chat li .chat-body p {
+    margin: 0;
+    color: #777777;
+}
+
+.panel-body {
+    overflow-y: scroll;
+    height: 350px;
+}
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+    background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
+}
+
+
+@media (min-width: 1300px){
+
+    .small_col{
+        max-width:300px;
+    }
+
+}
+@media (min-width: 1200px){
+    .container {
+        max-width: 1920px;
+    }
+
+}
