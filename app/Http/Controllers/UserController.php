@@ -20,43 +20,19 @@ class UserController extends Controller
 	public function __construct()
 	{
 		$this->middleware(['auth','verified']);
-		$this->middleware('permission:user-list|view-admin-pages|role-create|role-edit|role-delete' , ['only' => ['index','show']]);
+		$this->middleware('permission:user-list|user-create|user-edit|user-delete' , ['only' => ['index','show']]);
 		$this->middleware('permission:user-create' , ['only' => ['store','create']]);
 		$this->middleware('permission:user-edit' , ['only' => ['edit','update']]);
 		$this->middleware('permission:user-delete' , ['only' => ['destroy']]);
 
 	}
 
-	public function index_v2()
-	{
-		$users = User::get();
-
-		return view('users', compact('users'));
-	}
-
 	public function index(Request $request)
 	{
-		$data = User::orderBy('id','DESC')->paginate(5);
+		$data = User::orderBy('id','DESC')->paginate(10);
 		return view('users.index',compact('data'))
-			->with('i', ($request->input('page', 1) - 1) * 5);
+			->with('i', ($request->input('page', 1) - 1) * 10);
 	}
-
-	public function approve($user_id)
-	{
-		$user = User::findOrFail($user_id);
-		$user->update(['approved_at' => now()]);
-
-		return redirect()->route('admin.users.index')->withMessage('User approved successfully');
-	}
-
-	public function disapprove($user_id)
-	{
-		$user = User::findOrFail($user_id);
-		$user->update(['approved_at' => NULL]);
-
-		return redirect()->route('admin.users.index')->withMessage('User disapprove successfully');
-	}
-
 
 
 	/**
@@ -94,6 +70,7 @@ class UserController extends Controller
 		$user = User::create($input);
 		$user->assignRole($request->input('roles'));
 
+		$user->sendEmailVerificationNotification();
 
 		return redirect()->route('users.index')
 		                 ->with('success','User created successfully');

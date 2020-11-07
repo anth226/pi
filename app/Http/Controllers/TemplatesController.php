@@ -14,8 +14,7 @@ class TemplatesController extends Controller
 	public function __construct()
 	{
 		$this->middleware(['auth','verified']);
-		$this->middleware('permission:view-admin-pages', ['only' => ['index']]);
-		$this->middleware('permission:view-email-templates' , ['only' => ['view', 'previewTemplateMarkdownView']]);
+		$this->middleware('permission:view-email-templates|create-email-template' , ['only' => ['index', 'view', 'previewTemplateMarkdownView']]);
 		$this->middleware('permission:create-email-template' , ['only' => ['edit-email-templates','create', 'new','select']]);
 		abort_unless(
 			App::environment(config('maileclipse.allowed_environments', ['local'])),
