@@ -43,6 +43,17 @@
                                     </a>
                                 @endif
 
+                                @if( Gate::check('customer-create') || Gate::check('customer-edit') || Gate::check('customer-delete') || Gate::check('customer-list'))
+                                    <a class="dropdown-item" href="/customers" >
+                                        {{ __('Customers') }}
+                                    </a>
+                                @endif
+                                @if( Gate::check('salespeople-create') || Gate::check('salespeople-edit') || Gate::check('salespeople-delete') || Gate::check('salespeople-list'))
+                                    <a class="dropdown-item" href="/salespeople" >
+                                        {{ __('Salespeople') }}
+                                    </a>
+                                @endif
+
                                 @if( Gate::check('edit-email-templates') || Gate::check('create-email-templates') || Gate::check('view-email-templates'))
                                     <a class="dropdown-item bg-emails" href="/email-templates/templates" >
                                         {{ __('Email Templates') }}

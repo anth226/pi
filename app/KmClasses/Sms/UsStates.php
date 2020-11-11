@@ -78,4 +78,8 @@ class UsStates {
 		return $res;
 
 	}
+
+	public static function statesUS(){
+		return self::$us_states;
+	}
 }

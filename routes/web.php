@@ -39,10 +39,12 @@ Route::post('/send-emailtest', 'SendTestController@sendEmailTest');
 Route::get('/unsubscribe_me', 'EmailUnsubscribeController@index');
 Route::get('/subscribe_me', 'EmailSubscribeController@index');
 
-Route::group(['middleware' => ['auth']], function() {
+//Route::group(['middleware' => ['auth']], function() {
 	Route::resource('/roles','RoleController');
 	Route::resource('/users','UserController');
-});
+	Route::resource('/customers','CustomersController');
+	Route::resource('/salespeople','SalespeopleController');
+//});
 
 
 Route::get('/email-templates', 'TemplatesController@index');
