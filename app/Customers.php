@@ -18,7 +18,7 @@ class Customers extends Model
 		'address_2',
 		'city',
 		'zip',
-		'state_id',
+		'state',
 		'email',
 		'password',
 		'phone_number',

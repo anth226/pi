@@ -16,6 +16,7 @@ class Salespeople extends Model
 		'last_name',
 		'name_for_invoice',
 		'email',
-		'phone_number'
+		'phone_number',
+		'formated_phone_number'
 	];
 }

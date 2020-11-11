@@ -21,7 +21,7 @@ class CreateSalespeoplesTable extends Migration
             $table->string('name_for_invoice');
             $table->string('email')->nullable();
             $table->string('phone_number')->nullable();
-            $table->unique(['first_name', 'last_name', 'name_for_invoice'], 'un_id');
+            $table->string('formated_phone_number')->nullable();
             $table->softDeletes();
         });
     }
