@@ -61,13 +61,12 @@ class CustomersController extends Controller
 			'city' => 'required|max:120',
 			'state' => 'required||max:20',
 			'email' => 'required|unique:customers,email,NULL,id,deleted_at,NULL|email|max:120',
-			'password' => 'required|max:120',
 			'phone_number' => 'required|max:120|min:10',
-			'cc' => 'required|digits:4'
+
 		]);
 
 
-		Customers::create([
+		$customer = Customers::create([
 			'first_name' => $request->input('first_name'),
 			'last_name' => $request->input('last_name'),
 			'address_1' => $request->input('address_1'),
@@ -76,14 +75,19 @@ class CustomersController extends Controller
 			'state' => $request->input('state'),
 			'zip' => $request->input('zip'),
 			'email' => $request->input('email'),
-			'password' => $request->input('password'),
 			'phone_number' => $request->input('phone_number'),
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
-			'cc' => $request->input('cc')
 		]);
 
+		$user = auth()->user();
+		if($user->can('invoice-edit')){
+			return redirect()->route('invoices.create', ['customer_id' => $customer->id])
+			                 ->with('success','Customer created successfully');
+		}
 		return redirect()->route('customers.index')
 		                 ->with('success','Customer created successfully');
+
+
 	}
 	/**
 	 * Display the specified resource.
@@ -129,9 +133,7 @@ class CustomersController extends Controller
 			'zip' => 'required|digits:5',
 			'city' => 'required|max:120',
 			'state' => 'required||max:20',
-			'password' => 'required|max:120',
-			'phone_number' => 'required|max:120|min:10',
-			'cc' => 'required|digits:4'
+			'phone_number' => 'required|max:120|min:10'
 		]);
 
 		$customer = Customers::find($id);
@@ -142,9 +144,7 @@ class CustomersController extends Controller
 		$customer->zip = $request->input('zip');
 		$customer->state = $request->input('state');
 		$customer->password = $request->input('password');
-		$customer->phone_number = $request->input('phone_number');
 		$customer->formated_phone_number = FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'));
-		$customer->cc = $request->input('cc');
 		$customer->save();
 
 		return redirect()->route('customers.index')

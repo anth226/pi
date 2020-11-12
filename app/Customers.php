@@ -20,8 +20,15 @@ class Customers extends Model
 		'zip',
 		'state',
 		'email',
-		'password',
-		'phone_number',
-		'cc'
+		'phone_number'
 	];
+
+	public static function getIdsAndFullNames(){
+		return self::selectRaw("id, CONCAT(first_name, ' ', last_name) as full_name")
+			->orderBy('id', 'desc')
+			->limit(10000)
+			->pluck('full_name', 'id')
+			->toArray()
+		;
+	}
 }

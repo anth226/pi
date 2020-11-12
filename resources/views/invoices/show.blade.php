@@ -7,10 +7,10 @@
             <div class="row">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
-                        <h2> Show Customer</h2>
+                        <h2> Show Invoice</h2>
                     </div>
                     <div class="pull-right">
-                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('customers.index') }}"> Back</a>
+                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('invoices.index') }}"> Back</a>
                     </div>
                 </div>
             </div>
@@ -48,12 +48,22 @@
 
                 </div>
             </div>
+            {{--<div class="row">--}}
+                {{--<div class="col-md-12">--}}
 
-            @can('invoice-edit')
-                <div class="m-4">
-                    <a class="btn btn-success" href="{{ route('invoices.create',['customer_id' => $customer->id]) }}">Create Invoice</a>
-                </div>
-            @endcan
+                        {{--<strong>CC:</strong>--}}
+                        {{--{{ $customer->cc }}--}}
+
+                {{--</div>--}}
+            {{--</div>--}}
+            {{--<div class="row">--}}
+                {{--<div class="col-md-12">--}}
+                        {{--<strong>Password:</strong>--}}
+                        {{--{{ $customer->password }}--}}
+                {{--</div>--}}
+            {{--</div>--}}
+
+
         </div>
     </div>
 @endsection

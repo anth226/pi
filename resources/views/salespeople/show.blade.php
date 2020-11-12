@@ -43,7 +43,7 @@
             <div class="row">
                 <div class="col-md-12">
 
-                    <strong>Pnone Number:</strong>
+                    <strong>Phone Number:</strong>
                     {{ $salespeople->phone_number }}
 
                 </div>

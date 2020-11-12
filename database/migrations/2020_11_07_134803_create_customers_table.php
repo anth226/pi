@@ -24,10 +24,8 @@ class CreateCustomersTable extends Migration
             $table->string('city')->nullable();
             $table->string('state')->nullable();
 	        $table->string('email')->nullable();
-	        $table->string('password')->nullable();
 	        $table->string('phone_number')->nullable();
 	        $table->string('formated_phone_number')->nullable();
-	        $table->unsignedInteger('cc')->default(0);
 	        $table->softDeletes();
         });
     }
