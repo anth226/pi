@@ -143,7 +143,7 @@ class CustomersController extends Controller
 		$customer->address_2 =  !empty($request->input('address_2')) ? $request->input('address_2') : '';
 		$customer->zip = $request->input('zip');
 		$customer->state = $request->input('state');
-		$customer->password = $request->input('password');
+		$customer->phone_number = $request->input('phone_number');
 		$customer->formated_phone_number = FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'));
 		$customer->save();
 
