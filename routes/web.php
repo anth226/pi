@@ -13,7 +13,7 @@
 
 Route::get('/', function () {
 	if(Auth::check()){
-		return redirect('/invoices');
+		return redirect('/customers');
 	}
 	else {
 		return view( 'welcome' );
@@ -25,26 +25,24 @@ Auth::routes(['register' => false, 'verify' => true]);
 //Auth::routes(['verify' => true]);
 
 Route::get('/test', 'TestController@index')->name('test');
-Route::get('/invoices', 'InvoicesController@index')->name('invoices');
-
-
-
 //
 
 
 //Ajax
 
-Route::post('/send-emailtest', 'SendTestController@sendEmailTest');
+//Route::post('/send-emailtest', 'SendTestController@sendEmailTest');
+//
+//Route::get('/unsubscribe_me', 'EmailUnsubscribeController@index');
+//Route::get('/subscribe_me', 'EmailSubscribeController@index');
 
-Route::get('/unsubscribe_me', 'EmailUnsubscribeController@index');
-Route::get('/subscribe_me', 'EmailSubscribeController@index');
 
-//Route::group(['middleware' => ['auth']], function() {
-	Route::resource('/roles','RoleController');
-	Route::resource('/users','UserController');
-	Route::resource('/customers','CustomersController');
-	Route::resource('/salespeople','SalespeopleController');
-//});
+
+Route::resource('/roles','RoleController');
+Route::resource('/users','UserController');
+Route::resource('/customers','CustomersController');
+Route::resource('/salespeople','SalespeopleController');
+Route::resource('/invoices','InvoicesController');
+
 
 
 Route::get('/email-templates', 'TemplatesController@index');

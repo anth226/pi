@@ -1,5 +1,42 @@
 @extends('layouts.app')
 
+@section('style')
+    <link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
+    <style>
+        .select2-selection.select2-selection--single {
+            display: block;
+            width: 100%;
+            height: calc(1.6em + .75rem + 2px);
+            padding: .45rem .75rem;
+            font-size: .9rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+        .select2-selection.select2-selection--single:focus,
+        .select2-selection.select2-selection--single:hover {
+            color: #495057;
+            background-color: #fff;
+            border-color: #a1cbef;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(52,144,220,.25);
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 90%;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: .9rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #495057;
+        }
+    </style>
+@endsection
 
 @section('content')
     <div class="container">
@@ -92,26 +129,25 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Password *:</strong>
-                        {!! Form::text('password', null, array('placeholder' => 'Password','class' => 'form-control')) !!}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>CC *:</strong>
-                        {!! Form::text('cc', null, array('placeholder' => 'CC','class' => 'form-control')) !!}
-                    </div>
-                </div>
-            </div>
+
             <div class="row">
                 <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-primary">Save Customer</button>
                 </div>
             </div>
             {!! Form::close() !!}
         </div>
     </div>
+@endsection
+
+@section('script')
+    <script src="{{ url('/js/select2.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $("select").select2({
+                width: '100%',
+                placeholder: 'Please select'
+            });
+        });
+    </script>
 @endsection

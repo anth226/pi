@@ -6,22 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Kyslik\ColumnSortable\Sortable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Salespeople extends Model
+class Products extends Model
 {
 	use Sortable;
 	use SoftDeletes;
 
 	protected $fillable = [
-		'first_name',
-		'last_name',
-		'name_for_invoice',
-		'email',
-		'phone_number',
-		'formated_phone_number'
+		'title',
+		'description',
+		'sku',
+		'price'
 	];
 
 	public static function getIdsAndFullNames(){
-		return self::selectRaw("id, CONCAT(name_for_invoice, ' (', first_name, ' ', last_name, ')') as full_name")
+		return self::selectRaw("id, CONCAT(title, ' ($', price, ', sku: ', sku, ')') as full_name")
 		           ->orderBy('id', 'desc')
 		           ->limit(1000)
 		           ->pluck('full_name', 'id')

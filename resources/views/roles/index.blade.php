@@ -37,13 +37,13 @@
                         <td>{{ $role->name }}</td>
                         <td>
                             @if($role->name != 'Super Admin')
-                                <a class="btn btn-info" href="{{ route('roles.show',$role->id) }}">Show</a>
+                                <a class="btn btn-info mb-1" href="{{ route('roles.show',$role->id) }}">Show</a>
                                 @can('role-edit')
-                                    <a class="btn btn-primary" href="{{ route('roles.edit',$role->id) }}">Edit</a>
+                                    <a class="btn btn-primary mb-1" href="{{ route('roles.edit',$role->id) }}">Edit</a>
                                 @endcan
                                 @can('role-delete')
                                     {!! Form::open(['method' => 'DELETE','route' => ['roles.destroy', $role->id],'style'=>'display:inline']) !!}
-                                    {!! Form::submit('Delete', ['class' => 'btn btn-danger']) !!}
+                                    {!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}
                                     {!! Form::close() !!}
                                 @endcan
                             @endif

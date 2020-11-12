@@ -27,4 +27,13 @@ class EmailTemplates extends Model
 		'template_skeleton',
 		'template_type'
 	];
+
+	public static function getIdsAndFullNames(){
+		return self::selectRaw("id, template_name as full_name")
+		           ->orderBy('id', 'desc')
+		           ->limit(10000)
+		           ->pluck('full_name', 'id')
+		           ->toArray()
+			;
+	}
 }

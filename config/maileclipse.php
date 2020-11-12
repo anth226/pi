@@ -75,9 +75,7 @@ return [
     'skeletons' =>[
     	'html' => [
     		'airmail' => [
-				'thegopshop',
-				'thegopshop2',
-			    'clickmart'
+				'poinvoice'
 		    ]
 	    ]
     ],

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('style')
+    <link href="{{ asset('css/jquery.datetimepicker.min.css') }}" rel="stylesheet">
     <link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
     <style>
         .select2-selection.select2-selection--single {
@@ -44,10 +45,10 @@
             <div class="row">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
-                        <h2>Edit Customer</h2>
+                        <h2>Edit Invoice</h2>
                     </div>
                     <div class="pull-right">
-                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('customers.index') }}"> Back</a>
+                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('invoices.index') }}"> Back</a>
                     </div>
                 </div>
             </div>
@@ -65,7 +66,7 @@
             @endif
 
 
-            {!! Form::model($customer, ['method' => 'PATCH','route' => ['customers.update', $customer->id]]) !!}
+            {!! Form::model($customer, ['method' => 'PATCH','route' => ['invoices.update', $customer->id]]) !!}
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -128,7 +129,20 @@
                     </div>
                 </div>
             </div>
-
+            {{--<div class="row">--}}
+                {{--<div class="col-md-6">--}}
+                    {{--<div class="form-group">--}}
+                        {{--<strong>Password *:</strong>--}}
+                        {{--{!! Form::text('password', null, array('placeholder' => 'Password','class' => 'form-control')) !!}--}}
+                    {{--</div>--}}
+                {{--</div>--}}
+                {{--<div class="col-md-6">--}}
+                    {{--<div class="form-group">--}}
+                        {{--<strong>CC *:</strong>--}}
+                        {{--{!! Form::text('cc', null, array('placeholder' => 'CC','class' => 'form-control')) !!}--}}
+                    {{--</div>--}}
+                {{--</div>--}}
+            {{--</div>--}}
             <div class="row">
                 <div class="col-xs-12 col-sm-12 col-md-12 text-center">
                     <button type="submit" class="btn btn-primary">Submit</button>
@@ -140,6 +154,7 @@
 @endsection
 
 @section('script')
+    <script src="{{ url('/js/jquery.datetimepicker.full.min.js') }}"></script>
     <script src="{{ url('/js/select2.min.js') }}"></script>
     <script>
         $(document).ready(function() {
