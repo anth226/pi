@@ -71,7 +71,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <strong>Customer:</strong>
+                        <strong>Customer *:</strong>
                         {!! Form::select('customer_id', $customers,$customerId, array('class' => 'form-control')) !!}
                     </div>
                 </div>
@@ -79,7 +79,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <strong>Salesperson:</strong>
+                        <strong>Salesperson *:</strong>
                         {!! Form::select('salespeople_id', $salespeople,[], array('class' => 'form-control')) !!}
                     </div>
                 </div>
@@ -87,56 +87,65 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <strong>Product:</strong>
+                        <strong>Email Template *:</strong>
+                        {!! Form::select('email_template_id', $template,[], array('class' => 'form-control')) !!}
+                    </div>
+                </div>
+            </div>
+            <div class="row d-none">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <strong>Product *:</strong>
                         {!! Form::select('product_id', $products,[], array('class' => 'form-control')) !!}
                     </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="form-group">
-                        <strong>City *:</strong>
-                        {!! Form::text('city', null, array('placeholder' => 'City','class' => 'form-control')) !!}
+                        <strong>Sales Price *:</strong>
+                        {!! Form::text('sales_price', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Sales Price"', 'required="required"')) !!}
                     </div>
                 </div>
-                <div class="col-md-4">
+            </div>
+            <div class="row d-none">
+                <div class="col-md-6">
                     <div class="form-group">
-                        <strong>Zip *:</strong>
-                        {!! Form::text('zip', null, array('placeholder' => 'Zip','class' => 'form-control')) !!}
+                        <strong>Quantity *:</strong>
+                        {!! Form::number('qty', null, array('placeholder' => 'Quantity','class' => 'form-control', 'min="1"', 'max="10000"', 'step="1"', 'value="1"')) !!}
                     </div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <strong>Email *:</strong>
-                        {!! Form::text('email', null, array('placeholder' => 'Email','class' => 'form-control')) !!}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Phone Number *:</strong>
-                        {!! Form::text('phone_number', null, array('placeholder' => 'Phone Number','class' => 'form-control')) !!}
+                        <strong>Access Date *:</strong>
+                        {!! Form::text('access_date', null, array('id="access_date"', 'placeholder' => 'Access Date','class' => 'form-control datetimepicker-input', 'data-toggle="datetimepicker"', 'data-target="#access_date"', 'value="'.date("m-d-Y").'"')) !!}
                     </div>
                 </div>
             </div>
-            {{--<div class="row">--}}
-                {{--<div class="col-md-6">--}}
-                    {{--<div class="form-group">--}}
-                        {{--<strong>Password *:</strong>--}}
-                        {{--{!! Form::text('password', null, array('placeholder' => 'Password','class' => 'form-control')) !!}--}}
-                    {{--</div>--}}
-                {{--</div>--}}
-                {{--<div class="col-md-6">--}}
-                    {{--<div class="form-group">--}}
-                        {{--<strong>CC *:</strong>--}}
-                        {{--{!! Form::text('cc', null, array('placeholder' => 'CC','class' => 'form-control')) !!}--}}
-                    {{--</div>--}}
-                {{--</div>--}}
-            {{--</div>--}}
+
             <div class="row">
-                <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <strong>CC *:</strong>
+                        {!! Form::number('cc', null, array('placeholder' => 'CC','class' => 'form-control', 'maxlength="4"', 'minlength="4"', 'required="required"')) !!}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <strong>Password *:</strong>
+                        {!! Form::text('password', null, array('placeholder' => 'Password','class' => 'form-control', 'maxlength="100"', 'required="required"')) !!}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12">
+                    <button type="submit" class="btn btn-primary">Generate Invoice</button>
                 </div>
             </div>
             {!! Form::close() !!}
@@ -153,6 +162,98 @@
                 width: '100%',
                 placeholder: 'Please select'
             });
+
+            $("input[data-type='currency']").on({
+                keyup: function() {
+                    formatCurrency($(this));
+                },
+                blur: function() {
+                    formatCurrency($(this), "blur");
+                }
+            });
+
+            $('#access_date').datetimepicker({
+                timepicker:false,
+                format:'m-d-Y'
+            });
+            $.datetimepicker.setLocale('en');
+
+
+            function formatNumber(n) {
+                // format number 1000000 to 1,234,567
+                return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            }
+
+
+            function formatCurrency(input, blur) {
+                // appends $ to value, validates decimal side
+                // and puts cursor back in right position.
+
+                // get input value
+                var input_val = input.val();
+
+                // don't validate empty input
+                if (input_val === "") { return; }
+
+                // original length
+                var original_len = input_val.length;
+
+                // initial caret position
+                var caret_pos = input.prop("selectionStart");
+
+                // check for decimal
+                if (input_val.indexOf(".") >= 0) {
+
+                    // get position of first decimal
+                    // this prevents multiple decimals from
+                    // being entered
+                    var decimal_pos = input_val.indexOf(".");
+
+                    // split number by decimal point
+                    var left_side = input_val.substring(0, decimal_pos);
+                    var right_side = input_val.substring(decimal_pos);
+
+                    // add commas to left side of number
+                    left_side = formatNumber(left_side);
+
+                    // validate right side
+                    right_side = formatNumber(right_side);
+
+                    // On blur make sure 2 numbers after decimal
+                    if (blur === "blur") {
+                        right_side += "00";
+                    }
+
+                    // Limit decimal to only 2 digits
+                    right_side = right_side.substring(0, 2);
+
+                    // join number by .
+                    input_val = "$" + left_side + "." + right_side;
+
+                } else {
+                    // no decimal entered
+                    // add commas to number
+                    // remove all non-digits
+                    input_val = formatNumber(input_val);
+                    input_val = "$" + input_val;
+
+                    // final formatting
+                    if (blur === "blur") {
+                        input_val += ".00";
+                    }
+                }
+
+                // send updated string to input
+                input.val(input_val);
+
+                // put caret back in the right position
+                var updated_len = input_val.length;
+                caret_pos = updated_len - original_len + caret_pos;
+                input[0].setSelectionRange(caret_pos, caret_pos);
+            }
+
+
+
         });
     </script>
 @endsection

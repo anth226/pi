@@ -36,4 +36,8 @@ class EmailTemplates extends Model
 		           ->toArray()
 			;
 	}
+
+	public function invoices()	{
+		return $this->belongsTo('App\Invoices', 'email_template_id','id');
+	}
 }

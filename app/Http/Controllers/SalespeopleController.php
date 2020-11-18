@@ -83,7 +83,10 @@ class SalespeopleController extends Controller
 	public function show($id)
 	{
 		$salespeople = Salespeople::find($id);
-		return view('salespeople.show',compact('salespeople'));
+		if($salespeople) {
+			return view( 'salespeople.show', compact( 'salespeople' ) );
+		}
+		return abort(404);
 	}
 
 
@@ -96,7 +99,10 @@ class SalespeopleController extends Controller
 	public function edit($id)
 	{
 		$salespeople = Salespeople::find($id);
-		return view('salespeople.edit',compact('salespeople'));
+		if($salespeople) {
+			return view( 'salespeople.edit', compact( 'salespeople' ) );
+		}
+		return abort(404);
 	}
 
 

@@ -86,7 +86,10 @@ class UserController extends Controller
 	public function show($id)
 	{
 		$user = User::find($id);
-		return view('users.show',compact('user'));
+		if($user) {
+			return view( 'users.show', compact( 'user' ) );
+		}
+		return abort(404);
 	}
 
 
@@ -99,11 +102,14 @@ class UserController extends Controller
 	public function edit($id)
 	{
 		$user = User::find($id);
-		$roles = Role::pluck('name','name')->all();
-		$userRole = $user->roles->pluck('name','name')->all();
+		if($user) {
+			$roles    = Role::pluck( 'name', 'name' )->all();
+			$userRole = $user->roles->pluck( 'name', 'name' )->all();
 
 
-		return view('users.edit',compact('user','roles','userRole'));
+			return view( 'users.edit', compact( 'user', 'roles', 'userRole' ) );
+		}
+		return abort(404);
 	}
 
 

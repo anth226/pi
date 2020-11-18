@@ -41,18 +41,16 @@
                                 <div>{{ $user->email }}</div>
                                 <div>{{ $user->phone_number }}</div>
                                 <div>{{ $user->address_1 }} {{ $user->address_2 }}, {{ $user->city }}, {{ $user->state }}, {{ $user->zip }}</div>
-                                {{--<div>Password: {{ $user->password }}</div>--}}
-                                {{--<div>CC: {{ $user->cc }}</div>--}}
                             </small>
                         </td>
 
                         <td>
-                            <a class="btn btn-info mb-1" href="{{ route('customers.show',$user->id) }}">Show</a>
+                            <a class="btn btn-info mb-1" href="{{ route('invoices.show',$user->id) }}">Show</a>
                             @can('invoice-edit')
-                            <a class="btn btn-primary mb-1" href="{{ route('customers.edit',$user->id) }}">Edit</a>
+                            <a class="btn btn-primary mb-1" href="{{ route('invoices.edit',$user->id) }}">Edit</a>
                             @endcan
                             @can('invoice-delete')
-                            {!! Form::open(['method' => 'DELETE','route' => ['customers.destroy', $user->id],'style'=>'display:inline']) !!}
+                            {!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $user->id],'style'=>'display:inline']) !!}
                             {!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}
                             {!! Form::close() !!}
                             @endcan

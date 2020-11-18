@@ -26,4 +26,8 @@ class Products extends Model
 		           ->toArray()
 			;
 	}
+
+	public function invoices()	{
+		return $this->belongsTo('App\Invoices', 'product_id','id');
+	}
 }

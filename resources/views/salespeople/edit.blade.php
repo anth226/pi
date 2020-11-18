@@ -10,7 +10,7 @@
                         <h2>Edit Salesperson</h2>
                     </div>
                     <div class="pull-right">
-                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('salespeople.index') }}"> Back</a>
+                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('salespeople.index') }}"> All Salespeople</a>
                     </div>
                 </div>
             </div>

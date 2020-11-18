@@ -31,4 +31,8 @@ class Customers extends Model
 			->toArray()
 		;
 	}
+
+	public function invoices()	{
+		return $this->belongsTo('App\Invoices', 'customer_id','id');
+	}
 }

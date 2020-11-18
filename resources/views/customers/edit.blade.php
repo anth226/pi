@@ -47,7 +47,7 @@
                         <h2>Edit Customer</h2>
                     </div>
                     <div class="pull-right">
-                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('customers.index') }}"> Back</a>
+                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('customers.index') }}"> All Customers</a>
                     </div>
                 </div>
             </div>
