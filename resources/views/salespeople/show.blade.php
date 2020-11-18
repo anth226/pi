@@ -9,8 +9,11 @@
                     <div class="pull-left">
                         <h2> Show Salesperson</h2>
                     </div>
-                    <div class="pull-right">
-                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('salespeople.index') }}"> Back</a>
+                    <div class="pull-right mb-4">
+                        <a class="btn btn-primary mt-2" href="{{ route('salespeople.index') }}"> All Salespeople</a>
+                        @can('salespeople-edit')
+                            <a class="btn btn-info mt-2" href="{{ route('salespeople.edit',$salespeople->id) }}"> Edit</a>
+                        @endcan
                     </div>
                 </div>
             </div>

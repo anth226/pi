@@ -8,6 +8,7 @@ use App\Invoices;
 use App\Products;
 use App\Salespeople;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class InvoicesController extends Controller
 {
@@ -46,7 +47,7 @@ class InvoicesController extends Controller
 		$salespeople = Salespeople::getIdsAndFullNames();
 		$products = Products::getIdsAndFullNames();
 		$template = EmailTemplates::getIdsAndFullNames();
-		return view('invoices.create', compact('customers','salespeople', 'customerId', 'products'));
+		return view('invoices.create', compact('customers','salespeople', 'customerId', 'products', 'template'));
 	}
 
 
@@ -59,24 +60,39 @@ class InvoicesController extends Controller
 	public function store(Request $request)
 	{
 		$this->validate($request, [
-			'first_name' => 'required|max:120',
-			'last_name' => 'max:120',
-			'name_for_invoice' => 'max:120',
-			'email' => 'email|max:120',
-			'phone_number' => 'max:120|min:10',
+			'email_template_id' => 'required|numeric|min:1',
+			'customer_id' => 'required|numeric|min:1',
+			'salespeople_id' => 'required|numeric|min:1',
+			'product_id' => 'required|numeric|min:1',
+			'sales_price' => 'required',
+			'qty' => 'required|numeric|min:1',
+			'access_date' => 'required',
+			'password' => 'required',
+			'cc' => 'required|digits:4',
 		]);
 
-		$last_name = !empty($request->input('last_name')) ? $request->input('last_name') : '';
+		$sales_price = !empty($request->input('sales_price')) ? $this->moneyToDecimal($request->input('sales_price')) : 0;
+		if(!$sales_price){
+			return redirect()->route('invoices.create')
+							 ->withErrors(['Please enter correct price.'])
+							 ->withInput();
+		}
 
-		Invoices::create([
-			'first_name' => $request->input('first_name'),
-			'last_name' => $last_name,
-			'name_for_invoice' => !empty($request->input('name_for_invoice')) ? $request->input('name_for_invoice') : $request->input('first_name'). ' ' .$last_name,
-			'email' => !empty($request->input('email')) ? $request->input('email') : '',
-			'phone_number' => !empty($request->input('phone_number')) ? $request->input('phone_number') : '',
+		$invoice = Invoices::create([
+			'email_template_id' => $request->input('email_template_id'),
+			'customer_id' => $request->input('customer_id'),
+			'salespeople_id' => $request->input('salespeople_id'),
+			'product_id' => $request->input('product_id'),
+			'sales_price' => $sales_price,
+			'qty' => $request->input('qty'),
+			'access_date' => $this->createDateTime($request->input('access_date')),
+			'password' => $request->input('password'),
+			'cc' => $request->input('cc')
 		]);
 
-		return redirect()->route('invoices.index')
+		$this->generatePDF($invoice);
+
+		return redirect()->route('invoices.show', $invoice->id)
 		                 ->with('success','Invoice created successfully');
 	}
 	/**
@@ -87,8 +103,18 @@ class InvoicesController extends Controller
 	 */
 	public function show($id)
 	{
-		$invoice = Invoices::find($id);
-		return view('invoices.show',compact('invoice'));
+		$invoice = Invoices::
+							with('customer')
+		                   ->with('salespersone')
+		                   ->with('product')
+		                   ->with('template')
+		                   ->find($id);
+		if($invoice) {
+			$formated_price = $this->moneyFormat( $invoice->sales_price );
+			$access_date    = $this->createTimeString( $invoice->access_date );
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date' ) );
+		}
+		return abort(404);
 	}
 
 
@@ -100,8 +126,18 @@ class InvoicesController extends Controller
 	 */
 	public function edit($id)
 	{
-		$invoice = Invoices::find($id);
-		return view('invoices.edit',compact('invoice'));
+		$invoice = Invoices::
+		with('customer')
+		                   ->with('salespersone')
+		                   ->with('product')
+		                   ->with('template')
+		                   ->find($id);
+		if($invoice) {
+			$formated_price = $this->moneyFormat( $invoice->sales_price );
+			$access_date    = $this->createTimeString( $invoice->access_date );
+			return view( 'invoices.edit', compact( 'invoice', 'formated_price', 'access_date' ) );
+		}
+		return abort(404);
 	}
 
 
@@ -153,5 +189,36 @@ class InvoicesController extends Controller
 		$value = 1025 + $id;
 		$valueWithZeros = $formatted_value = sprintf("%05d", $value);
 		return $in_number.$valueWithZeros;
+	}
+
+	public function moneyFormat($value){
+		$formatter = new \NumberFormatter('en_US', \NumberFormatter::CURRENCY);
+		return $formatter->formatCurrency($value, 'USD');
+	}
+
+	public function moneyToDecimal($number, $dec_point=null) {
+		if (empty($dec_point)) {
+			$locale = localeconv();
+			$dec_point = $locale['decimal_point'];
+		}
+		return floatval(str_replace($dec_point, '.', preg_replace('/[^\d'.preg_quote($dec_point).']/', '', $number)));
+	}
+
+	public function createDateTime($datetimestring){
+		$timezone = config('app.timezone');
+		$carbon = Carbon::instance(date_create_from_format('m-d-Y', $datetimestring));
+		$carbon->timezone($timezone);
+		return $carbon->toDateTimeString();
+	}
+
+	public function createTimeString($datetimestring){
+		return date('m-d-Y', strtotime($datetimestring));
+	}
+
+	public function generatePDF($invoice){
+		$inv = Invoices::find($invoice->id);
+		$inv->invoice_number = $this->generateInvoiceNumber($invoice->id);
+		$inv->save();
+		return true;
 	}
 }

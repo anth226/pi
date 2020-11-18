@@ -79,12 +79,8 @@ class CustomersController extends Controller
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
 		]);
 
-		$user = auth()->user();
-		if($user->can('invoice-edit')){
-			return redirect()->route('invoices.create', ['customer_id' => $customer->id])
-			                 ->with('success','Customer created successfully');
-		}
-		return redirect()->route('customers.index')
+
+		return redirect()->route('customers.show', ['customer_id' => $customer->id])
 		                 ->with('success','Customer created successfully');
 
 
@@ -98,7 +94,10 @@ class CustomersController extends Controller
 	public function show($id)
 	{
 		$customer = Customers::find($id);
-		return view('customers.show',compact('customer'));
+		if($customer) {
+			return view( 'customers.show', compact( 'customer' ) );
+		}
+		return abort(404);
 	}
 
 
@@ -111,9 +110,13 @@ class CustomersController extends Controller
 	public function edit($id)
 	{
 		$customer = Customers::find($id);
-		$states = UsStates::statesUS();
-		$customerState = $customer->state;
-		return view('customers.edit',compact('customer','states','customerState'));
+		if($customer) {
+			$states        = UsStates::statesUS();
+			$customerState = $customer->state;
+
+			return view( 'customers.edit', compact( 'customer', 'states', 'customerState' ) );
+		}
+		return abort(404);
 	}
 
 

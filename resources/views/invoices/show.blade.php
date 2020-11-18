@@ -9,59 +9,88 @@
                     <div class="pull-left">
                         <h2> Show Invoice</h2>
                     </div>
-                    <div class="pull-right">
-                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('invoices.index') }}"> Back</a>
+                    <div class="pull-right mb-4 ">
+                        <a class="btn btn-primary mt-2" href="{{ route('invoices.index') }}"> All Invoices</a>
+                        @can('invoice-edit')
+                            <a class="btn btn-info mt-2" href="{{ route('invoices.edit',$invoice->id) }}">Edit Invoice</a>
+                        @endcan
                     </div>
                 </div>
             </div>
 
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Invoice N:</strong>
+                    {{ $invoice->invoice_number }}
+                </div>
+            </div>
 
             <div class="row">
-                <div class="col-md-12">
-
-                        <strong>Name:</strong>
-                        {{ $customer->first_name }} {{ $customer->last_name }}
+                <div class="col-md-6">
+                    <strong>Customer:</strong>
+                    <a target="_blank" href="{{ route('customers.show', $invoice->customer_id) }}" title="{{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}">
+                        {{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}
+                    </a>
+                    <small>
+                        {{ $invoice->customer->email }}
+                    </small>
 
                 </div>
             </div>
+
             <div class="row">
-                <div class="col-md-12">
-
-                        <strong>Address:</strong>
-                        {{ $customer->address_1 }} {{ $customer->address_2 }}, {{ $customer->address_2 }}, {{ $customer->city }}, {{ $customer->state }}, {{ $customer->zip }}
-
+                <div class="col-md-6">
+                    <strong>Salesperson:</strong>
+                    <a target="_blank" href="{{ route('salespeople.show', $invoice->salespeople_id) }}" title="({{ $invoice->salespersone->first_name }} {{ $invoice->salespersone->last_name }})">
+                        {{ $invoice->salespersone->name_for_invoice }}
+                    </a>
                 </div>
             </div>
+
             <div class="row">
-                <div class="col-md-12">
-
-                    <strong>Email:</strong>
-                    {{ $customer->email }}
-
+                <div class="col-md-6">
+                    <strong>Product:</strong>
+                    {{ $invoice->product->title }}
                 </div>
             </div>
+
             <div class="row">
-                <div class="col-md-12">
-
-                        <strong>Pnone Number:</strong>
-                        {{ $customer->phone_number }}
-
+                <div class="col-md-6">
+                    <strong>Quantity:</strong>
+                    {{ $invoice->qty }}
                 </div>
             </div>
-            {{--<div class="row">--}}
-                {{--<div class="col-md-12">--}}
 
-                        {{--<strong>CC:</strong>--}}
-                        {{--{{ $customer->cc }}--}}
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Sales Price:</strong>
+                    {{ $formated_price }}
+                </div>
+            </div>
 
-                {{--</div>--}}
-            {{--</div>--}}
-            {{--<div class="row">--}}
-                {{--<div class="col-md-12">--}}
-                        {{--<strong>Password:</strong>--}}
-                        {{--{{ $customer->password }}--}}
-                {{--</div>--}}
-            {{--</div>--}}
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Access Date:</strong>
+                    {{ $access_date }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Password:</strong>
+                    {{ $invoice->password }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Email Template:</strong>
+                    <a target="_blank" href="/email-templates/templates/edit/{{ $invoice->template->template_slug }}" title="{{ $invoice->template->template_name }}">
+                        {{ $invoice->template->template_name }}
+                    </a>
+                </div>
+            </div>
+
 
 
         </div>

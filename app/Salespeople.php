@@ -28,4 +28,8 @@ class Salespeople extends Model
 		           ->toArray()
 			;
 	}
+
+	public function invoices()	{
+		return $this->belongsTo('App\Invoices', 'salespeople_id','id');
+	}
 }

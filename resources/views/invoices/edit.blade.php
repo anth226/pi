@@ -48,7 +48,7 @@
                         <h2>Edit Invoice</h2>
                     </div>
                     <div class="pull-right">
-                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('invoices.index') }}"> Back</a>
+                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('invoices.index') }}"> All Invoices</a>
                     </div>
                 </div>
             </div>
@@ -129,20 +129,7 @@
                     </div>
                 </div>
             </div>
-            {{--<div class="row">--}}
-                {{--<div class="col-md-6">--}}
-                    {{--<div class="form-group">--}}
-                        {{--<strong>Password *:</strong>--}}
-                        {{--{!! Form::text('password', null, array('placeholder' => 'Password','class' => 'form-control')) !!}--}}
-                    {{--</div>--}}
-                {{--</div>--}}
-                {{--<div class="col-md-6">--}}
-                    {{--<div class="form-group">--}}
-                        {{--<strong>CC *:</strong>--}}
-                        {{--{!! Form::text('cc', null, array('placeholder' => 'CC','class' => 'form-control')) !!}--}}
-                    {{--</div>--}}
-                {{--</div>--}}
-            {{--</div>--}}
+
             <div class="row">
                 <div class="col-xs-12 col-sm-12 col-md-12 text-center">
                     <button type="submit" class="btn btn-primary">Submit</button>

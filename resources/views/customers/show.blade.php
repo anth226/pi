@@ -9,8 +9,14 @@
                     <div class="pull-left">
                         <h2> Show Customer</h2>
                     </div>
-                    <div class="pull-right">
-                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('customers.index') }}"> Back</a>
+                    <div class="pull-right mb-4">
+                        <a class="btn btn-primary mt-2" href="{{ route('customers.index') }}"> All Customers</a>
+                        @can('customer-edit')
+                            <a class="btn btn-info mt-2" href="{{ route('customers.edit',$customer->id) }}"> Edit</a>
+                        @endcan
+                        @can('invoice-edit')
+                            <a class="btn btn-success mt-2" href="{{ route('invoices.create',['customer_id' => $customer->id]) }}"> Create Invoice</a>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -49,11 +55,7 @@
                 </div>
             </div>
 
-            @can('invoice-edit')
-                <div class="m-4">
-                    <a class="btn btn-success" href="{{ route('invoices.create',['customer_id' => $customer->id]) }}">Create Invoice</a>
-                </div>
-            @endcan
+
         </div>
     </div>
 @endsection
