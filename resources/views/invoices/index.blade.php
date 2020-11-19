@@ -29,13 +29,15 @@
                 <tr>
                     <th>Id</th>
                     <th>Name</th>
+                    <th>Salesperson</th>
                     <th>Details</th>
                     <th></th>
                 </tr>
                 @foreach ($invoices as $key => $invoice)
                     <tr>
                         <td>{{ $invoice->id }}</td>
-                        <td>{{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}</td>
+                        <td><a target="_blank" href="/customers/{{$invoice->customer->id}}">{{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}</a></td>
+                        <td><a target="_blank" href="/salespeople/{{$invoice->salespersone->id}}">{{ $invoice->salespersone->name_for_invoice }}</a></td>
                         <td>
                             <small>
                                 <div>{{ $invoice->invoice_number }}</div>
