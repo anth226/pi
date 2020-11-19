@@ -11,9 +11,15 @@
                     </div>
                     <div class="pull-right mb-4">
                         <a class="btn btn-primary mt-2" href="{{ route('customers.index') }}"> All Customers</a>
+                        @can('customer-delete')
+                            {!! Form::open(['method' => 'DELETE','route' => ['customers.destroy', $customer->id],'style'=>'display:inline']) !!}
+                            {!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}
+                            {!! Form::close() !!}
+                        @endcan
                         @can('customer-edit')
                             <a class="btn btn-info mt-2" href="{{ route('customers.edit',$customer->id) }}"> Edit</a>
                         @endcan
+
                         @can('invoice-edit')
                             <a class="btn btn-success mt-2" href="{{ route('invoices.create',['customer_id' => $customer->id]) }}"> Create Invoice</a>
                         @endcan
@@ -50,7 +56,10 @@
                 <div class="col-md-12">
 
                         <strong>Pnone Number:</strong>
-                        {{ $customer->phone_number }}
+                        @php
+                            use App\KmClasses\Sms\FormatUsPhoneNumber;
+                            echo FormatUsPhoneNumber::nicePhoneNumberFormat($customer->phone_number, $customer->formated_phone_number);
+                        @endphp
 
                 </div>
             </div>
