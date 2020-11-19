@@ -68,7 +68,7 @@ Route::post('/email-templates/mailables/delete', 'MailablesController@delete')->
 
 Route::get('/pdfview/{id}','InvoicesController@showPdf');
 Route::get('/pdfdownload/{id}','InvoicesController@downloadPdf');
-Route::get('/testview/{id}','InvoicesController@testview');
+//Route::get('/testview/{id}','InvoicesController@testview');
 
 
 

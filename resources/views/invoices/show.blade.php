@@ -11,8 +11,13 @@
                     </div>
                     <div class="pull-right mb-4 ">
                         <a class="btn btn-primary mt-2" href="{{ route('invoices.index') }}"> All Invoices</a>
-                        @can('invoice-edit')
-                            <a class="btn btn-info mt-2" href="{{ route('invoices.edit',$invoice->id) }}">Edit Invoice</a>
+                        {{--@can('invoice-edit')--}}
+                            {{--<a class="btn btn-info mt-2" href="{{ route('invoices.edit',$invoice->id) }}">Edit Invoice</a>--}}
+                        {{--@endcan--}}
+                        @can('invoice-delete')
+                            {!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline;']) !!}
+                            {!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}
+                            {!! Form::close() !!}
                         @endcan
                     </div>
                 </div>

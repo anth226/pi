@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Customers;
 use App\EmailTemplates;
 use App\Invoices;
+use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\Products;
 use App\Salespeople;
 use Illuminate\Http\Request;
@@ -119,10 +120,12 @@ class InvoicesController extends Controller
 		if($invoice) {
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
 			$access_date    = $this->createTimeString( $invoice->access_date );
+			$total = $this->moneyFormat( $invoice->sales_price * $invoice->qty );
 			$file_name = $this->generateFileName($invoice);
+			$phone_number = FormatUsPhoneNumber::nicePhoneNumberFormat($invoice->customer->phone_number, $invoice->customer->formated_phone_number);
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url') );
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total') );
 		}
 		return abort(404);
 	}
@@ -234,12 +237,14 @@ class InvoicesController extends Controller
 		                   ->find($id);
 		if($invoice) {
 			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->id);
+			$total = $this->moneyFormat( $invoice->sales_price * $invoice->qty );
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
 			$access_date    = $this->createTimeString( $invoice->access_date );
 			$file_name = $this->generateFileName($invoice);
+			$phone_number = FormatUsPhoneNumber::nicePhoneNumberFormat($invoice->customer->phone_number, $invoice->customer->formated_phone_number);
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
-			$pdf = PDF::loadView('pdfviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url' ));
+			$pdf = PDF::loadView('pdfviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total' ));
 			$pdf->save($this->pdf_path.$file_name);
 			$invoice->save();
 			return true;
@@ -279,12 +284,14 @@ class InvoicesController extends Controller
 		                   ->find($id);
 		if($invoice) {
 			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->id);
+			$total = $this->moneyFormat( $invoice->sales_price * $invoice->qty );
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
 			$access_date    = $this->createTimeString( $invoice->access_date );
 			$file_name = $this->generateFileName($invoice);
+			$phone_number = FormatUsPhoneNumber::nicePhoneNumberFormat($invoice->customer->phone_number, $invoice->customer->formated_phone_number);
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
-			return view('pdfviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url' ));
+			return view('pdfviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total' ));
 		}
 		return abort(404);
 
