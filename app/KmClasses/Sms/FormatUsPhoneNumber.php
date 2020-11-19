@@ -65,4 +65,13 @@ class FormatUsPhoneNumber {
 		}
 		return $randomString;
 	}
+
+	public static function nicePhoneNumberFormat($phone, $formated_phone_number = ''){
+		if( $formated_phone_number && preg_match( '/^\+\d(\d{3})(\d{3})(\d{4})$/', $formated_phone_number,  $matches ) )
+		{
+			$result = $matches[1] . '-' .$matches[2] . '-' . $matches[3];
+			return $result;
+		}
+		return $phone;
+	}
 }

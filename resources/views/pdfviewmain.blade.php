@@ -8,9 +8,15 @@
         @font-face {
             font-family: 'Poppins-Regular';
             font-style: normal;
-            font-weight: normal;
+            font-weight: 300;
             src: url(/fonts/Poppins-Regular.ttf) format('truetype');
             }
+        @font-face {
+            font-family: 'Poppins-Light';
+            font-style: normal;
+            font-weight: normal;
+            src: url(/fonts/Poppins-Light.ttf) format('truetype');
+        }
         @font-face {
             font-family: 'Poppins-Bold';
             font-style: normal;
@@ -19,7 +25,7 @@
             }
     </style>
 </head>
-<body style="background-color: white;padding:4%;font-family: 'Poppins-Regular', sans-serif;font-size: 16px;margin: 0 auto;">
+<body style="background-color: white;padding:4%;font-family: 'Poppins-Regular', sans-serif;font-size: 15px;margin: 0 auto;">
     @include('pdfview')
 </body>
 </html>
