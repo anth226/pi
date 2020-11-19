@@ -33,17 +33,20 @@
                     <th>Details</th>
                     <th></th>
                 </tr>
+                @php
+                    $inv = new \App\Http\Controllers\InvoicesController();
+                    use App\KmClasses\Sms\FormatUsPhoneNumber;
+                @endphp
                 @foreach ($invoices as $key => $invoice)
                     <tr>
                         <td>{{ $invoice->id }}</td>
-                        <td><a target="_blank" href="/customers/{{$invoice->customer->id}}">{{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}</a></td>
-                        <td><a target="_blank" href="/salespeople/{{$invoice->salespersone->id}}">{{ $invoice->salespersone->name_for_invoice }}</a></td>
+                        <td><a target="_blank" href="/customers/{{$invoice->customer->id}}" title="{{ $invoice->customer->email }} @php echo PHP_EOL; echo FormatUsPhoneNumber::nicePhoneNumberFormat($invoice->customer->phone_number, $invoice->customer->formated_phone_number); @endphp">{{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}</a></td>
+                        <td><a target="_blank" href="/salespeople/{{$invoice->salespersone->id}}" title="{{ $invoice->salespersone->first_name }} {{ $invoice->salespersone->last_name }}{{PHP_EOL}}{{ $invoice->salespersone->email }}@php echo PHP_EOL; echo FormatUsPhoneNumber::nicePhoneNumberFormat($invoice->salespersone->phone_number, $invoice->salespersone->formated_phone_number); @endphp">{{ $invoice->salespersone->name_for_invoice }}</a></td>
                         <td>
                             <small>
                                 <div>{{ $invoice->invoice_number }}</div>
                                 <div>
                                     @php
-                                        $inv = new \App\Http\Controllers\InvoicesController();
                                         echo $inv->moneyFormat( $invoice->sales_price * $invoice->qty );
                                      @endphp
                                  </div>
