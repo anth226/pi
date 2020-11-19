@@ -32,6 +32,9 @@
                     <th>Details</th>
                     <th></th>
                 </tr>
+                @php
+                    use App\KmClasses\Sms\FormatUsPhoneNumber;
+                @endphp
                 @foreach ($customers as $key => $user)
                     <tr>
                         <td>{{ $user->id }}</td>
@@ -39,7 +42,7 @@
                         <td>
                             <small>
                                 <div>{{ $user->email }}</div>
-                                <div>{{ $user->phone_number }}</div>
+                                <div>@php echo FormatUsPhoneNumber::nicePhoneNumberFormat($user->phone_number, $user->formated_phone_number); @endphp</div>
                                 <div>{{ $user->address_1 }} {{ $user->address_2 }}, {{ $user->city }}, {{ $user->state }}, {{ $user->zip }}</div>
                             </small>
                         </td>

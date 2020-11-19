@@ -14,6 +14,11 @@
                         @can('salespeople-edit')
                             <a class="btn btn-info mt-2" href="{{ route('salespeople.edit',$salespeople->id) }}"> Edit</a>
                         @endcan
+                        @can('salespeople-delete')
+                            {!! Form::open(['method' => 'DELETE','route' => ['salespeople.destroy', $salespeople->id],'style'=>'display:inline']) !!}
+                            {!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}
+                            {!! Form::close() !!}
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -47,7 +52,10 @@
                 <div class="col-md-12">
 
                     <strong>Phone Number:</strong>
-                    {{ $salespeople->phone_number }}
+                    @php
+                        use App\KmClasses\Sms\FormatUsPhoneNumber;
+                        echo FormatUsPhoneNumber::nicePhoneNumberFormat($salespeople->phone_number, $salespeople->formated_phone_number);
+                    @endphp
 
                 </div>
             </div>
