@@ -9,16 +9,23 @@ use App\Products;
 use App\Salespeople;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use PDF;
 
 class InvoicesController extends Controller
 {
+	protected $pdf_path, $full_path, $app_url;
+
 	function __construct()
 	{
 		$this->middleware(['auth','verified']);
-		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['index','show']]);
+		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['index','show', 'showPdf']]);
 		$this->middleware('permission:invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:invoice-edit', ['only' => ['edit','update']]);
 		$this->middleware('permission:invoice-delete', ['only' => ['destroy']]);
+		$this->pdf_path = base_path().'/resources/views/invoicesPdf/';
+		$this->full_path =  config('app.url').'/pdfview/';
+		$this->app_url =  config('app.url');
+
 	}
 
 
@@ -90,7 +97,7 @@ class InvoicesController extends Controller
 			'cc' => $request->input('cc')
 		]);
 
-		$this->generatePDF($invoice);
+		$this->generatePDF($invoice->id);
 
 		return redirect()->route('invoices.show', $invoice->id)
 		                 ->with('success','Invoice created successfully');
@@ -112,7 +119,10 @@ class InvoicesController extends Controller
 		if($invoice) {
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
 			$access_date    = $this->createTimeString( $invoice->access_date );
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date' ) );
+			$file_name = $this->generateFileName($invoice);
+			$full_path =  $this->full_path;
+			$app_url =  $this->app_url;
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url') );
 		}
 		return abort(404);
 	}
@@ -215,10 +225,69 @@ class InvoicesController extends Controller
 		return date('m-d-Y', strtotime($datetimestring));
 	}
 
-	public function generatePDF($invoice){
-		$inv = Invoices::find($invoice->id);
-		$inv->invoice_number = $this->generateInvoiceNumber($invoice->id);
-		$inv->save();
-		return true;
+	public function generatePDF($id){
+		$invoice = Invoices::
+							with('customer')
+		                   ->with('salespersone')
+		                   ->with('product')
+		                   ->with('template')
+		                   ->find($id);
+		if($invoice) {
+			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->id);
+			$formated_price = $this->moneyFormat( $invoice->sales_price );
+			$access_date    = $this->createTimeString( $invoice->access_date );
+			$file_name = $this->generateFileName($invoice);
+			$full_path =  $this->full_path;
+			$app_url =  $this->app_url;
+			$pdf = PDF::loadView('pdfviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url' ));
+			$pdf->save($this->pdf_path.$file_name);
+			$invoice->save();
+			return true;
+
+		}
+		return false;
 	}
+
+	protected function generateFileName(Invoices $invoice){
+		return 'Portfolio Insider '.$invoice->customer->first_name.' '.$invoice->customer->last_name.' ['.$invoice->invoice_number.'].pdf';
+	}
+
+	public function showPdf($id){
+		$invoice = Invoices::with('customer')->find($id);
+		if($invoice) {
+			return response()->file($this->pdf_path.$this->generateFileName($invoice));
+		}
+		return abort(404);
+	}
+
+	public function downloadPdf($id){
+		$invoice = Invoices::with('customer')->find($id);
+		if($invoice) {
+			return response()->download($this->pdf_path.$this->generateFileName($invoice));
+		}
+		return abort(404);
+	}
+
+
+	public function testview($id)
+	{
+		$invoice = Invoices::
+							with('customer')
+		                   ->with('salespersone')
+		                   ->with('product')
+		                   ->with('template')
+		                   ->find($id);
+		if($invoice) {
+			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->id);
+			$formated_price = $this->moneyFormat( $invoice->sales_price );
+			$access_date    = $this->createTimeString( $invoice->access_date );
+			$file_name = $this->generateFileName($invoice);
+			$full_path =  $this->full_path;
+			$app_url =  $this->app_url;
+			return view('pdfviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url' ));
+		}
+		return abort(404);
+
+	}
+
 }
