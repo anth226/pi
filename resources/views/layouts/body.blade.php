@@ -56,7 +56,7 @@
                                 @endif
 
                                 @if( Gate::check('edit-email-templates') || Gate::check('create-email-templates') || Gate::check('view-email-templates'))
-                                    <a class="dropdown-item bg-emails" href="/email-templates/templates" >
+                                    <a class="dropdown-item" href="/email-templates/templates" >
                                         {{ __('Email Templates') }}
                                     </a>
                                 @endif
