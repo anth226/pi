@@ -30,6 +30,7 @@
                     <th>Id</th>
                     <th>Name</th>
                     <th>Details</th>
+                    <th>Invoices</th>
                     <th></th>
                 </tr>
                 @php
@@ -45,6 +46,15 @@
                                 <div>@php echo FormatUsPhoneNumber::nicePhoneNumberFormat($user->phone_number, $user->formated_phone_number); @endphp</div>
                                 <div>{{ $user->address_1 }} {{ $user->address_2 }}, {{ $user->city }}, {{ $user->state }}, {{ $user->zip }}</div>
                             </small>
+                        </td>
+                        <td>
+                            <div style="max-width: 300px;">
+                                @if(count($user->invoices))
+                                    @foreach($user->invoices as $v)
+                                        <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$v->id}}"><span class="badge badge-success">{{ $v->invoice_number }}</span></a>
+                                    @endforeach
+                                @endif
+                            </div>
                         </td>
 
                         <td>

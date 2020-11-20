@@ -30,6 +30,7 @@ class Salespeople extends Model
 	}
 
 	public function invoices()	{
-		return $this->belongsTo('App\Invoices', 'salespeople_id','id');
+		return $this->hasMany('App\Invoices', 'salespeople_id','id');
 	}
+
 }

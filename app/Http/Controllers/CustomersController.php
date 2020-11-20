@@ -27,7 +27,7 @@ class CustomersController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		$customers = Customers::orderBy('id','DESC')->paginate(10);
+		$customers = Customers::with('invoices')->orderBy('id','DESC')->paginate(10);
 		return view('customers.index',compact('customers'))
 			->with('i', ($request->input('page', 1) - 1) * 10);
 	}
@@ -93,7 +93,7 @@ class CustomersController extends Controller
 	 */
 	public function show($id)
 	{
-		$customer = Customers::find($id);
+		$customer = Customers::with('invoices')->find($id);
 		if($customer) {
 			return view( 'customers.show', compact( 'customer' ) );
 		}
