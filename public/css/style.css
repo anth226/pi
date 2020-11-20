@@ -1,3 +1,11 @@
 .details_bgcolor{
     background-color: #fff0f0;
 }
+.navbar-laravel {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+.error{ color:red; }
+.text-primary.edit-template, .text-danger.delete-template, .table-action.remove-item, .save-draft{
+    display:none;
+}
