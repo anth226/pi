@@ -18,6 +18,11 @@
                     <div class="pull-right">
 
                         <a class="btn btn-primary mb-4 mt-2" href="{{ route('roles.index') }}"> Back</a>
+                        @can('role-delete')
+                            {!! Form::open(['method' => 'DELETE','route' => ['roles.destroy', $role->id],'style'=>'display:inline']) !!}
+                            {!! Form::submit('Delete', ['class' => 'btn btn-danger mb-4 mt-2']) !!}
+                            {!! Form::close() !!}
+                        @endcan
 
                     </div>
 

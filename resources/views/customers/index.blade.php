@@ -48,18 +48,19 @@
                         </td>
 
                         <td>
-                            @can('invoice-edit')
-                                <a class="btn btn-success mb-1" href="{{ route('invoices.create',['customer_id' => $user->id]) }}">Create Invoice</a>
-                            @endcan
+
                             <a class="btn btn-info mb-1" href="{{ route('customers.show',$user->id) }}">Show</a>
                             @can('customer-edit')
                                 <a class="btn btn-primary mb-1" href="{{ route('customers.edit',$user->id) }}">Edit</a>
                             @endcan
-                            @can('customer-delete')
-                                {!! Form::open(['method' => 'DELETE','route' => ['customers.destroy', $user->id],'style'=>'display:inline']) !!}
-                                {!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}
-                                {!! Form::close() !!}
+                            @can('invoice-edit')
+                                <a class="btn btn-success mb-1" href="{{ route('invoices.create',['customer_id' => $user->id]) }}">Create Invoice</a>
                             @endcan
+                            {{--@can('customer-delete')--}}
+                                {{--{!! Form::open(['method' => 'DELETE','route' => ['customers.destroy', $user->id],'style'=>'display:inline']) !!}--}}
+                                {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}--}}
+                                {{--{!! Form::close() !!}--}}
+                            {{--@endcan--}}
                         </td>
                     </tr>
                 @endforeach

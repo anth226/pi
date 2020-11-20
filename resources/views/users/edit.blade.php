@@ -11,6 +11,11 @@
                     </div>
                     <div class="pull-right">
                         <a class="btn btn-primary mb-4 mt-2" href="{{ route('users.index') }}"> Back</a>
+                        @can('user-delete')
+                            {!! Form::open(['method' => 'DELETE','route' => ['users.destroy', $user->id],'style'=>'display:inline']) !!}
+                            {!! Form::submit('Delete', ['class' => 'btn btn-danger mb-4 mt-2']) !!}
+                            {!! Form::close() !!}
+                        @endcan
                     </div>
                 </div>
             </div>
