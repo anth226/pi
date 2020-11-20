@@ -33,8 +33,8 @@
 @section('editor', true)
 
 @section('content')
-
-<div class="col-lg-10 col-md-12 m-auto">
+    <div class="container">
+<div class="col-lg-12 col-md-12 m-auto">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ route('templateList') }}">Templates</a></li>
@@ -186,6 +186,6 @@
                 </div>
 </div>
             </div>
-   
+    </div>
 @endsection
 {{--<script src="{{ asset('vendor/maileclipse/js/maileclipse-app.js') }}"></script>--}}

@@ -32,8 +32,8 @@
 
 @section('content')
 
-
-<div class="col-lg-10 col-md-12 m-auto">
+    <div class="container">
+<div class="col-lg-12 col-md-12 m-auto">
   
                 <div class="card my-4">
                     <div class="card-header d-flex align-items-center justify-content-between"><h5>{{ __('Templates') }}</h5>
@@ -100,6 +100,7 @@
         {{$templates->onEachSide(1)->links( "pagination")}}
     </div>
             </div>
+    </div>
 <script src="{{ asset('vendor/maileclipse/js/maileclipse-app.js') }}"></script>
 <script type="text/javascript">
 

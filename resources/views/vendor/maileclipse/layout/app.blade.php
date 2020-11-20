@@ -46,28 +46,28 @@
 </head>
 
 <body>
+    <div class="container">
+        @include('maileclipse::layout.header')
 
-    @include('maileclipse::layout.header')
-        
-    <div class="container mt-5">
-        <div class="row">
+        <div class="container mt-5">
+            <div class="row">
 
-            @if ( request()->route()->getName() !== 'newTemplate' && 
-                  request()->route()->getName() !== 'editMailable' &&
-                  request()->route()->getName() !== 'viewTemplate'
-                )
+                @if ( request()->route()->getName() !== 'newTemplate' &&
+                      request()->route()->getName() !== 'editMailable' &&
+                      request()->route()->getName() !== 'viewTemplate'
+                    )
 
-                @include('maileclipse::layout.sidebar')
+                    @include('maileclipse::layout.sidebar')
 
-            @endif
+                @endif
 
-            @yield('content')
-            
+                @yield('content')
 
+
+            </div>
+            @include('maileclipse::layout.footer')
         </div>
-        @include('maileclipse::layout.footer')
     </div>
-
 </body>
 
 </html>
