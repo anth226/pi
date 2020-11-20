@@ -65,7 +65,7 @@
      </style>
 
      {{-- {{ dd($templateData) }} --}}
-
+     <div class="container">
 <div class="col-lg-12 col-md-12 m-auto">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
@@ -195,6 +195,7 @@
             </div>
         </div>       
  </div>
+     </div>
 <script src="{{ asset('vendor/maileclipse/js/maileclipse-app.js') }}"></script>
 <script type="text/javascript">
     

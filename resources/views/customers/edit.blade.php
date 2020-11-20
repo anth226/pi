@@ -40,7 +40,7 @@
 
 @section('content')
     <div class="container">
-        <div class="col-lg-8 m-auto">
+        <div class="col-lg-12 m-auto">
             <div class="row">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">

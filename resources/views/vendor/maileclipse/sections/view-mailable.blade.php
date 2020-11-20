@@ -3,8 +3,8 @@
 @section('title', 'View Mailable')
 
 @section('content')
-
-<div class="col-lg-10 col-md-12">
+    <div class="container">
+<div class="col-lg-12 col-md-12">
 
 	<nav aria-label="breadcrumb">
       <ol class="breadcrumb">
@@ -118,7 +118,7 @@
 					</div>
                 </div>
             </div>
-
+    </div>
 <script type="text/javascript">
 
                 
