@@ -52,11 +52,11 @@
                             @can('salespeople-edit')
                             <a class="btn btn-primary mb-1" href="{{ route('salespeople.edit',$user->id) }}">Edit</a>
                             @endcan
-                            @can('salespeople-delete')
-                            {!! Form::open(['method' => 'DELETE','route' => ['salespeople.destroy', $user->id],'style'=>'display:inline']) !!}
-                            {!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}
-                            {!! Form::close() !!}
-                            @endcan
+                            {{--@can('salespeople-delete')--}}
+                            {{--{!! Form::open(['method' => 'DELETE','route' => ['salespeople.destroy', $user->id],'style'=>'display:inline']) !!}--}}
+                            {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}--}}
+                            {{--{!! Form::close() !!}--}}
+                            {{--@endcan--}}
                         </td>
                     </tr>
                 @endforeach

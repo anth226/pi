@@ -11,6 +11,12 @@
                     </div>
                     <div class="pull-right">
                         <a class="btn btn-primary mb-4 mt-2" href="{{ route('salespeople.index') }}"> All Salespeople</a>
+                        <a class="btn btn-info mb-4 mt-2" href="{{ route('salespeople.show',$salespeople->id) }}">Show</a>
+                        @can('salespeople-delete')
+                            {!! Form::open(['method' => 'DELETE','route' => ['salespeople.destroy', $salespeople->id],'style'=>'display:inline']) !!}
+                            {!! Form::submit('Delete', ['class' => 'btn btn-danger mb-4 mt-2']) !!}
+                            {!! Form::close() !!}
+                        @endcan
                     </div>
                 </div>
             </div>

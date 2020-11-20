@@ -63,11 +63,11 @@
                             {{--@can('invoice-edit')--}}
                             {{--<a class="btn btn-primary mb-1" href="{{ route('invoices.edit',$invoice->id) }}">Edit</a>--}}
                             {{--@endcan--}}
-                            @can('invoice-delete')
-                            {!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline']) !!}
-                            {!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}
-                            {!! Form::close() !!}
-                            @endcan
+                            {{--@can('invoice-delete')--}}
+                            {{--{!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline']) !!}--}}
+                            {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}--}}
+                            {{--{!! Form::close() !!}--}}
+                            {{--@endcan--}}
                         </td>
                     </tr>
                 @endforeach

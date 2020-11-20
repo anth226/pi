@@ -48,6 +48,12 @@
                     </div>
                     <div class="pull-right">
                         <a class="btn btn-primary mb-4 mt-2" href="{{ route('customers.index') }}"> All Customers</a>
+                        <a class="btn btn-info mb-4 mt-2" href="{{ route('customers.show',$customer->id) }}">Show Customer</a>
+                        @can('customer-delete')
+                            {!! Form::open(['method' => 'DELETE','route' => ['customers.destroy', $customer->id],'style'=>'display:inline']) !!}
+                            {!! Form::submit('Delete', ['class' => 'btn btn-danger  mb-4 mt-2']) !!}
+                            {!! Form::close() !!}
+                        @endcan
                     </div>
                 </div>
             </div>
