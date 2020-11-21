@@ -12,22 +12,15 @@ class Invoices extends Model
 	use SoftDeletes;
 
 	protected $fillable = [
-		'email_template_id',
 		'customer_id',
 		'salespeople_id',
 		'product_id',
 		'sales_price',
 		'qty',
 		'access_date',
-		'password',
 		'invoice_number',
 		'cc'
 	];
-
-	public function template()
-	{
-		return $this->hasOne('App\EmailTemplates', 'id','email_template_id');
-	}
 
 	public function customer()
 	{
@@ -42,5 +35,10 @@ class Invoices extends Model
 	public function product()
 	{
 		return $this->hasOne('App\Products', 'id','product_id')->withTrashed();
+	}
+
+	public function emails()
+	{
+		return $this->hasMany('App\EmailLogs', 'id','invoice_id');
 	}
 }

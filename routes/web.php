@@ -30,10 +30,8 @@ Route::get('/test', 'TestController@index')->name('test');
 
 //Ajax
 
-//Route::post('/send-emailtest', 'SendTestController@sendEmailTest');
+Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail');
 //
-//Route::get('/unsubscribe_me', 'EmailUnsubscribeController@index');
-//Route::get('/subscribe_me', 'EmailSubscribeController@index');
 
 
 

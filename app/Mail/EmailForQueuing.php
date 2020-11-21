@@ -11,7 +11,7 @@ class EmailForQueuing extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $name, $email, $unsubscribe_url, $pixel, $tracking, $tracking2, $token;
+    protected $name, $email, $salesperson;
 
     /**
      * Create a new message instance.
@@ -33,25 +33,10 @@ class EmailForQueuing extends Mailable
 		$this->email = $email;
 	}
 
-	public function setPixel($pixel){
-		$this->pixel = $pixel;
+	public function setSalesperson($salesperson){
+		$this->salesperson = $salesperson;
 	}
 
-	public function setUnsubscribeUrl($unsubscribe_url){
-		$this->unsubscribe_url = $unsubscribe_url;
-	}
-
-	public function setTracking($tracking){
-		$this->tracking = $tracking;
-	}
-
-	public function setTracking2($tracking2){
-		$this->tracking2 = $tracking2;
-	}
-
-	public function setToken($token){
-		$this->token = $token;
-	}
 
     /**
      * Build the message.
