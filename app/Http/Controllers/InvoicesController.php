@@ -14,7 +14,8 @@ use PDF;
 
 class InvoicesController extends Controller
 {
-	protected $pdf_path, $full_path, $app_url;
+	protected $full_path, $app_url;
+	public $pdf_path;
 
 	function __construct()
 	{
@@ -54,8 +55,7 @@ class InvoicesController extends Controller
 		$customers = Customers::getIdsAndFullNames();
 		$salespeople = Salespeople::getIdsAndFullNames();
 		$products = Products::getIdsAndFullNames();
-		$template = EmailTemplates::getIdsAndFullNames();
-		return view('invoices.create', compact('customers','salespeople', 'customerId', 'products', 'template'));
+		return view('invoices.create', compact('customers','salespeople', 'customerId', 'products'));
 	}
 
 
@@ -68,14 +68,12 @@ class InvoicesController extends Controller
 	public function store(Request $request)
 	{
 		$this->validate($request, [
-			'email_template_id' => 'required|numeric|min:1',
 			'customer_id' => 'required|numeric|min:1',
 			'salespeople_id' => 'required|numeric|min:1',
 			'product_id' => 'required|numeric|min:1',
 			'sales_price' => 'required',
 			'qty' => 'required|numeric|min:1',
 			'access_date' => 'required',
-			'password' => 'required',
 			'cc' => 'required|digits:4',
 		]);
 
@@ -87,14 +85,12 @@ class InvoicesController extends Controller
 		}
 
 		$invoice = Invoices::create([
-			'email_template_id' => $request->input('email_template_id'),
 			'customer_id' => $request->input('customer_id'),
 			'salespeople_id' => $request->input('salespeople_id'),
 			'product_id' => $request->input('product_id'),
 			'sales_price' => $sales_price,
 			'qty' => $request->input('qty'),
 			'access_date' => $this->createDateTime($request->input('access_date')),
-			'password' => $request->input('password'),
 			'cc' => $request->input('cc')
 		]);
 
@@ -115,7 +111,6 @@ class InvoicesController extends Controller
 							with('customer')
 		                   ->with('salespersone')
 		                   ->with('product')
-		                   ->with('template')
 		                   ->find($id);
 		if($invoice) {
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
@@ -125,7 +120,8 @@ class InvoicesController extends Controller
 			$phone_number = FormatUsPhoneNumber::nicePhoneNumberFormat($invoice->customer->phone_number, $invoice->customer->formated_phone_number);
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total') );
+			$template = EmailTemplates::getIdsAndFullNames();
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template') );
 		}
 		return abort(404);
 	}
@@ -143,7 +139,6 @@ class InvoicesController extends Controller
 		with('customer')
 		                   ->with('salespersone')
 		                   ->with('product')
-		                   ->with('template')
 		                   ->find($id);
 		if($invoice) {
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
@@ -233,7 +228,6 @@ class InvoicesController extends Controller
 							with('customer')
 		                   ->with('salespersone')
 		                   ->with('product')
-		                   ->with('template')
 		                   ->find($id);
 		if($invoice) {
 			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->id);
@@ -253,7 +247,7 @@ class InvoicesController extends Controller
 		return false;
 	}
 
-	protected function generateFileName(Invoices $invoice){
+	public function generateFileName(Invoices $invoice){
 		return 'Portfolio Insider '.$invoice->customer->first_name.' '.$invoice->customer->last_name.' ['.$invoice->invoice_number.'].pdf';
 	}
 
@@ -280,7 +274,6 @@ class InvoicesController extends Controller
 							with('customer')
 		                   ->with('salespersone')
 		                   ->with('product')
-		                   ->with('template')
 		                   ->find($id);
 		if($invoice) {
 			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->id);

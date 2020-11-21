@@ -84,14 +84,14 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Email Template *:</strong>
-                        {!! Form::select('email_template_id', $template,[], array('class' => 'form-control')) !!}
-                    </div>
-                </div>
-            </div>
+            {{--<div class="row">--}}
+                {{--<div class="col-md-6">--}}
+                    {{--<div class="form-group">--}}
+                        {{--<strong>Email Template *:</strong>--}}
+                        {{--{!! Form::select('email_template_id', $template,[], array('class' => 'form-control')) !!}--}}
+                    {{--</div>--}}
+                {{--</div>--}}
+            {{--</div>--}}
             <div class="row d-none">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -130,15 +130,6 @@
                     <div class="form-group">
                         <strong>CC *:</strong>
                         {!! Form::number('cc', null, array('placeholder' => 'CC','class' => 'form-control', 'maxlength="4"', 'minlength="4"', 'required="required"')) !!}
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Password *:</strong>
-                        {!! Form::text('password', null, array('placeholder' => 'Password','class' => 'form-control', 'maxlength="100"', 'required="required"')) !!}
                     </div>
                 </div>
             </div>

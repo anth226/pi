@@ -37,7 +37,14 @@ class EmailTemplates extends Model
 			;
 	}
 
-	public function invoices()	{
-		return $this->belongsTo('App\Invoices', 'email_template_id','id');
+	public static function getSlugAndFullNames(){
+		return self::selectRaw("template_slug, template_name as full_name")
+		           ->orderBy('id', 'desc')
+		           ->limit(10000)
+		           ->pluck('full_name', 'template_slug')
+		           ->toArray()
+			;
 	}
+
+
 }

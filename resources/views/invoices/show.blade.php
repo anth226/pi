@@ -8,6 +8,12 @@
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
                         <h2> {{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }} [{{ $invoice->invoice_number }}]</h2>
+                        <div class="text-muted mb-4">
+                            <small class="details_bgcolor p-2">
+                                <strong>Created at:</strong>
+                                {{ $invoice->created_at }}
+                            </small>
+                        </div>
                     </div>
                     <div class="pull-right mb-4 ">
                         <a class="btn btn-primary mt-2" href="{{ route('invoices.index') }}"> All Invoices</a>
@@ -60,31 +66,26 @@
                         <strong>Access Date:</strong>
                         {{ $access_date }}
                     </div>
-                    <div>
-                        <strong>Password:</strong>
-                        {{ $invoice->password }}
-                    </div>
-                    <div>
-                        <strong>Email Template:</strong>
-                        <a target="_blank" href="/email-templates/templates/edit/{{ $invoice->template->template_slug }}" title="{{ $invoice->template->template_name }}">
-                            {{ $invoice->template->template_name }}
-                        </a>
-                    </div>
+
                 </div>
                 <div class="col-md-6">
+                    @can('invoice-create')
+                    <div class="mb-2">
+                        <input type="hidden" id="invoice_id" value="{{ $invoice->id }}">
+                        <div class="form-group">
+                            <strong>Email Template *:</strong>
+                            {!! Form::select('email_template_id', $template,[], array('class' => 'form-control', 'id' => 'email_template_id')) !!}
+                        </div>
+                        <div class="form-group">
+                            <strong>Email *:</strong>
+                            {!! Form::text('email', $invoice->customer->email, array('placeholder' => 'Email','class' => 'form-control', 'id' => 'email_address')) !!}
+                        </div>
+                        <button class="btn btn-primary" id="send_email">Send Invoice Email</button>
+                        <div class="err_box"></div>
+                    </div>
+                    @endcan
                     <div class="p-2 text-muted details_bgcolor">
-                        <div>
-                            <small>
-                                <strong>Created at:</strong>
-                                {{ $invoice->created_at }}
-                            </small>
-                        </div>
-                        <div>
-                            <small>
-                                <strong>Updated at:</strong>
-                                {{ $invoice->updated_at }}
-                            </small>
-                        </div>
+
                         <div>
                             <small>
                                 <strong>Emailed at:</strong>
@@ -106,4 +107,90 @@
         </div>
     </div>
 
+@endsection
+
+@section('script')
+    <script>
+        function isEmail(email) {
+            var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,6})+$/;
+            return regex.test(email);
+        }
+
+        $('#send_email').on('click', function(){
+            var current_button = $(this);
+            var email = $('#email_address').val();
+            var invoice_id = $('#invoice_id').val();
+            var email_template_id = $('#email_template_id').val();
+            var err_box = $('.err_box');
+            err_box.html('');
+
+            if(email && invoice_id && email_template_id) {
+                err_box.addClass('text-danger');
+                err_box.removeClass('text-success');
+                if(isEmail(email)) {
+                    var button_text = current_button.html();
+                    var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                    current_button.html(ajax_img);
+                    $('.btn').prop('disabled', true);
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
+                    $.ajax({
+                        url: '/send-invoice-email',
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            invoice_id: invoice_id,
+                            email_template_id: email_template_id,
+                            email: email
+                        },
+                        success: function (response) {
+                            if (response) {
+                                if (response.success) {
+                                    err_box.removeClass('text-danger');
+                                    err_box.addClass('text-success');
+                                    err_box.html(response.message);
+                                }
+                                else {
+                                    err_box.html('Error: ' + response.message);
+                                }
+                                if (response.data) {
+                                    err_box.append(response.data)
+                                }
+                            }
+                            else {
+                                err_box.html('Error!');
+                            }
+                            current_button.html(button_text);
+                            $('.btn').prop('disabled', false);
+                        },
+                        error: function (response) {
+                            if (response && response.responseJSON) {
+                                if (response.responseJSON.message) {
+                                    err_box.html(response.responseJSON.message);
+                                }
+                                else {
+                                    err_box.html('Error!');
+                                }
+                            }
+                            current_button.html(button_text);
+                            $('.btn').prop('disabled', false);
+                        }
+                    });
+                }
+                else{
+                    err_box.html('Please enter valid Email.');
+                }
+
+            }
+            else{
+                err_box.html('Empty email address');
+            }
+
+
+        })
+
+    </script>
 @endsection
