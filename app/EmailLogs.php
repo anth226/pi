@@ -10,8 +10,7 @@ class EmailLogs extends Model
 		'invoice_id',
 		'email_template_id',
 		'from',
-		'to',
-		'result'
+		'to'
 	];
 
 	public function template()

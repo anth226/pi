@@ -20,8 +20,7 @@ class CreateEmailLogsTable extends Migration
             $table->unsignedBigInteger('email_template_id')->default(0);
             $table->string('from');
             $table->string('to');
-            $table->string('result', 2000)->nullable();
-	        $table->foreign('invoice_id')->references('id')->on('invoices')->onUpdate('CASCADE')->onDelete('CASCADE');
+            $table->foreign('invoice_id')->references('id')->on('invoices')->onUpdate('CASCADE')->onDelete('CASCADE');
 	        $table->foreign('email_template_id')->references('id')->on('email_templates')->onUpdate('CASCADE')->onDelete('CASCADE');
 
         });
