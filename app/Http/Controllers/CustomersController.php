@@ -79,6 +79,16 @@ class CustomersController extends Controller
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
 		]);
 
+		$this->sendLead([
+			'first_name' => $request->input('first_name'),
+			'last_name' => $request->input('last_name'),
+			'full_name' => $request->input('first_name').' '.$request->input('last_name'),
+			'email' => $request->input('email'),
+			'phone' => $request->input('phone_number'),
+			'source' => 'portfolioinsider',
+			'tags' => 'portfolioinsider,portfolio-insider-prime'
+		]);
+
 
 		return redirect()->route('customers.show', ['customer_id' => $customer->id])
 		                 ->with('success','Customer created successfully');
@@ -164,5 +174,17 @@ class CustomersController extends Controller
 		Customers::where('id',$id)->delete();
 		return redirect()->route('customers.index')
 		                 ->with('success','Customer deleted successfully');
+	}
+
+
+	protected function sendLead($input){
+		$url = 'https://magicstarsystem.com/api/ulp';
+		$postvars = http_build_query($input);
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_POST, count($input));
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $postvars);
+		curl_exec($ch);
+		curl_close($ch);
 	}
 }

@@ -84,14 +84,16 @@
                         <div class="err_box"></div>
                     </div>
                     @endcan
-                    <div class="p-2 text-muted details_bgcolor">
-
-                        <div>
-                            <small>
-                                <strong>Emailed at:</strong>
-                                {{ $invoice->updated_at }} <strong>to</strong> {{ $invoice->customer->email }}
-                            </small>
-                        </div>
+                    <div class="text-muted details_bgcolor" id="log_box">
+                        @if(!empty($logs) && $logs->count())
+                            @foreach ($logs as $k=>$log)
+                                <div class="pl-1 pr-1">
+                                    <small>
+                                        <strong>Sent at </strong>{{ $log->created_at }} <strong>to</strong> {{ $log->to }}
+                                    </small>
+                                </div>
+                            @endforeach
+                        @endif
                     </div>
                 </div>
             </div>
@@ -157,7 +159,13 @@
                                     err_box.html('Error: ' + response.message);
                                 }
                                 if (response.data) {
-                                    err_box.append(response.data)
+                                    const returnedData = JSON.parse(response.data);
+                                    var str = '';
+                                    returnedData.forEach(function(item) {
+                                       str += '<div class="pl-1 pr-1"><small><strong>Sent at </strong>'+item.created_at+'<strong> to</strong> '+item.to+'</small></div>';
+
+                                    });
+                                    $('#log_box').html(str);
                                 }
                             }
                             else {

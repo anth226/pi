@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Customers;
+use App\EmailLogs;
 use App\EmailTemplates;
 use App\Invoices;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
@@ -121,7 +122,8 @@ class InvoicesController extends Controller
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
 			$template = EmailTemplates::getIdsAndFullNames();
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template') );
+			$logs = EmailLogs::where('invoice_id', $id)->get();
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs') );
 		}
 		return abort(404);
 	}
