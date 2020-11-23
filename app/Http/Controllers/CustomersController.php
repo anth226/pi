@@ -79,15 +79,15 @@ class CustomersController extends Controller
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
 		]);
 
-		$this->sendLead([
-			'first_name' => $request->input('first_name'),
-			'last_name' => $request->input('last_name'),
-			'full_name' => $request->input('first_name').' '.$request->input('last_name'),
-			'email' => $request->input('email'),
-			'phone' => $request->input('phone_number'),
-			'source' => 'portfolioinsider',
-			'tags' => 'portfolioinsider,portfolio-insider-prime'
-		]);
+//		$this->sendLead([
+//			'first_name' => $request->input('first_name'),
+//			'last_name' => $request->input('last_name'),
+//			'full_name' => $request->input('first_name').' '.$request->input('last_name'),
+//			'email' => $request->input('email'),
+//			'phone' => $request->input('phone_number'),
+//			'source' => 'portfolioinsider',
+//			'tags' => 'portfolioinsider,portfolio-insider-prime'
+//		]);
 
 
 		return redirect()->route('customers.show', ['customer_id' => $customer->id])
