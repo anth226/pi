@@ -8,7 +8,7 @@
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
                         @can('invoice-create')
-                            <a class="btn btn-success mb-4 mt-2" href="{{ route('customers-invoices.create') }}"> Create New Invoice</a>
+                            <a class="btn btn-success mb-4 mt-2" href="{{ route('customers-invoices.create') }}"> Create User & Email Invoice</a>
                         @endcan
                         <h2>Customers</h2>
                     </div>
