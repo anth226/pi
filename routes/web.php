@@ -34,12 +34,13 @@ Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail');
 //
 
 
-
 Route::resource('/roles','RoleController');
 Route::resource('/users','UserController');
 Route::resource('/customers','CustomersController');
+Route::resource('/customers-invoices','CustomerInvoiceController');
 Route::resource('/salespeople','SalespeopleController');
 Route::resource('/invoices','InvoicesController');
+
 
 
 
