@@ -60,6 +60,14 @@
                                 {{ $customer->updated_at }}
                             </small>
                         </div>
+                        @if($dataSentDate)
+                            <div>
+                                <small>
+                                    <strong>Data sent to SMS system: </strong>
+                                    {{ $customer->updated_at }}
+                                </small>
+                            </div>
+                        @endif
                     </div>
                 </div>
                 <div class="col-md-12 mt-2">
