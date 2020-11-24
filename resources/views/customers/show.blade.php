@@ -63,7 +63,7 @@
                         @if($dataSentDate)
                             <div>
                                 <small>
-                                    <strong>Data sent to SMS system: </strong>
+                                    <strong>Sent to SMS system at: </strong>
                                     {{ $customer->updated_at }}
                                 </small>
                             </div>
