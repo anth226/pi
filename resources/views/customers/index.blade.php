@@ -14,7 +14,7 @@
                     </div>
                     <div class="pull-right">
                         @can('customer-create')
-                        <a class="btn btn-success mb-4 mt-2 btn-sm" href="{{ route('customers.create') }}"> Add New Customer</a>
+                        {{--<a class="btn btn-success mb-4 mt-2 btn-sm" href="{{ route('customers.create') }}"> Add New Customer</a>--}}
                         @endcan
                     </div>
                 </div>
