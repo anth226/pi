@@ -45,7 +45,7 @@
             <div class="row">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
-                        <h2>Create New Invoice</h2>
+                        <h2>New Prime Sale</h2>
                     </div>
                     <div class="pull-right">
                         <a class="btn btn-primary mb-4 mt-2" href="{{ route('customers.index') }}"> Back</a>
