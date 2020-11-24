@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Customers;
+use App\Errors;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
+use App\SentDataLog;
 use Illuminate\Http\Request;
 use Validator;
+use Exception;
+
 
 class CustomersController extends Controller
 {
@@ -79,15 +83,17 @@ class CustomersController extends Controller
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
 		]);
 
-//		$this->sendLead([
-//			'first_name' => $request->input('first_name'),
-//			'last_name' => $request->input('last_name'),
-//			'full_name' => $request->input('first_name').' '.$request->input('last_name'),
-//			'email' => $request->input('email'),
-//			'phone' => $request->input('phone_number'),
-//			'source' => 'portfolioinsider',
-//			'tags' => 'portfolioinsider,portfolio-insider-prime'
-//		]);
+		$dataToSend = [
+			'first_name' => $request->input('first_name'),
+			'last_name' => $request->input('last_name'),
+			'full_name' => $request->input('first_name').' '.$request->input('last_name'),
+			'email' => $request->input('email'),
+			'phone' => $request->input('phone_number'),
+			'source' => 'portfolioinsider',
+			'tags' => 'portfolioinsider,portfolio-insider-prime'
+		];
+
+		$this->sendLead($dataToSend, $customer->id);
 
 
 		return redirect()->route('customers.show', ['customer_id' => $customer->id])
@@ -104,8 +110,13 @@ class CustomersController extends Controller
 	public function show($id)
 	{
 		$customer = Customers::with('invoices')->find($id);
+		$sentLog = SentDataLog::where('customer_id', $id)->orderBy('id', 'desc')->first();
+		$dataSentDate = '';
+		if($sentLog && $sentLog->count() && !empty($sentLog->created_at)){
+			$dataSentDate = $sentLog->created_at;
+		}
 		if($customer) {
-			return view( 'customers.show', compact( 'customer' ) );
+			return view( 'customers.show', compact( 'customer', 'dataSentDate' ) );
 		}
 		return abort(404);
 	}
@@ -177,14 +188,56 @@ class CustomersController extends Controller
 	}
 
 
-	protected function sendLead($input){
-		$url = 'https://magicstarsystem.com/api/ulp';
-		$postvars = http_build_query($input);
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_POST, count($input));
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $postvars);
-		curl_exec($ch);
-		curl_close($ch);
+	protected function sendLead($input, $customer_id){
+		try {
+			$url      = 'https://test.magicstarsystem.com/api/ulp';
+			$postvars = http_build_query( $input );
+			$ch       = curl_init();
+			curl_setopt( $ch, CURLOPT_URL, $url );
+			curl_setopt( $ch, CURLOPT_POST, count( $input ) );
+			curl_setopt( $ch, CURLOPT_POSTFIELDS, $postvars );
+			curl_setopt( $ch, CURLOPT_RETURNTRANSFER , true );
+			$res = curl_exec( $ch );
+			curl_close( $ch );
+			if($res) {
+				$result = json_decode($res);
+				if ( $result && ! empty( $result->success ) && $result->success && ! empty( $result->data ) && ! empty( $result->data->id ) ) {
+					SentDataLog::create( [
+						'customer_id' => $customer_id,
+						'lead_id'     => $result->data->id
+					] );
+
+					return true;
+				} else {
+					$error = "Wrong response from " . $url;
+					if ( $result && ! empty( $result->success ) && ! $result->success && ! empty( $result->message ) ) {
+						$error = $result->message;
+					}
+					Errors::create( [
+						'error'      => $error,
+						'controller' => 'CustomersController',
+						'function'   => 'sendLead'
+					] );
+					return false;
+				}
+			}
+			else{
+				$error = "No response from " . $url;
+				Errors::create( [
+					'error'      => $error,
+					'controller' => 'CustomersController',
+					'function'   => 'sendLead'
+				] );
+				return false;
+			}
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersController',
+				'function' => 'sendLead'
+			]);
+			return false;
+		}
 	}
 }
