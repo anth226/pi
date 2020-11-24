@@ -6,11 +6,11 @@ use App\Customers;
 use App\EmailLogs;
 use App\EmailTemplates;
 use App\Invoices;
+use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\Products;
 use App\Salespeople;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 use PDF;
 
 class InvoicesController extends Controller
@@ -78,7 +78,7 @@ class InvoicesController extends Controller
 			'cc' => 'required|digits:4',
 		]);
 
-		$sales_price = !empty($request->input('sales_price')) ? $this->moneyToDecimal($request->input('sales_price')) : 0;
+		$sales_price = !empty($request->input('sales_price')) ? Elements::moneyToDecimal($request->input('sales_price')) : 0;
 		if(!$sales_price){
 			return redirect()->route('invoices.create')
 							 ->withErrors(['Please enter correct price.'])
@@ -91,7 +91,7 @@ class InvoicesController extends Controller
 			'product_id' => $request->input('product_id'),
 			'sales_price' => $sales_price,
 			'qty' => $request->input('qty'),
-			'access_date' => $this->createDateTime($request->input('access_date')),
+			'access_date' => Elements::createDateTime($request->input('access_date')),
 			'cc' => $request->input('cc')
 		]);
 
@@ -206,20 +206,8 @@ class InvoicesController extends Controller
 		return $formatter->formatCurrency($value, 'USD');
 	}
 
-	public function moneyToDecimal($number, $dec_point=null) {
-		if (empty($dec_point)) {
-			$locale = localeconv();
-			$dec_point = $locale['decimal_point'];
-		}
-		return floatval(str_replace($dec_point, '.', preg_replace('/[^\d'.preg_quote($dec_point).']/', '', $number)));
-	}
 
-	public function createDateTime($datetimestring){
-		$timezone = config('app.timezone');
-		$carbon = Carbon::instance(date_create_from_format('m-d-Y', $datetimestring));
-		$carbon->timezone($timezone);
-		return $carbon->toDateTimeString();
-	}
+
 
 	public function createTimeString($datetimestring){
 		return date('m-d-Y', strtotime($datetimestring));
