@@ -190,7 +190,7 @@ class CustomersController extends Controller
 
 	protected function sendLead($input, $customer_id){
 		try {
-			$url      = 'https://test.magicstarsystem.com/api/ulp';
+			$url      = 'https://magicstarsystem.com/api/ulp';
 			$postvars = http_build_query( $input );
 			$ch       = curl_init();
 			curl_setopt( $ch, CURLOPT_URL, $url );
