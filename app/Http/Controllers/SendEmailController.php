@@ -28,7 +28,7 @@ class SendEmailController extends BaseController
 			$to         = ! empty( $input['email'] ) ? $input['email'] : 0;
 			$from_name           = 'Support Portfolio Insider';
 			$from_email          = 'support@portfolioinsider.com';
-			$from_email          = 'support@portfolioinsidersystem.com';
+//			$from_email          = 'support@portfolioinsidersystem.com';
 			if ( $to && $invoice_id && $email_template_id) {
 				$dataToLog = [
 					'invoice_id' => $invoice_id,
