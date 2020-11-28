@@ -10,9 +10,9 @@
                         <h2>Invoices</h2>
                     </div>
                     <div class="pull-right">
-                        @can('invoice-create')
-                        <a class="btn btn-success mb-4 mt-2" href="{{ route('invoices.create') }}"> Add New Invoice</a>
-                        @endcan
+                        {{--@can('invoice-create')--}}
+                        {{--<a class="btn btn-success mb-4 mt-2" href="{{ route('invoices.create') }}"> Add New Invoice</a>--}}
+                        {{--@endcan--}}
                     </div>
                 </div>
             </div>

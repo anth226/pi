@@ -25,6 +25,7 @@ class EmailSender {
 
 	public function sendEmail(
 					$to,
+					$bcc = '',
 					$from_email,
 					$template = '',
 					$subject = '',
@@ -37,12 +38,12 @@ class EmailSender {
 	){
 		$data = array();
 		$data['name'] = $name;
-		$data['email'] = $to;
+		$data['email'] = $to[0];
 		$data['salesperson'] = $salesperson;
 
 		try {
-			Mail::send( $template, $data, function ( $message ) use ($to, $subject, $from_email, $from_name, $pathToFile, $mime ) {
-				$message->to( $to )->subject( $subject );
+			Mail::send( $template, $data, function ( $message ) use ($to, $bcc, $subject, $from_email, $from_name, $pathToFile, $mime ) {
+				$message->to( $to )->cc($bcc)->subject( $subject );
 				$message->from( $from_email, $from_name );
 				if($pathToFile) {
 					$message->attach( $pathToFile, [ 'mime' => $mime ] );

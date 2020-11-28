@@ -10,15 +10,15 @@
                         <h2> {{ $customer->first_name }} {{ $customer->last_name }}</h2>
                     </div>
                     <div class="pull-right mb-4">
-                        <a class="btn btn-primary mt-2" href="{{ route('customers.index') }}"> All Customers</a>
+                        <a class="btn btn-primary mt-2" href="{{ route('customers.index') }}"> Dashboard</a>
 
-                        @can('customer-edit')
-                            <a class="btn btn-info mt-2" href="{{ route('customers.edit',$customer->id) }}"> Edit</a>
-                        @endcan
+                        {{--@can('customer-edit')--}}
+                            {{--<a class="btn btn-info mt-2" href="{{ route('customers.edit',$customer->id) }}"> Edit</a>--}}
+                        {{--@endcan--}}
 
-                        @can('invoice-edit')
-                            <a class="btn btn-success mt-2" href="{{ route('invoices.create',['customer_id' => $customer->id]) }}"> Create Invoice</a>
-                        @endcan
+                        {{--@can('invoice-edit')--}}
+                            {{--<a class="btn btn-success mt-2" href="{{ route('invoices.create',['customer_id' => $customer->id]) }}"> Create Invoice</a>--}}
+                        {{--@endcan--}}
                     </div>
                 </div>
             </div>
@@ -54,17 +54,17 @@
                                 {{ $customer->created_at }}
                             </small>
                         </div>
-                        <div>
-                            <small>
-                                <strong>Updated at:</strong>
-                                {{ $customer->updated_at }}
-                            </small>
-                        </div>
+                        {{--<div>--}}
+                            {{--<small>--}}
+                                {{--<strong>Updated at:</strong>--}}
+                                {{--{{ $customer->updated_at }}--}}
+                            {{--</small>--}}
+                        {{--</div>--}}
                         @if($dataSentDate)
                             <div>
                                 <small>
                                     <strong>Sent to SMS system at: </strong>
-                                    {{ $customer->updated_at }}
+                                    {{ $dataSentDate }}
                                 </small>
                             </div>
                         @endif

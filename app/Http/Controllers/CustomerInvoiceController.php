@@ -10,6 +10,7 @@ use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\Products;
 use App\Salespeople;
+use App\SecondarySalesPeople;
 use App\SentDataLog;
 use Illuminate\Http\Request;
 use Validator;
@@ -57,7 +58,7 @@ class CustomerInvoiceController extends CustomersController
 			'sales_price' => 'required',
 			'qty' => 'required|numeric|min:1',
 			'access_date' => 'required',
-			'cc' => 'required|digits:4',
+			'cc' => 'required|digits:4'
 		]);
 
 
@@ -96,6 +97,15 @@ class CustomerInvoiceController extends CustomersController
 			$invoice_instance = new InvoicesController();
 			$invoice_instance->generatePDF($invoice->id);
 
+			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
+				foreach ($request->input('second_salespeople_id') as $val){
+					SecondarySalesPeople::create( [
+						'salespeople_id' => $val,
+						'invoice_id'     => $invoice->id
+					] );
+				}
+			}
+
 			$dataToSend = [
 				'first_name' => $request->input('first_name'),
 				'last_name' => $request->input('last_name'),
@@ -106,7 +116,7 @@ class CustomerInvoiceController extends CustomersController
 				'tags' => 'portfolioinsider,portfolio-insider-prime'
 			];
 
-			$this->sendLead($dataToSend, $customer->id);
+//			$this->sendLead($dataToSend, $customer->id);
 
 			return redirect()->route('invoices.show', $invoice->id)
 			                 ->with('success','Invoice created successfully');

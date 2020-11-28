@@ -55,7 +55,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <strong>Email:</strong>
+                        <strong>Email *:</strong>
                         {!! Form::text('email', null, array('placeholder' => 'Email','class' => 'form-control')) !!}
                     </div>
                 </div>

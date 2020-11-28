@@ -32,6 +32,11 @@ class Invoices extends Model
 		return $this->hasOne('App\Salespeople', 'id','salespeople_id')->withTrashed();
 	}
 
+	public function salespeople()
+	{
+		return $this->hasMany('App\SecondarySalesPeople', 'invoice_id');
+	}
+
 	public function product()
 	{
 		return $this->hasOne('App\Products', 'id','product_id')->withTrashed();

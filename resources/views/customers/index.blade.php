@@ -10,12 +10,12 @@
                         @can('invoice-create')
                             <a class="btn btn-success mb-4 mt-2" href="{{ route('customers-invoices.create') }}"> Create User & Email Invoice</a>
                         @endcan
-                        <h2>Customers</h2>
+                        <h2>Dashboard</h2>
                     </div>
                     <div class="pull-right">
-                        @can('customer-create')
+                        {{--@can('customer-create')--}}
                         {{--<a class="btn btn-success mb-4 mt-2 btn-sm" href="{{ route('customers.create') }}"> Add New Customer</a>--}}
-                        @endcan
+                        {{--@endcan--}}
                     </div>
                 </div>
             </div>
@@ -62,18 +62,18 @@
 
                         <td>
 
-                            <a class="btn btn-info mb-1" href="{{ route('customers.show',$user->id) }}">Show</a>
-                            @can('customer-edit')
-                                <a class="btn btn-primary mb-1" href="{{ route('customers.edit',$user->id) }}">Edit</a>
-                            @endcan
-                            @can('invoice-edit')
-                                <a class="btn btn-success mb-1" href="{{ route('invoices.create',['customer_id' => $user->id]) }}">Create Invoice</a>
-                            @endcan
-                            {{--@can('customer-delete')--}}
-                                {{--{!! Form::open(['method' => 'DELETE','route' => ['customers.destroy', $user->id],'style'=>'display:inline']) !!}--}}
-                                {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}--}}
-                                {{--{!! Form::close() !!}--}}
+                            {{--<a class="btn btn-info mb-1" href="{{ route('customers.show',$user->id) }}">Show</a>--}}
+                            {{--@can('customer-edit')--}}
+                                {{--<a class="btn btn-primary mb-1" href="{{ route('customers.edit',$user->id) }}">Edit</a>--}}
                             {{--@endcan--}}
+                            {{--@can('invoice-edit')--}}
+                                {{--<a class="btn btn-success mb-1" href="{{ route('invoices.create',['customer_id' => $user->id]) }}">Create Invoice</a>--}}
+                            {{--@endcan--}}
+                            @can('customer-delete')
+                                {!! Form::open(['method' => 'DELETE','route' => ['customers.destroy', $user->id],'style'=>'display:inline']) !!}
+                                {!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}
+                                {!! Form::close() !!}
+                            @endcan
                         </td>
                     </tr>
                 @endforeach
