@@ -133,26 +133,32 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <strong>Salesperson *:</strong>
-                        {!! Form::select('salespeople_id', $salespeople,[], array('class' => 'form-control')) !!}
+                        <strong>Salesperson for invoice *:</strong>
+                        {!! Form::select('salespeople_id', [null=>'Please Select'] + $salespeople,[], array('class' => 'form-control')) !!}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <strong>Sales Price *:</strong>
-                        {!! Form::text('sales_price', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Sales Price"', 'required="required"')) !!}
+                        <strong>Salespeople:</strong>
+                        {!! Form::select('second_salespeople_id[]', [null=>'Please Select'] + $salespeople,[], array('class' => 'form-control', 'disabled' => 'disabled', 'multiple')) !!}
                     </div>
                 </div>
             </div>
 
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <strong>Sales Price *:</strong>
+                        {!! Form::text('sales_price', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Sales Price"', 'required="required"')) !!}
+                    </div>
+                </div>
+                <div class="col-md-4">
                     <div class="form-group">
                         <strong>Access Date *:</strong>
                         {!! Form::text('access_date', null, array('id="access_date"', 'placeholder' => 'Access Date','class' => 'form-control datetimepicker-input', 'data-toggle="datetimepicker"', 'data-target="#access_date"', 'value="'.date("m-d-Y").'"')) !!}
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <strong>CC *:</strong>
                         {!! Form::number('cc', null, array('placeholder' => 'CC','class' => 'form-control', 'maxlength="4"', 'minlength="4"', 'required="required"')) !!}
@@ -193,7 +199,8 @@
         $(document).ready(function() {
             $("select").select2({
                 width: '100%',
-                placeholder: 'Please select'
+                placeholder: 'Please select',
+                allowClear: true
             });
             $("input[data-type='currency']").on({
                 keyup: function() {
@@ -209,6 +216,27 @@
                 format:'m-d-Y'
             });
             $.datetimepicker.setLocale('en');
+
+            $('select[name="salespeople_id"]').on('change', function(){
+                const s_val = $(this).val();
+                const second_sel = $('select[name="second_salespeople_id[]"]');
+                if(s_val) {
+                    second_sel.prop('disabled', false);
+                    second_sel.find($('option')).prop('disabled', false);
+                    second_sel.find($('option[value="' + s_val + '"]')).prop('disabled', true);
+                }
+                else{
+                    second_sel.val([]).trigger('change');
+                    second_sel.prop('disabled', true);
+                }
+            });
+            $('select[name="second_salespeople_id[]"]').on('change', function(){
+                const s_val = $(this).val();
+                const second_sel = $('select[name="salespeople_id"]');
+                second_sel.prop('disabled', false);
+                second_sel.find($('option')).prop('disabled', false);
+                second_sel.find($('option[value="'+s_val+'"]')).prop('disabled', true);
+            });
 
 
             function formatNumber(n) {

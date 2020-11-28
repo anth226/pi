@@ -37,15 +37,15 @@
 
 
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                @if( Gate::check('invoice-create') || Gate::check('invoice-edit') || Gate::check('invoice-delete') || Gate::check('invoice-list'))
-                                    <a class="dropdown-item" href="/invoices" >
-                                        {{ __('Invoices') }}
-                                    </a>
-                                @endif
+                                {{--@if( Gate::check('invoice-create') || Gate::check('invoice-edit') || Gate::check('invoice-delete') || Gate::check('invoice-list'))--}}
+                                    {{--<a class="dropdown-item" href="/invoices" >--}}
+                                        {{--{{ __('Invoices') }}--}}
+                                    {{--</a>--}}
+                                {{--@endif--}}
 
                                 @if( Gate::check('customer-create') || Gate::check('customer-edit') || Gate::check('customer-delete') || Gate::check('customer-list'))
                                     <a class="dropdown-item" href="/customers" >
-                                        {{ __('Customers') }}
+                                        {{ __('Dashboard') }}
                                     </a>
                                 @endif
 

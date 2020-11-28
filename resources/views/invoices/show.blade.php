@@ -9,22 +9,35 @@
                     <div class="pull-left">
                         <h2> {{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }} [{{ $invoice->invoice_number }}]</h2>
                         <div class="text-muted mb-4">
-                            <small class="details_bgcolor p-2">
-                                <strong>Created at:</strong>
-                                {{ $invoice->created_at }}
-                            </small>
+                            <div  class="details_bgcolor p-2">
+                                <div>
+                                    <small>
+                                        <strong>Created at:</strong>
+                                        {{ $invoice->created_at }}
+                                    </small>
+                                </div>
+                                @if($dataSentDate)
+                                    <div>
+                                        <small>
+                                            <strong>Sent to SMS system at: </strong>
+                                            {{ $dataSentDate }}
+                                        </small>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
+
                     </div>
                     <div class="pull-right mb-4 ">
-                        <a class="btn btn-primary mt-2" href="{{ route('invoices.index') }}"> All Invoices</a>
+                        <a class="btn btn-primary mt-2" href="{{ route('customers.index') }}"> Dashboard</a>
                         {{--@can('invoice-edit')--}}
                             {{--<a class="btn btn-info mt-2" href="{{ route('invoices.edit',$invoice->id) }}">Edit Invoice</a>--}}
                         {{--@endcan--}}
-                        @can('invoice-delete')
-                            {!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline;']) !!}
-                            {!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}
-                            {!! Form::close() !!}
-                        @endcan
+                        {{--@can('invoice-delete')--}}
+                            {{--{!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline;']) !!}--}}
+                            {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}--}}
+                            {{--{!! Form::close() !!}--}}
+                        {{--@endcan--}}
                     </div>
                 </div>
             </div>
@@ -50,6 +63,31 @@
                             {{ $invoice->salespersone->name_for_invoice }}
                         </a>
                     </div>
+                    @php
+                        $salespeople = [];
+                        $salespeople[] = $invoice->salespersone->email;
+                        $bcc = '';
+                    @endphp
+                    @if(count($invoice->salespeople))
+                        @foreach($invoice->salespeople as  $sp)
+                            @php
+                                $salespeople[] = $sp->salespersone->email;
+                            @endphp
+                            <div class="px-2">
+                                <small>
+                                    <strong>Salesperson:</strong>
+                                    <a target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
+                                        {{ $sp->salespersone->name_for_invoice }}
+                                    </a>
+                                </small>
+                            </div>
+                        @endforeach
+                    @endif
+                    @php
+                        if(count($salespeople)){
+                            $bcc = implode(', ', $salespeople);
+                        }
+                    @endphp
                     <div>
                         <strong>Product:</strong>
                         {{ $invoice->product->title }}
@@ -79,6 +117,10 @@
                         <div class="form-group">
                             <strong>Email *:</strong>
                             {!! Form::text('email', $invoice->customer->email, array('placeholder' => 'Email','class' => 'form-control', 'id' => 'email_address')) !!}
+                        </div>
+                        <div class="form-group">
+                            <strong>BCC:</strong>
+                            {!! Form::text('bcc_email', $bcc, array('placeholder' => 'Email','class' => 'form-control', 'id' => 'bcc_email_address')) !!}
                         </div>
                         <button class="btn btn-primary" id="send_email">Send Invoice Email</button>
                         <div class="err_box"></div>
@@ -121,6 +163,7 @@
         $('#send_email').on('click', function(){
             var current_button = $(this);
             var email = $('#email_address').val();
+            var bcc = $('#bcc_email_address').val();
             var invoice_id = $('#invoice_id').val();
             var email_template_id = $('#email_template_id').val();
             var err_box = $('.err_box');
@@ -146,7 +189,8 @@
                         data: {
                             invoice_id: invoice_id,
                             email_template_id: email_template_id,
-                            email: email
+                            email: email,
+                            bcc: bcc
                         },
                         success: function (response) {
                             if (response) {

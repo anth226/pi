@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Customers;
 use App\Errors;
+use App\Invoices;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\SentDataLog;
@@ -183,6 +184,7 @@ class CustomersController extends Controller
 	public function destroy($id)
 	{
 		Customers::where('id',$id)->delete();
+		Invoices::where('customer_id', $id)->delete();
 		return redirect()->route('customers.index')
 		                 ->with('success','Customer deleted successfully');
 	}

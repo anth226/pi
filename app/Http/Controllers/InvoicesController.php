@@ -10,6 +10,8 @@ use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\Products;
 use App\Salespeople;
+use App\SecondarySalesPeople;
+use App\SentDataLog;
 use Illuminate\Http\Request;
 use PDF;
 
@@ -111,6 +113,7 @@ class InvoicesController extends Controller
 		$invoice = Invoices::
 							with('customer')
 		                   ->with('salespersone')
+		                   ->with('salespeople.salespersone')
 		                   ->with('product')
 		                   ->find($id);
 		if($invoice) {
@@ -122,8 +125,13 @@ class InvoicesController extends Controller
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
 			$template = EmailTemplates::getIdsAndFullNames();
+			$sentLog = SentDataLog::where('customer_id', $invoice->customer->id)->orderBy('id', 'desc')->first();
+			$dataSentDate = '';
+			if($sentLog && $sentLog->count() && !empty($sentLog->created_at)){
+				$dataSentDate = $sentLog->created_at;
+			}
 			$logs = EmailLogs::where('invoice_id', $id)->get();
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs') );
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','dataSentDate') );
 		}
 		return abort(404);
 	}
@@ -194,11 +202,10 @@ class InvoicesController extends Controller
 	}
 
 
-	public function generateInvoiceNumber($id){
-		$in_number = '00424-';
+	public function generateInvoiceNumber($id, $prefix = '00425-'){
 		$value = 1025 + $id;
 		$valueWithZeros = $formatted_value = sprintf("%05d", $value);
-		return $in_number.$valueWithZeros;
+		return $prefix.$valueWithZeros;
 	}
 
 	public function moneyFormat($value){
@@ -220,7 +227,7 @@ class InvoicesController extends Controller
 		                   ->with('product')
 		                   ->find($id);
 		if($invoice) {
-			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->id);
+			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->customer->id);
 			$total = $this->moneyFormat( $invoice->sales_price * $invoice->qty );
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
 			$access_date    = $this->createTimeString( $invoice->access_date );
@@ -228,6 +235,7 @@ class InvoicesController extends Controller
 			$phone_number = FormatUsPhoneNumber::nicePhoneNumberFormat($invoice->customer->phone_number, $invoice->customer->formated_phone_number);
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
+			PDF::setOptions(['dpi' => 400]);
 			$pdf = PDF::loadView('pdfviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total' ));
 			$pdf->save($this->pdf_path.$file_name);
 			$invoice->save();
@@ -266,7 +274,7 @@ class InvoicesController extends Controller
 		                   ->with('product')
 		                   ->find($id);
 		if($invoice) {
-			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->id);
+			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->customer->id);
 			$total = $this->moneyFormat( $invoice->sales_price * $invoice->qty );
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
 			$access_date    = $this->createTimeString( $invoice->access_date );
