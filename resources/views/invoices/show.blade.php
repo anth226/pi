@@ -66,7 +66,8 @@
                     @php
                         $salespeople = [];
                         $salespeople[] = $invoice->salespersone->email;
-                        $bcc = '';
+                        $cc = '';
+                        $bcc = 'corporate@portfolioinsider.com';
                     @endphp
                     @if(count($invoice->salespeople))
                         @foreach($invoice->salespeople as  $sp)
@@ -85,7 +86,7 @@
                     @endif
                     @php
                         if(count($salespeople)){
-                            $bcc = implode(', ', $salespeople);
+                            $cc = implode(', ', $salespeople);
                         }
                     @endphp
                     <div>
@@ -117,6 +118,10 @@
                         <div class="form-group">
                             <strong>Email *:</strong>
                             {!! Form::text('email', $invoice->customer->email, array('placeholder' => 'Email','class' => 'form-control', 'id' => 'email_address')) !!}
+                        </div>
+                        <div class="form-group">
+                            <strong>CC:</strong>
+                            {!! Form::text('cc_email', $cc, array('placeholder' => 'Email','class' => 'form-control', 'id' => 'cc_email_address')) !!}
                         </div>
                         <div class="form-group">
                             <strong>BCC:</strong>
@@ -163,6 +168,7 @@
         $('#send_email').on('click', function(){
             var current_button = $(this);
             var email = $('#email_address').val();
+            var cc = $('#cc_email_address').val();
             var bcc = $('#bcc_email_address').val();
             var invoice_id = $('#invoice_id').val();
             var email_template_id = $('#email_template_id').val();
@@ -190,7 +196,8 @@
                             invoice_id: invoice_id,
                             email_template_id: email_template_id,
                             email: email,
-                            bcc: bcc
+                            bcc: bcc,
+                            cc: cc
                         },
                         success: function (response) {
                             if (response) {
