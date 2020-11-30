@@ -116,7 +116,7 @@ class CustomerInvoiceController extends CustomersController
 				'tags' => 'portfolioinsider,portfolio-insider-prime'
 			];
 
-//			$this->sendLead($dataToSend, $customer->id);
+			$this->sendLead($dataToSend, $customer->id);
 
 			return redirect()->route('invoices.show', $invoice->id)
 			                 ->with('success','Invoice created successfully');
