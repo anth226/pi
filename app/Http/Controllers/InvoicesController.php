@@ -172,7 +172,7 @@ class InvoicesController extends Controller
 			'first_name' => 'required|max:120',
 			'last_name' => 'max:120',
 			'name_for_invoice' => 'max:120',
-			'email' => 'email|max:120',
+			'email' => 'required|max:120',
 			'phone_number' => 'max:120|min:10',
 		]);
 

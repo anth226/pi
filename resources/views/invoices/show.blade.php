@@ -98,6 +98,10 @@
                         {{ $invoice->qty }}
                     </div>
                     <div>
+                        <strong>CC last 4 digits:</strong>
+                        {{ $invoice->cc }}
+                    </div>
+                    <div>
                         <strong>Sales Price:</strong>
                         {{ $formated_price }}
                     </div>
@@ -161,8 +165,9 @@
 @section('script')
     <script>
         function isEmail(email) {
-            var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,6})+$/;
-            return regex.test(email);
+            // var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,6})+$/;
+            // return regex.test(email);
+            return true;
         }
 
         $('#send_email').on('click', function(){
