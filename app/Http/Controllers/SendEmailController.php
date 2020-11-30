@@ -27,6 +27,7 @@ class SendEmailController extends BaseController
 			$email_template_id = ! empty( $input['email_template_id'] ) ? $input['email_template_id'] : 0;
 			$to         = ! empty( $input['email'] ) ? $input['email'] : 0;
 			$bcc        = ! empty( $input['bcc'] ) ? $input['bcc'] : 0;
+			$cc        = ! empty( $input['cc'] ) ? $input['cc'] : 0;
 			$from_name           = 'Support Portfolio Insider';
 			$from_email          = 'support@portfolioinsider.com';
 //			$from_email          = 'support@portfolioinsidersystem.com';
@@ -34,6 +35,8 @@ class SendEmailController extends BaseController
 				$to = array_map('trim', explode(',', $to));
 				$bcc = array_map('trim', explode(',', $bcc));
 				$bcc = array_unique($bcc);
+				$cc = array_map('trim', explode(',', $cc));
+				$cc = array_unique($cc);
 				if(count($to)) {
 					foreach ($to as $t) {
 						$dataToLog[] = [
@@ -48,6 +51,18 @@ class SendEmailController extends BaseController
 				}
 				if(count($bcc)) {
 					foreach ($bcc as $t) {
+						$dataToLog[] = [
+							'invoice_id'        => $invoice_id,
+							'email_template_id' => $email_template_id,
+							'from'              => $from_email,
+							'to'                => $t,
+							'created_at'        => date('Y-m-d H:i:s'),
+							'updated_at'        => date('Y-m-d H:i:s')
+						];
+					}
+				}
+				if(count($cc)) {
+					foreach ($cc as $t) {
 						$dataToLog[] = [
 							'invoice_id'        => $invoice_id,
 							'email_template_id' => $email_template_id,
@@ -73,7 +88,7 @@ class SendEmailController extends BaseController
 							$subject             = $customer_first_name . ', a warm welcome! (Here\'s your access)';
 							$pdfFilename         = $invoiceController->generateFileName( $invoice );
 							$path_to_file        = $invoiceController->pdf_path . $pdfFilename;
-							$res                 = $sender->sendEmail( $to, $bcc, $from_email, $template, $subject, $from_name, $customer_first_name, $salesperson, $path_to_file );
+							$res                 = $sender->sendEmail( $to, $bcc, $cc, $from_email, $template, $subject, $from_name, $customer_first_name, $salesperson, $path_to_file );
 							if ( $res && $res['success'] ) {
 								EmailLogs::insert( $dataToLog );
 								$logs = EmailLogs::where( 'invoice_id', $invoice_id )->get();
