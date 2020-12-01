@@ -13,6 +13,7 @@ use App\Salespeople;
 use App\SecondarySalesPeople;
 use App\SentDataLog;
 use Illuminate\Http\Request;
+use Stripe\StripeClient;
 use Validator;
 
 
@@ -25,6 +26,7 @@ class CustomerInvoiceController extends CustomersController
 		$this->middleware('permission:customer-create,permission:invoices-create', ['only' => ['create','store']]);
 		$this->middleware('permission:customer-edit', ['only' => ['edit','update']]);
 		$this->middleware('permission:customer-delete', ['only' => ['destroy']]);
+		$this->stripe = new StripeClient(config('stripe.stripeKey'));
 	}
 
 	public function create()
@@ -61,6 +63,47 @@ class CustomerInvoiceController extends CustomersController
 			'cc' => 'required|digits:4'
 		]);
 
+		$sales_price = !empty($request->input('sales_price')) ? Elements::moneyToDecimal($request->input('sales_price')) : 0;
+		if(!$sales_price){
+			return redirect()->route('customers-invoices.create')
+			                 ->withErrors(['Please enter correct price.'])
+			                 ->withInput();
+		}
+
+		$dataToSend = [
+			'first_name' => $request->input('first_name'),
+			'last_name' => $request->input('last_name'),
+			'full_name' => $request->input('first_name').' '.$request->input('last_name'),
+			'email' => $request->input('email'),
+			'phone' => $request->input('phone_number'),
+			'source' => 'portfolioinsider',
+			'tags' => 'portfolioinsider,portfolio-insider-prime'
+		];
+
+		$stripe_res = $this->sendDataToStripe($dataToSend);
+		if(!$stripe_res){
+			return redirect()->route('customers-invoices.create')
+			                 ->withErrors(['Can\'t send data to stripe'])
+			                 ->withInput();
+		}
+		else{
+			if(!$stripe_res['success']){
+				$message = 'Error! Can\'t send data to stripe';
+				if(!empty($stripe_res['message'])){
+					$message = $stripe_res['message'];
+				}
+				return redirect()->route('customers-invoices.create')
+				                 ->withErrors([$message])
+				                 ->withInput();
+			}
+			else{
+				if(empty($stripe_res['data']) || empty($stripe_res['data']['id']) || empty($stripe_res['data']['customer'])){
+					return redirect()->route('customers-invoices.create')
+					                 ->withErrors(['Unknown error! Can\'t send data to stripe'])
+					                 ->withInput();
+				}
+			}
+		}
 
 		$customer = Customers::create([
 			'first_name' => $request->input('first_name'),
@@ -73,15 +116,12 @@ class CustomerInvoiceController extends CustomersController
 			'email' => $request->input('email'),
 			'phone_number' => $request->input('phone_number'),
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
+			'stripe_customer_id' => $stripe_res['data']['customer'],
+			'stripe_customer_subscr_id' => $stripe_res['data']['id']
 		]);
 
 
-		$sales_price = !empty($request->input('sales_price')) ? Elements::moneyToDecimal($request->input('sales_price')) : 0;
-		if(!$sales_price){
-			return redirect()->route('customers-invoices.create')
-			                 ->withErrors(['Please enter correct price.'])
-			                 ->withInput();
-		}
+
 
 		if($customer && !empty($customer->id)){
 			$invoice = Invoices::create([
@@ -106,18 +146,8 @@ class CustomerInvoiceController extends CustomersController
 				}
 			}
 
-			$dataToSend = [
-				'first_name' => $request->input('first_name'),
-				'last_name' => $request->input('last_name'),
-				'full_name' => $request->input('first_name').' '.$request->input('last_name'),
-				'email' => $request->input('email'),
-				'phone' => $request->input('phone_number'),
-				'source' => 'portfolioinsider',
-				'tags' => 'portfolioinsider,portfolio-insider-prime'
-			];
-
 			if(config('app.env') == 'production') {
-				$this->sendLead( $dataToSend, $customer->id );
+				$this->sendDataToSMSSystem( $dataToSend, $customer->id );
 			}
 
 			return redirect()->route('invoices.show', $invoice->id)
