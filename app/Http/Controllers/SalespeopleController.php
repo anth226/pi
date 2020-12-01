@@ -128,6 +128,7 @@ class SalespeopleController extends Controller
 		$salespeople = Salespeople::find($id);
 		$salespeople->first_name = $request->input('first_name');
 		$salespeople->last_name =  $last_name;
+		$salespeople->email = !empty($request->input('email')) ? $request->input('email') : '';
 		$salespeople->name_for_invoice =  !empty($request->input('name_for_invoice')) ? $request->input('name_for_invoice') : $request->input('first_name'). ' ' .$last_name;
 		$salespeople->phone_number = !empty($request->input('phone_number')) ? $request->input('phone_number') : '';
 		$salespeople->formated_phone_number = !empty($request->input('phone_number')) ? FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')) : '';
