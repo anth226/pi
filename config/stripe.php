@@ -1,5 +1,5 @@
 <?php
-if(App::environment('local')){
+if(config('app.env') == 'local'){
 	return [
 		'stripeKey'      => env( 'STRIPE_TEST_API_SECRET_KEY' ) ?: '',
 		'endpointSecret' => env( 'STRIPE_TEST_ENDPOINT_SECRET' ) ?: '',
