@@ -15,7 +15,6 @@ class AddRepPaymentsAndCustIdToCustomersTable extends Migration
     {
         Schema::table('customers', function (Blueprint $table) {
             $table->string('stripe_customer_id')->nullable();
-            $table->string('stripe_customer_subscr_id')->nullable();
             $table->unsignedTinyInteger('rep_payment_status')->default(0)->index();
         });
     }
@@ -29,7 +28,6 @@ class AddRepPaymentsAndCustIdToCustomersTable extends Migration
     {
         Schema::table('customers', function (Blueprint $table) {
             $table->dropColumn('stripe_customer_id');
-            $table->dropColumn('stripe_customer_subscr_id');
             $table->dropColumn('rep_payment_status');
         });
     }
