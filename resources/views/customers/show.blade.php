@@ -72,11 +72,9 @@
                 </div>
                 <div class="col-md-12 mt-2">
                     <div class="form-group">
-                        @if(count($customer->invoices))
+                        @if(!empty($customer->invoices))
                             <strong>Invoices:</strong>
-                            @foreach($customer->invoices as $v)
-                                <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$v->id}}"><span class="badge badge-success">{{ $v->invoice_number }}</span></a>
-                            @endforeach
+                            <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$customer->invoices->id}}"><span class="badge badge-success">{{ $customer->invoices->invoice_number }}</span></a>
                         @endif
                     </div>
                 </div>

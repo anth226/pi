@@ -32,7 +32,8 @@ class CustomersController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		$customers = Customers::with('invoices')->orderBy('id','DESC')->paginate(10);
+		$customers = Customers::with('invoices')->with('invoices.salespersone')->with('invoices.salespeople.salespersone')->orderBy('customers.id','DESC')->paginate(10);
+//		dd($customers->toArray());
 		return view('customers.index',compact('customers'))
 			->with('i', ($request->input('page', 1) - 1) * 10);
 	}

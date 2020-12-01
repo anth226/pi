@@ -33,6 +33,6 @@ class Customers extends Model
 	}
 
 	public function invoices()	{
-		return $this->hasMany('App\Invoices', 'customer_id','id');
+		return $this->hasOne('App\Invoices', 'customer_id','id');
 	}
 }
