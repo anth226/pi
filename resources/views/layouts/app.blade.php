@@ -38,7 +38,7 @@
 
     {{--<link href="{{ asset('css/jquery.fancybox.min.css') }}" rel="stylesheet">--}}
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/style.css') }}?ver=1.1" rel="stylesheet">
     @yield('style')
 </head>
 <body>
