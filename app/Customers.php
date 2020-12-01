@@ -20,7 +20,10 @@ class Customers extends Model
 		'zip',
 		'state',
 		'email',
-		'phone_number'
+		'phone_number',
+		'stripe_customer_id',
+		'stripe_customer_subscr_id',
+		'rep_payment_status' // 1 - 'Paid Sales Rep', 2 - 'Refund'
 	];
 
 	public static function getIdsAndFullNames(){

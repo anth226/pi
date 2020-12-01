@@ -19,16 +19,13 @@ class TestController extends Controller
 	public function index()
 	{
 		$c = new CustomersController();
-		$client = $c->createStripeCustomer();
-		echo "<pre>";
-		var_export($client->id);
-		echo "</pre>";
-		if($client && !empty($client->id)){
-			$subscription = $c->createStripeSubscription($client->id);
-			echo "<pre>";
-			var_export($subscription->id);
-			echo "</pre>";
-		}
+		$res = $c->sendDataToStripe([
+			'full_name' => 'test tettt',
+			'email' => 'hhahkhgkkjgjk@ttt.vv',
+			'phone' => '54646546465'
+		]);
+		dd($res);
+
 
 	}
 

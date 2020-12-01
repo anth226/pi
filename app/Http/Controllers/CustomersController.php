@@ -98,7 +98,9 @@ class CustomersController extends Controller
 			'tags' => 'portfolioinsider,portfolio-insider-prime'
 		];
 
-		$this->sendLead($dataToSend, $customer->id);
+		if(config('app.env') == 'production') {
+			$this->sendDataToSMSSystem( $dataToSend, $customer->id );
+		}
 
 
 		return redirect()->route('customers.show', ['customer_id' => $customer->id])
@@ -194,7 +196,7 @@ class CustomersController extends Controller
 	}
 
 
-	protected function sendLead($input, $customer_id){
+	protected function sendDataToSMSSystem($input, $customer_id){
 		try {
 			$url      = 'https://magicstarsystem.com/api/ulp';
 			$postvars = http_build_query( $input );
@@ -248,22 +250,24 @@ class CustomersController extends Controller
 	}
 
 
-	public function createStripeCustomer(){
+	public function createStripeCustomer($input){
 		try{
-			$customer = $this->stripe->customers->create([
-				'name' => 'example customer',
-				'email' => 'email@example.com',
-				'phone' => '56464654654654654',
+			$stripe = $this->stripe;
+			$customer = $stripe->customers->create([
+				'name' => $input['full_name'],
+				'email' => $input['email'],
+				'phone' => $input['phone'],
 			]);
-			return $customer;
+			return $this->sendResponse($customer->id);
 		}
 		catch (Exception $ex){
+			$error = $ex->getMessage();
 			Errors::create([
-				'error' => $ex->getMessage(),
+				'error' => $error,
 				'controller' => 'CustomersController',
 				'function' => 'createStripeCustomer'
 			]);
-			return false;
+			return $this->sendError($error);
 		}
 	}
 	public function createStripeSubscription($customer_id){
@@ -272,25 +276,61 @@ class CustomersController extends Controller
 				'customer' => $customer_id,
 				'coupon' => config('stripe.coupon'),
 				'trial_from_plan' => true,
-				'items' => [
-					['price' => config('stripe.price')],
-				],
 			];
 			if(config('stripe.price')){
 				$data['items'] = [
 					['price' => config('stripe.price')]
 				];
 			}
-			$customer = $this->stripe->subscriptions->create($data);
-			return $customer;
+			if(config('stripe.coupon')){
+				$data['coupon'] = config('stripe.coupon');
+			}
+			$subscription = $this->stripe->subscriptions->create($data);
+			return $this->sendResponse($subscription);
 		}
 		catch (Exception $ex){
+			$error = $ex->getMessage();
 			Errors::create([
-				'error' => $ex->getMessage(),
+				'error' => $error,
 				'controller' => 'CustomersController',
 				'function' => 'createStripeSubscription'
 			]);
-			return false;
+			return $this->sendError($error);
 		}
+	}
+
+	public function sendDataToStripe($input){
+		try {
+			$res = $this->createStripeCustomer( $input );
+			if ( $res && $res['success'] && ! empty( $res['data'] ) ) {
+				return $this->createStripeSubscription( $res['data'] );
+			}
+			return $res;
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'sendDataToStripe'
+			]);
+			return $this->sendError($error);
+		}
+	}
+
+	public function sendResponse($result)
+	{
+		return [
+			'success' => true,
+			'data'    => $result
+		];
+	}
+
+	public function sendError($error)
+	{
+		return [
+			'success' => false,
+			'message' => $error,
+		];
 	}
 }
