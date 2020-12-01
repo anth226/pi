@@ -30,37 +30,45 @@
 
             <table class="table table-responsive">
                 <tr>
-                    <th>Id</th>
+                    {{--<th>Id</th>--}}
+                    <th>Date</th>
                     <th>Name</th>
-                    <th>Details</th>
-                    <th>Invoices</th>
+                    <th>Amount</th>
+                    <th>Salesperson</th>
+                    <th>Email</th>
+                    <th>Phone</th>
                     <th></th>
                 </tr>
-                @php
-                    use App\KmClasses\Sms\FormatUsPhoneNumber;
-                @endphp
+
                 @foreach ($customers as $key => $user)
                     <tr>
-                        <td>{{ $user->id }}</td>
-                        <td>{{ $user->first_name }} {{ $user->last_name }}</td>
+                        {{--<td>{{ $user->id }}</td>--}}
+                        <td>{{ date('M d y', strtotime($user->created_at)) }}</td>
+                        <td><a href="/customers/{{ $user->id }}" target="_blank">{{ $user->first_name }} {{ $user->last_name }}</a></td>
                         <td>
-                            <div class="card">
-                                <div class="card-body p-2">
-
-                                        <div>{{ $user->email }}</div>
-                                        <div>@php echo FormatUsPhoneNumber::nicePhoneNumberFormat($user->phone_number, $user->formated_phone_number); @endphp</div>
-                                        <div>{{ $user->address_1 }} {{ $user->address_2 }}, {{ $user->city }}, {{ $user->state }}, {{ $user->zip }}</div>
-
-                                </div>
-                            </div>
-
+                            @php
+                            $invoices_obj =  new \App\Http\Controllers\InvoicesController();
+                            if(!empty($user->invoices) && !empty($user->invoices->sales_price)){
+                                echo $invoices_obj->moneyFormat($user->invoices->sales_price);
+                            }
+                            @endphp
                         </td>
                         <td>
+                            @if(!empty($user->invoices) && !empty($user->invoices->salespersone))
+                                <div><a href="/salespeople/{{ $user->invoices->salespersone->id }}" target="_blank" title="{{ $user->invoices->salespersone->first_name }} {{ $user->invoices->salespersone->last_name }}">{{ $user->invoices->salespersone->name_for_invoice }}</a></div>
+                            @endif
+                            @if(!empty($user->invoices) && !empty($user->invoices->salespeople))
+                                @foreach($user->invoices->salespeople as $p)
+                                        <div style="line-height: 1.1"><a href="/salespeople/{{ $p->salespersone->id }}" target="_blank" title="{{ $p->salespersone->first_name }} {{ $p->salespersone->last_name }}"><small>{{ $p->salespersone->name_for_invoice }}</small></a></div>
+                                @endforeach
+                            @endif
+                        </td>
+                        <td>{{ $user->email }}</td>
+                        <td>@php echo \App\KmClasses\Sms\FormatUsPhoneNumber::nicePhoneNumberFormat($user->phone_number, $user->formated_phone_number); @endphp</td>
+                        <td>
                             <div style="max-width: 300px;">
-                                @if(count($user->invoices))
-                                    @foreach($user->invoices as $v)
-                                        <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$v->id}}"><span class="badge badge-success">{{ $v->invoice_number }}</span></a>
-                                    @endforeach
+                                @if(!empty($user->invoices) && !empty($user->invoices->id))
+                                        <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$user->invoices->id}}"><span class="badge badge-success">{{ $user->invoices->invoice_number }}</span></a>
                                 @endif
                             </div>
                         </td>
@@ -74,11 +82,11 @@
                             {{--@can('invoice-edit')--}}
                                 {{--<a class="btn btn-success mb-1" href="{{ route('invoices.create',['customer_id' => $user->id]) }}">Create Invoice</a>--}}
                             {{--@endcan--}}
-                            @can('customer-delete')
-                                {!! Form::open(['method' => 'DELETE','route' => ['customers.destroy', $user->id],'style'=>'display:inline']) !!}
-                                {!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}
-                                {!! Form::close() !!}
-                            @endcan
+                            {{--@can('customer-delete')--}}
+                                {{--{!! Form::open(['method' => 'DELETE','route' => ['customers.destroy', $user->id],'style'=>'display:inline']) !!}--}}
+                                {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mb-1']) !!}--}}
+                                {{--{!! Form::close() !!}--}}
+                            {{--@endcan--}}
                         </td>
                     </tr>
                 @endforeach

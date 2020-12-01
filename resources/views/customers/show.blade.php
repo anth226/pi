@@ -32,7 +32,7 @@
                     </div>
                     <div>
                         <strong>Address:</strong>
-                        {{ $customer->address_1 }} {{ $customer->address_2 }}, {{ $customer->address_2 }}, {{ $customer->city }}, {{ $customer->state }}, {{ $customer->zip }}
+                        {{ $customer->address_1 }} {{ $customer->address_2 }}, {{ $customer->city }}, {{ $customer->state }}, {{ $customer->zip }}
                     </div>
                     <div>
                         <strong>Email:</strong>
@@ -72,11 +72,9 @@
                 </div>
                 <div class="col-md-12 mt-2">
                     <div class="form-group">
-                        @if(count($customer->invoices))
+                        @if(!empty($customer->invoices))
                             <strong>Invoices:</strong>
-                            @foreach($customer->invoices as $v)
-                                <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$v->id}}"><span class="badge badge-success">{{ $v->invoice_number }}</span></a>
-                            @endforeach
+                            <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$customer->invoices->id}}"><span class="badge badge-success">{{ $customer->invoices->invoice_number }}</span></a>
                         @endif
                     </div>
                 </div>
