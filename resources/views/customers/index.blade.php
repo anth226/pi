@@ -44,11 +44,16 @@
                         <td>{{ $user->id }}</td>
                         <td>{{ $user->first_name }} {{ $user->last_name }}</td>
                         <td>
-                            <small>
-                                <div>{{ $user->email }}</div>
-                                <div>@php echo FormatUsPhoneNumber::nicePhoneNumberFormat($user->phone_number, $user->formated_phone_number); @endphp</div>
-                                <div>{{ $user->address_1 }} {{ $user->address_2 }}, {{ $user->city }}, {{ $user->state }}, {{ $user->zip }}</div>
-                            </small>
+                            <div class="card">
+                                <div class="card-body p-2">
+
+                                        <div>{{ $user->email }}</div>
+                                        <div>@php echo FormatUsPhoneNumber::nicePhoneNumberFormat($user->phone_number, $user->formated_phone_number); @endphp</div>
+                                        <div>{{ $user->address_1 }} {{ $user->address_2 }}, {{ $user->city }}, {{ $user->state }}, {{ $user->zip }}</div>
+
+                                </div>
+                            </div>
+
                         </td>
                         <td>
                             <div style="max-width: 300px;">

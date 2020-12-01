@@ -37,40 +37,56 @@ class SendEmailController extends BaseController
 				$bcc = array_unique($bcc);
 				$cc = array_map('trim', explode(',', $cc));
 				$cc = array_unique($cc);
+
 				if(count($to)) {
 					foreach ($to as $t) {
-						$dataToLog[] = [
-							'invoice_id'        => $invoice_id,
-							'email_template_id' => $email_template_id,
-							'from'              => $from_email,
-							'to'                => $t,
-							'created_at'        => date('Y-m-d H:i:s'),
-							'updated_at'        => date('Y-m-d H:i:s')
-						];
+						if($this->validateEMAIL($t)) {
+							$dataToLog[] = [
+								'invoice_id'        => $invoice_id,
+								'email_template_id' => $email_template_id,
+								'from'              => $from_email,
+								'to'                => $t,
+								'created_at'        => date( 'Y-m-d H:i:s' ),
+								'updated_at'        => date( 'Y-m-d H:i:s' )
+							];
+						}
+						else{
+							return $this->sendError( $t." is not valid address. please fix and try again." );
+						}
 					}
 				}
 				if(count($bcc)) {
 					foreach ($bcc as $t) {
-						$dataToLog[] = [
-							'invoice_id'        => $invoice_id,
-							'email_template_id' => $email_template_id,
-							'from'              => $from_email,
-							'to'                => $t,
-							'created_at'        => date('Y-m-d H:i:s'),
-							'updated_at'        => date('Y-m-d H:i:s')
-						];
+						if($this->validateEMAIL($t)) {
+							$dataToLog[] = [
+								'invoice_id'        => $invoice_id,
+								'email_template_id' => $email_template_id,
+								'from'              => $from_email,
+								'to'                => $t,
+								'created_at'        => date( 'Y-m-d H:i:s' ),
+								'updated_at'        => date( 'Y-m-d H:i:s' )
+							];
+						}
+						else{
+							return $this->sendError( $t." is not valid address. please fix and try again." );
+						}
 					}
 				}
 				if(count($cc)) {
-					foreach ($cc as $t) {
-						$dataToLog[] = [
-							'invoice_id'        => $invoice_id,
-							'email_template_id' => $email_template_id,
-							'from'              => $from_email,
-							'to'                => $t,
-							'created_at'        => date('Y-m-d H:i:s'),
-							'updated_at'        => date('Y-m-d H:i:s')
-						];
+					foreach ( $cc as $t ) {
+						if($this->validateEMAIL($t)) {
+							$dataToLog[] = [
+								'invoice_id'        => $invoice_id,
+								'email_template_id' => $email_template_id,
+								'from'              => $from_email,
+								'to'                => $t,
+								'created_at'        => date( 'Y-m-d H:i:s' ),
+								'updated_at'        => date( 'Y-m-d H:i:s' )
+							];
+						}
+						else{
+							return $this->sendError( $t." is not valid address. please fix and try again." );
+						}
 					}
 				}
 				$invoice = Invoices::with('customer')->with('salespersone')
@@ -131,6 +147,11 @@ class SendEmailController extends BaseController
 	}
 
 
-
+		public function validateEMAIL($email) {
+			if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+				return true;
+			}
+			return false;
+		}
 
 }
