@@ -12,6 +12,7 @@ use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
 use App\SentDataLog;
+use App\StripeData;
 use Illuminate\Http\Request;
 use Stripe\StripeClient;
 use Validator;
@@ -117,7 +118,13 @@ class CustomerInvoiceController extends CustomersController
 			'phone_number' => $request->input('phone_number'),
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
 			'stripe_customer_id' => $stripe_res['data']['customer'],
-			'stripe_customer_subscr_id' => $stripe_res['data']['id']
+		]);
+
+		//saving data to stripedata
+		$stripeData = StripeData::create([
+			'stripe_customer_id' => $stripe_res['data']['customer'],
+			'stripe_subs_id' => $stripe_res['data']['id'],
+			'customer_id' => $customer->id
 		]);
 
 
@@ -136,6 +143,9 @@ class CustomerInvoiceController extends CustomersController
 
 			$invoice_instance = new InvoicesController();
 			$invoice_instance->generatePDF($invoice->id);
+
+			// updating stripedata record
+			StripeData::find($stripeData->id)->update(['invoice_id' => $invoice->id]);
 
 			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
 				foreach ($request->input('second_salespeople_id') as $val){

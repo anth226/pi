@@ -25,8 +25,6 @@ class TestController extends Controller
 			'phone' => '54646546465'
 		]);
 		dd($res);
-
-
 	}
 
 }
