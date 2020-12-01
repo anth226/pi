@@ -9,12 +9,14 @@ use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\SentDataLog;
 use Illuminate\Http\Request;
+use Stripe\StripeClient;
 use Validator;
 use Exception;
 
 
 class CustomersController extends Controller
 {
+	public $stripe;
 	function __construct()
 	{
 		$this->middleware(['auth','verified']);
@@ -22,6 +24,7 @@ class CustomersController extends Controller
 		$this->middleware('permission:customer-create', ['only' => ['create','store']]);
 		$this->middleware('permission:customer-edit', ['only' => ['edit','update']]);
 		$this->middleware('permission:customer-delete', ['only' => ['destroy']]);
+		$this->stripe = new StripeClient(config('stripe.stripeKey'));
 	}
 
 
@@ -245,4 +248,49 @@ class CustomersController extends Controller
 	}
 
 
+	public function createStripeCustomer(){
+		try{
+			$customer = $this->stripe->customers->create([
+				'name' => 'example customer',
+				'email' => 'email@example.com',
+				'phone' => '56464654654654654',
+			]);
+			return $customer;
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersController',
+				'function' => 'createStripeCustomer'
+			]);
+			return false;
+		}
+	}
+	public function createStripeSubscription($customer_id){
+		try{
+			$data = [
+				'customer' => $customer_id,
+				'coupon' => config('stripe.coupon'),
+				'trial_from_plan' => true,
+				'items' => [
+					['price' => config('stripe.price')],
+				],
+			];
+			if(config('stripe.price')){
+				$data['items'] = [
+					['price' => config('stripe.price')]
+				];
+			}
+			$customer = $this->stripe->subscriptions->create($data);
+			return $customer;
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersController',
+				'function' => 'createStripeSubscription'
+			]);
+			return false;
+		}
+	}
 }

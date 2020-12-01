@@ -1,5 +1,5 @@
 <?php
-if(App::environment('local')){
+if(config('app.env') == 'local'){
 	return [
 		'basePath' => env( 'KLAVIYO_TEST_BASEPATH' ) ?: '',
 		'apiKey'   => env( 'KLAVIYO_TEST_API_KEY' ) ?: '',

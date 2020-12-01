@@ -14,7 +14,7 @@ use App\SecondarySalesPeople;
 use App\SentDataLog;
 use Illuminate\Http\Request;
 use Validator;
-use Exception;
+
 
 class CustomerInvoiceController extends CustomersController
 {
@@ -116,7 +116,9 @@ class CustomerInvoiceController extends CustomersController
 				'tags' => 'portfolioinsider,portfolio-insider-prime'
 			];
 
-			$this->sendLead($dataToSend, $customer->id);
+			if(config('app.env') == 'production') {
+				$this->sendLead( $dataToSend, $customer->id );
+			}
 
 			return redirect()->route('invoices.show', $invoice->id)
 			                 ->with('success','Invoice created successfully');
