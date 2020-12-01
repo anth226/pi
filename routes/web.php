@@ -13,7 +13,7 @@
 
 Route::get('/', function () {
 	if(Auth::check()){
-		return redirect('/customers');
+		return redirect('/dashboard');
 	}
 	else {
 		return view( 'welcome' );
@@ -41,6 +41,7 @@ Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['
 Route::resource('/salespeople','SalespeopleController');
 Route::resource('/invoices','InvoicesController', ['only' => ['show']]);
 
+Route::get('/dashboard', 'CustomersController@index');
 
 
 

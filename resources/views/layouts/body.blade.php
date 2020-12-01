@@ -44,7 +44,7 @@
                                 {{--@endif--}}
 
                                 @if( Gate::check('customer-create') || Gate::check('customer-edit') || Gate::check('customer-delete') || Gate::check('customer-list'))
-                                    <a class="dropdown-item" href="/customers" >
+                                    <a class="dropdown-item" href="/dashboard" >
                                         {{ __('Dashboard') }}
                                     </a>
                                 @endif
