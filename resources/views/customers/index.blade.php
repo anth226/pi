@@ -30,7 +30,7 @@
 
             <table class="table table-responsive">
                 <tr>
-                    <th>Id</th>
+                    {{--<th>Id</th>--}}
                     <th>Name</th>
                     <th>Amount</th>
                     <th>Salesperson</th>
@@ -41,7 +41,7 @@
 
                 @foreach ($customers as $key => $user)
                     <tr>
-                        <td>{{ $user->id }}</td>
+                        {{--<td>{{ $user->id }}</td>--}}
                         <td><a href="/customers/{{ $user->id }}" target="_blank">{{ $user->first_name }} {{ $user->last_name }}</a></td>
                         <td>
                             @php
