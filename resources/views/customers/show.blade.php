@@ -32,7 +32,7 @@
                     </div>
                     <div>
                         <strong>Address:</strong>
-                        {{ $customer->address_1 }} {{ $customer->address_2 }}, {{ $customer->address_2 }}, {{ $customer->city }}, {{ $customer->state }}, {{ $customer->zip }}
+                        {{ $customer->address_1 }} {{ $customer->address_2 }}, {{ $customer->city }}, {{ $customer->state }}, {{ $customer->zip }}
                     </div>
                     <div>
                         <strong>Email:</strong>
