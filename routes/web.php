@@ -13,7 +13,7 @@
 
 Route::get('/', function () {
 	if(Auth::check()){
-		return redirect('/customers');
+		return redirect('/dashboard');
 	}
 	else {
 		return view( 'welcome' );
@@ -36,11 +36,12 @@ Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail');
 
 Route::resource('/roles','RoleController');
 Route::resource('/users','UserController');
-Route::resource('/customers','CustomersController', ['only' => ['show', 'index', 'destroy']]);
+Route::resource('/customers','CustomersController', ['only' => ['show', 'index']]);
 Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['store', 'create']]);
 Route::resource('/salespeople','SalespeopleController');
 Route::resource('/invoices','InvoicesController', ['only' => ['show']]);
 
+Route::get('/dashboard', 'CustomersController@index');
 
 
 
