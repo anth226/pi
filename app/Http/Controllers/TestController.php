@@ -18,13 +18,14 @@ class TestController extends Controller
 
 	public function index()
 	{
-		$c = new CustomersController();
-		$res = $c->sendDataToStripe([
-			'full_name' => 'test tettt',
-			'email' => 'hhahkhgkkjgjk@ttt.vv',
-			'phone' => '54646546465'
-		]);
-		dd($res);
+//		$c = new CustomersController();
+//		$res = $c->sendDataToStripe([
+//			'full_name' => 'test tettt',
+//			'email' => 'hhahkhgkkjgjk@ttt.vv',
+//			'phone' => '54646546465'
+//		]);
+//		dd($res);
+		dd(config('firebase'));
 	}
 
 }
