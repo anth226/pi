@@ -24,7 +24,7 @@ class CustomerInvoiceController extends CustomersController
 	{
 		$this->middleware(['auth','verified']);
 		$this->middleware('permission:customer-list|customer-create|customer-edit|customer-delete', ['only' => ['index','show']]);
-		$this->middleware('permission:customer-create,permission:invoices-create', ['only' => ['create','store']]);
+		$this->middleware('permission:customer-create|invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:customer-edit', ['only' => ['edit','update']]);
 		$this->middleware('permission:customer-delete', ['only' => ['destroy']]);
 		$this->stripe = new StripeClient(config('stripe.stripeKey'));
