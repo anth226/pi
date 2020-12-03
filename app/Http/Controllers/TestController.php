@@ -18,12 +18,6 @@ class TestController extends Controller
 
 	public function index()
 	{
-//		phpinfo();
-		echo extension_loaded('grpc') ? 'yes' : 'no';
-//		echo "<pre>";
-//		var_export(get_loaded_extensions());
-//		echo "</pre>";
-//		die;
 		$c = new CustomersController();
 		$userProperties = [
 			'email'         => 'user10@example.com',
@@ -43,6 +37,7 @@ class TestController extends Controller
 //		]);
 //		dd($res);
 //		dd(config('firebase'));
+
 	}
 
 }
