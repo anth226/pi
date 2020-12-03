@@ -25,18 +25,22 @@ class SendEmailController extends BaseController
 			$input      = $request->all();
 			$invoice_id = ! empty( $input['invoice_id'] ) ? $input['invoice_id'] : 0;
 			$email_template_id = ! empty( $input['email_template_id'] ) ? $input['email_template_id'] : 0;
-			$to         = ! empty( $input['email'] ) ? $input['email'] : 0;
-			$bcc        = ! empty( $input['bcc'] ) ? $input['bcc'] : 0;
-			$cc        = ! empty( $input['cc'] ) ? $input['cc'] : 0;
+			$to         = ! empty( $input['email'] ) ? $input['email'] : '';
+			$bcc        = ! empty( $input['bcc'] ) ? $input['bcc'] : '';
+			$cc        = ! empty( $input['cc'] ) ? $input['cc'] : '';
 			$from_name           = 'Support Portfolio Insider';
 			$from_email          = 'support@portfolioinsider.com';
 //			$from_email          = 'support@portfolioinsidersystem.com';
 			if ( $to && $invoice_id && $email_template_id) {
 				$to = array_map('trim', explode(',', $to));
-				$bcc = array_map('trim', explode(',', $bcc));
-				$bcc = array_unique($bcc);
-				$cc = array_map('trim', explode(',', $cc));
-				$cc = array_unique($cc);
+				if($bcc) {
+					$bcc = array_map( 'trim', explode( ',', $bcc ) );
+					$bcc = array_unique( $bcc );
+				}
+				if($cc) {
+					$cc = array_map( 'trim', explode( ',', $cc ) );
+					$cc = array_unique( $cc );
+				}
 
 				if(count($to)) {
 					foreach ($to as $t) {
@@ -55,7 +59,7 @@ class SendEmailController extends BaseController
 						}
 					}
 				}
-				if(count($bcc)) {
+				if($bcc && count($bcc)) {
 					foreach ($bcc as $t) {
 						if($this->validateEMAIL($t)) {
 							$dataToLog[] = [
@@ -72,7 +76,7 @@ class SendEmailController extends BaseController
 						}
 					}
 				}
-				if(count($cc)) {
+				if($cc && count($cc)) {
 					foreach ( $cc as $t ) {
 						if($this->validateEMAIL($t)) {
 							$dataToLog[] = [

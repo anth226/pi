@@ -9,22 +9,31 @@ use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\SentDataLog;
 use Illuminate\Http\Request;
+use MrShan0\PHPFirestore\FirestoreClient;
 use Stripe\StripeClient;
+use Kreait\Firebase\Factory;
 use Validator;
 use Exception;
 
 
 class CustomersController extends Controller
 {
-	public $stripe;
+	public $stripe, $firebase, $firebase_collection;
 	function __construct()
 	{
-		$this->middleware(['auth','verified']);
-		$this->middleware('permission:customer-list|customer-create|customer-edit|customer-delete', ['only' => ['index','show']]);
-		$this->middleware('permission:customer-create', ['only' => ['create','store']]);
-		$this->middleware('permission:customer-edit', ['only' => ['edit','update']]);
-		$this->middleware('permission:customer-delete', ['only' => ['destroy']]);
-		$this->stripe = new StripeClient(config('stripe.stripeKey'));
+		$this->middleware( [ 'auth', 'verified' ] );
+		$this->middleware( 'permission:customer-list|customer-create|customer-edit|customer-delete', [
+			'only' => [
+				'index',
+				'show'
+			]
+		] );
+		$this->middleware( 'permission:customer-create', [ 'only' => [ 'create', 'store' ] ] );
+		$this->middleware( 'permission:customer-edit', [ 'only' => [ 'edit', 'update' ] ] );
+		$this->middleware( 'permission:customer-delete', [ 'only' => [ 'destroy' ] ] );
+		$this->createStripe();
+		$this->createFirebase();
+
 	}
 
 
@@ -332,5 +341,71 @@ class CustomersController extends Controller
 			'success' => false,
 			'message' => $error,
 		];
+	}
+
+	public function sendDataToFirebase($user) {
+		try {
+			$createdUser    = $this->firebase->createUser( $user );
+			return $createdUser;
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'sendDataToFirebase'
+			]);
+			return $this->sendError($error);
+		}
+
+	}
+
+	public function getFirebaseUser($uid){
+		try {
+			$user = $this->firebase->getUser($uid);
+//			$user = $auth->getUserByEmail('user@domain.tld');
+//			$user = $auth->getUserByPhoneNumber('+49-123-456789');
+			return $user;
+		} catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'getFirebaseUser'
+			]);
+			return $this->sendError($error);
+		}
+
+	}
+
+	protected function createFirebase(){
+		try{
+			$this->firebase = ( new Factory )->withServiceAccount( storage_path( config( 'firebase.file_name' ) ) );
+			$this->firebase_collection = new FirestoreClient(config( 'firebase.project_id' ), config( 'firebase.api_key' ), [
+				'database' => '(default)',
+			]);
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'createFirebase'
+			]);
+		}
+	}
+
+	protected function createStripe(){
+		try{
+			$this->stripe = new StripeClient( config( 'stripe.stripeKey' ) );
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'createStripe'
+			]);
+		}
 	}
 }

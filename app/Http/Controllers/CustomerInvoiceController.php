@@ -11,10 +11,8 @@ use App\KmClasses\Sms\UsStates;
 use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
-use App\SentDataLog;
 use App\StripeData;
 use Illuminate\Http\Request;
-use Stripe\StripeClient;
 use Validator;
 
 
@@ -27,7 +25,8 @@ class CustomerInvoiceController extends CustomersController
 		$this->middleware('permission:customer-create|invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:customer-edit', ['only' => ['edit','update']]);
 		$this->middleware('permission:customer-delete', ['only' => ['destroy']]);
-		$this->stripe = new StripeClient(config('stripe.stripeKey'));
+		$this->createStripe();
+		$this->createFirebase();
 	}
 
 	public function create()
