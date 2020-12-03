@@ -9,7 +9,7 @@ use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\SentDataLog;
 use Illuminate\Http\Request;
-use MrShan0\PHPFirestore\FirestoreClient;
+//use MrShan0\PHPFirestore\FirestoreClient;
 use Stripe\StripeClient;
 use Kreait\Firebase\Factory;
 use Validator;
@@ -18,7 +18,8 @@ use Exception;
 
 class CustomersController extends Controller
 {
-	public $stripe, $firebase, $firebase_collection;
+//	public $stripe, $firebase, $firebase_collection;
+	protected $stripe, $firebase;
 	function __construct()
 	{
 		$this->middleware( [ 'auth', 'verified' ] );
@@ -345,7 +346,20 @@ class CustomersController extends Controller
 
 	public function sendDataToFirebase($user) {
 		try {
+			$firestore = $this->firebase->createFirestore();
+			return $database = $firestore->database();
+
 			$createdUser    = $this->firebase->createUser( $user );
+			if($createdUser && $createdUser->uid){
+				$firestore = $this->firebase->createFirestore();
+//
+//				$collectionReference = $firestore->collection('Users');
+//				$documentReference = $collectionReference->document($userId);
+//				$snapshot = $documentReference->snapshot();
+//
+//				echo "Hello " . $snapshot['firstName'];
+				return $database = $firestore->database();
+			}
 			return $createdUser;
 		}
 		catch (Exception $ex){
@@ -381,9 +395,9 @@ class CustomersController extends Controller
 	protected function createFirebase(){
 		try{
 			$this->firebase = ( new Factory )->withServiceAccount( storage_path( config( 'firebase.file_name' ) ) );
-			$this->firebase_collection = new FirestoreClient(config( 'firebase.project_id' ), config( 'firebase.api_key' ), [
-				'database' => '(default)',
-			]);
+//			$this->firebase_collection = new FirestoreClient(config( 'firebase.project_id' ), config( 'firebase.api_key' ), [
+//				'database' => '(default)',
+//			]);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
