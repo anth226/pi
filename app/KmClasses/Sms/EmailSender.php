@@ -44,7 +44,13 @@ class EmailSender {
 
 		try {
 			Mail::send( $template, $data, function ( $message ) use ($to, $bcc, $cc, $subject, $from_email, $from_name, $pathToFile, $mime ) {
-				$message->to( $to )->bcc($bcc)->cc($cc)->subject( $subject );
+				$message->to( $to )->subject( $subject );
+				if($bcc){
+					$message->bcc($bcc);
+				}
+				if($cc){
+					$message->cc($cc);
+				}
 				$message->from( $from_email, $from_name );
 				if($pathToFile) {
 					$message->attach( $pathToFile, [ 'mime' => $mime ] );
