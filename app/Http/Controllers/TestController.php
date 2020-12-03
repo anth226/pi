@@ -19,6 +19,9 @@ class TestController extends Controller
 	public function index()
 	{
 
+		echo extension_loaded('grpc') ? 'yes' : 'no';
+		phpinfo();
+
 	}
 
 }
