@@ -63,7 +63,7 @@ class CustomersController extends Controller
 			'first_name' => 'required|max:120',
 			'last_name' => 'required|max:120',
 			'address_1' => 'required|max:120',
-			'zip' => 'required|digits:5',
+			'zip' => 'required|max:120',
 			'city' => 'required|max:120',
 			'state' => 'required||max:20',
 			'email' => 'required|unique:customers,email,NULL,id,deleted_at,NULL|email|max:120',
