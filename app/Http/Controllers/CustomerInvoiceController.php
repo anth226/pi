@@ -79,7 +79,7 @@ class CustomerInvoiceController extends CustomersController
 			'source' => 'portfolioinsider',
 			'tags' => 'portfolioinsider,portfolio-insider-prime'
 		];
-
+		//////////// sending data to stripe
 		$stripe_res = $this->sendDataToStripe($dataToSend);
 		if(!$stripe_res){
 			return redirect()->route('customers-invoices.create')
@@ -104,6 +104,12 @@ class CustomerInvoiceController extends CustomersController
 				}
 			}
 		}
+		//////sending data to FireBase
+		$dataToSend['customerId'] = $stripe_res['data']['customer'];
+		$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
+		$firebase_res = $this->sendDataToFirebase($dataToSend);
+
+
 
 		$customer = Customers::create([
 			'first_name' => $request->input('first_name'),
@@ -119,17 +125,20 @@ class CustomerInvoiceController extends CustomersController
 			'stripe_customer_id' => $stripe_res['data']['customer'],
 		]);
 
-		//saving data to stripedata
-		$stripeData = StripeData::create([
-			'stripe_customer_id' => $stripe_res['data']['customer'],
-			'stripe_subs_id' => $stripe_res['data']['id'],
-			'customer_id' => $customer->id
-		]);
+
 
 
 
 
 		if($customer && !empty($customer->id)){
+
+			//saving data to stripedata
+			$stripeData = StripeData::create([
+				'stripe_customer_id' => $stripe_res['data']['customer'],
+				'stripe_subs_id' => $stripe_res['data']['id'],
+				'customer_id' => $customer->id
+			]);
+
 			$invoice = Invoices::create([
 				'customer_id' => $customer->id,
 				'salespeople_id' => $request->input('salespeople_id'),
