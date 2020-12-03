@@ -32,7 +32,13 @@
                     </div>
                     <div>
                         <strong>Address:</strong>
-                        {{ $customer->address_1 }} {{ $customer->address_2 }}, {{ $customer->city }}, {{ $customer->state }}, {{ $customer->zip }}
+                        @php
+                            $customer_state = '';
+                            if($customer->state != 'N/A'){
+                                $customer_state = ', '.$customer->state;
+                            }
+                        @endphp
+                        {{ $customer->address_1 }} {{ $customer->address_2 }}, {{ $customer->city }}{{ $customer_state }}, {{ $customer->zip }}
                     </div>
                     <div>
                         <strong>Email:</strong>
