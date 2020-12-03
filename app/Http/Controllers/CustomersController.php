@@ -9,7 +9,6 @@ use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\SentDataLog;
 use Illuminate\Http\Request;
-//use MrShan0\PHPFirestore\FirestoreClient;
 use Stripe\StripeClient;
 use Kreait\Firebase\Factory;
 use Validator;
@@ -18,7 +17,6 @@ use Exception;
 
 class CustomersController extends Controller
 {
-//	public $stripe, $firebase, $firebase_collection;
 	protected $stripe, $firebase;
 	function __construct()
 	{
@@ -34,7 +32,6 @@ class CustomersController extends Controller
 		$this->middleware( 'permission:customer-delete', [ 'only' => [ 'destroy' ] ] );
 		$this->createStripe();
 		$this->createFirebase();
-
 	}
 
 
@@ -344,21 +341,43 @@ class CustomersController extends Controller
 		];
 	}
 
-	public function sendDataToFirebase($user) {
+	public function sendDataToFirebase($user, $collection = 'users') {
 		try {
-			$firestore = $this->firebase->createFirestore();
-			return $database = $firestore->database();
-
-			$createdUser    = $this->firebase->createUser( $user );
+			$auth = $this->firebase->createAuth();
+			$userProperties = [
+				'email'         => $user['email'],
+				'password'      => 'warrenbuffett1',
+				'emailVerified' => false,
+				'disabled'      => false,
+				'metadata'      => [
+					'lastSignInDate' => date( 'D M d Y H:i:s O' ),
+				],
+//				'customClaims'  => [
+//					'customer_id' => $user['customerId'],
+//					'subscription_id' => $user['subscriptionId'],
+//				]
+			];
+			$createdUser    = $auth->createUser( $userProperties );
 			if($createdUser && $createdUser->uid){
 				$firestore = $this->firebase->createFirestore();
-//
-//				$collectionReference = $firestore->collection('Users');
-//				$documentReference = $collectionReference->document($userId);
-//				$snapshot = $documentReference->snapshot();
-//
-//				echo "Hello " . $snapshot['firstName'];
-				return $database = $firestore->database();
+				$database = $firestore->database();
+				$data = [
+					'firstName' => $user['first_name'],
+					'lastName' => $user['last_name'],
+					'email'         => $user['email'],
+					'phoneNumber' => $user['phone'],
+					'userId' =>  $createdUser->uid,
+				    'customerId' => $user['customerId'],
+				    'subscriptionId' => $user['subscriptionId'],
+				    'isPrime' => true,
+				    'subscriptionStatus' => "active",
+				];
+				$database->collection($collection)->document($createdUser->uid)->set($data);
+
+				$auth->setCustomUserClaims($createdUser->uid, [
+						'customer_id' => $user['customerId'],
+						'subscription_id' => $user['subscriptionId'],
+				]);
 			}
 			return $createdUser;
 		}
@@ -376,7 +395,8 @@ class CustomersController extends Controller
 
 	public function getFirebaseUser($uid){
 		try {
-			$user = $this->firebase->getUser($uid);
+			$auth = $this->firebase->createAuth();
+			return $auth->getUser($uid);
 //			$user = $auth->getUserByEmail('user@domain.tld');
 //			$user = $auth->getUserByPhoneNumber('+49-123-456789');
 			return $user;
@@ -392,12 +412,29 @@ class CustomersController extends Controller
 
 	}
 
+	public function getFirebaseCollectionRecord($id, $collection= 'users'){
+		try {
+			$firestore         = $this->firebase->createFirestore();
+			$database          = $firestore->database();
+			$collection        = $database->collection( $collection );
+			$documentReference = $collection->document( $id );
+			$snapshot = $documentReference->snapshot();
+			return $this->sendResponse($snapshot);
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'getFirebaseCollectionRecord'
+			]);
+			return $this->sendError($error);
+		}
+	}
+
 	protected function createFirebase(){
 		try{
 			$this->firebase = ( new Factory )->withServiceAccount( storage_path( config( 'firebase.file_name' ) ) );
-//			$this->firebase_collection = new FirestoreClient(config( 'firebase.project_id' ), config( 'firebase.api_key' ), [
-//				'database' => '(default)',
-//			]);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();

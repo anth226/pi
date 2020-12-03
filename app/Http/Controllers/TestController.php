@@ -20,23 +20,16 @@ class TestController extends Controller
 	{
 		$c = new CustomersController();
 		$userProperties = [
-			'email'         => 'user10@example.com',
-//			'emailVerified' => false,
-			'password'      => 'secretPassword6',
-//			'disabled'      => false,
-//			'metadata'      => [
-//				'lastSignInDate' => date( 'D M d Y H:i:s O' ),
-//			],
+			'email'         => 'qzzze@example.com',
+			'phone'         => '464-654-6464',
+			'first_name' => 'Kev',
+			'last_name' => 'M',
+			'customerId' => 'cus_IMR5waCodpvTWw',
+			'subscriptionId' => 'sub_IMR5gIal1yW5Bq'
 		];
-		dd($c->sendDataToFirebase($userProperties));
-//		dd($c->getFirebaseUser('7ReNZAV04iYyH8Y0yXmKZUimtab2'));
-//		$res = $c->sendDataToStripe([
-//			'full_name' => 'test tettt',
-//			'email' => 'hhahkhgkkjgjk@ttt.vv',
-//			'phone' => '54646546465'
-//		]);
-//		dd($res);
-//		dd(config('firebase'));
+		$customer = $c->sendDataToFirebase($userProperties);
+		dd($c->getFirebaseUser($customer->uid));
+//		dd($c->getFirebaseUser('JAWGa9pT2OeqS6wQoj1bdw6f56r2')); //JAWGa9pT2OeqS6wQoj1bdw6f56r2
 
 	}
 
