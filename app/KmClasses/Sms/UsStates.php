@@ -6,6 +6,7 @@ namespace App\KmClasses\Sms;
 
 class UsStates {
 	protected static $us_states =  array (
+			'N/A'  => 'N/A',
 			'AL'=>'Alabama',
 			'AK'=>'Alaska',
 			'AZ'=>'Arizona',

@@ -26,7 +26,13 @@
                     {{ $invoice->customer->address_1 }} {{ $invoice->customer->address_2 }}
                </div>
                 <div>
-                    {{ $invoice->customer->city }} {{ $invoice->customer->state }} {{ $invoice->customer->zip }}
+                    @php
+                        $customer_state = '';
+                        if($invoice->customer->state != 'N/A'){
+                            $customer_state = $invoice->customer->state;
+                        }
+                    @endphp
+                    {{ $invoice->customer->city }} {{ $customer_state }} {{ $invoice->customer->zip }}
                 </div>
                 <div>
                     {{ $phone_number }}
