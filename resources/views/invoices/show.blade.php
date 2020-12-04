@@ -99,7 +99,7 @@
                     </div>
                     <div>
                         <strong>CC last 4 digits:</strong>
-                        {{ $invoice->cc }}
+                        {{ $invoice->cc_number }}
                     </div>
                     <div>
                         <strong>Sales Price:</strong>

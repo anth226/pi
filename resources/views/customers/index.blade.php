@@ -68,7 +68,7 @@
                         <td>
                             <div style="max-width: 300px;">
                                 @if(!empty($user->invoices) && !empty($user->invoices->id))
-                                        <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$user->invoices->id}}"><span class="badge badge-success">{{ $user->invoices->invoice_number }}</span></a>
+                                        <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$user->invoices->id}}"><span class="badge badge-success">View</span></a>
                                 @endif
                             </div>
                         </td>

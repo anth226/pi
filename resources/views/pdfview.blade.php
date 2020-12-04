@@ -56,7 +56,7 @@
                     <tr>
                         <td><div style="color:green;font-family: 'Poppins-Light', sans-serif;">CC DIGITS: </div></td>
                         <td style="width: 4%;"></td>
-                        <td> **********{{ $invoice->cc }}</td>
+                        <td> **********{{ $invoice->cc_number }}</td>
                     </tr>
                 </table>
             </td>

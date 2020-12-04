@@ -19,7 +19,8 @@ class Invoices extends Model
 		'qty',
 		'access_date',
 		'invoice_number',
-		'cc'
+		'cc',
+		'cc_number'
 	];
 
 	public function customer()
