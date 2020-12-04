@@ -7,6 +7,7 @@ use App\Errors;
 use App\Invoices;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
+use App\SentData;
 use App\SentDataLog;
 use Illuminate\Http\Request;
 use Stripe\StripeClient;
@@ -124,13 +125,10 @@ class CustomersController extends Controller
 	public function show($id)
 	{
 		$customer = Customers::with('invoices')->find($id);
-		$sentLog = SentDataLog::where('customer_id', $id)->orderBy('id', 'desc')->first();
-		$dataSentDate = '';
-		if($sentLog && $sentLog->count() && !empty($sentLog->created_at)){
-			$dataSentDate = $sentLog->created_at;
-		}
+		$sentLog = SentData::where('customer_id', $id)->orderBy('id', 'asc')->get();
+
 		if($customer) {
-			return view( 'customers.show', compact( 'customer', 'dataSentDate' ) );
+			return view( 'customers.show', compact( 'customer', 'sentLog' ) );
 		}
 		return abort(404);
 	}
@@ -206,6 +204,9 @@ class CustomersController extends Controller
 	protected function sendDataToSMSSystem($input, $customer_id){
 		try {
 			$url      = 'https://magicstarsystem.com/api/ulp';
+			if(config('app.env') == 'local') {
+				$url      = 'https://test.magicstarsystem.com/api/ulp';
+			}
 			$postvars = http_build_query( $input );
 			$ch       = curl_init();
 			curl_setopt( $ch, CURLOPT_URL, $url );
@@ -221,6 +222,12 @@ class CustomersController extends Controller
 						'customer_id' => $customer_id,
 						'lead_id'     => $result->data->id
 					] );
+					SentData::create([
+						'customer_id' => $customer_id,
+						'value' => $result->data->id,
+						'field' => 'lead_id',
+						'service_type' => 4 // sms_system
+					]);
 
 					return true;
 				} else {

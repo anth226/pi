@@ -116,21 +116,21 @@ class CustomerInvoiceController extends CustomersController
 					'customer_id' => $customer->id,
 					'value' => $stripe_res['data']['id'],
 					'field' => 'subscriber_id',
-					'service_name' => 'stripe',
+					'service_type' => 1, // stripe
 				]);
 				SentData::create([
 					'customer_id' => $customer->id,
 					'value' => $stripe_res['data']['customer'],
 					'field' => 'customer_id',
-					'service_name' => 'stripe'
+					'service_type' => 1 // stripe
 				]);
 			}
 			if(!empty($firebase_res)){
 				SentData::create([
 					'customer_id' => $customer->id,
-					'value' => $firebase_res['data']['customer'],
+					'value' => $firebase_res['data']->uid,
 					'field' => 'uid',
-					'service_name' => 'firebase',
+					'service_type' => 2 // firebase,
 				]);
 			}
 			////////////////////////////////////////////
@@ -157,9 +157,9 @@ class CustomerInvoiceController extends CustomersController
 				}
 			}
 
-			if(config('app.env') == 'production') {
-				$this->sendDataToSMSSystem( $dataToSend, $customer->id );
-			}
+			//////sending data to SMS system
+			$this->sendDataToSMSSystem( $dataToSend, $customer->id );
+
 
 			return redirect()->route('invoices.show', $invoice->id)
 			                 ->with('success','Invoice created successfully');
@@ -219,7 +219,7 @@ class CustomerInvoiceController extends CustomersController
 				                 ->withInput();
 			}
 			else{
-				if(empty($firebase_res['data']) || empty($firebase_res['data']['uid'])){
+				if(empty($firebase_res['data']) || empty($firebase_res['data']->uid)){
 					return redirect()->route('customers-invoices.create')
 					                 ->withErrors(['Unknown error! Can\'t send data to firebase'])
 					                 ->withInput();
