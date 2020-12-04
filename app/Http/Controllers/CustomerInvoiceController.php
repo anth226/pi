@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Customers;
-use App\Errors;
 use App\Invoices;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
@@ -12,8 +11,6 @@ use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
 use App\SentData;
-use App\StripeData;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -102,11 +99,6 @@ class CustomerInvoiceController extends CustomersController
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
 			'stripe_customer_id' => $stripe_res['data']['customer'],
 		]);
-
-
-
-
-
 
 		if($customer && !empty($customer->id)){
 
