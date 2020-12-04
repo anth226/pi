@@ -352,10 +352,6 @@ class CustomersController extends Controller
 				'metadata'      => [
 					'lastSignInDate' => date( 'D M d Y H:i:s O' ),
 				],
-//				'customClaims'  => [
-//					'customer_id' => $user['customerId'],
-//					'subscription_id' => $user['subscriptionId'],
-//				]
 			];
 			$createdUser    = $auth->createUser( $userProperties );
 			if($createdUser && $createdUser->uid){
@@ -379,7 +375,7 @@ class CustomersController extends Controller
 						'subscription_id' => $user['subscriptionId'],
 				]);
 			}
-			return $createdUser;
+			return $this->sendResponse($createdUser);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();

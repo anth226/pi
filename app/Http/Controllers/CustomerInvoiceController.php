@@ -11,7 +11,9 @@ use App\KmClasses\Sms\UsStates;
 use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
+use App\SentData;
 use App\StripeData;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -70,6 +72,7 @@ class CustomerInvoiceController extends CustomersController
 			                 ->withInput();
 		}
 
+		//////////// sending data to stripe
 		$dataToSend = [
 			'first_name' => $request->input('first_name'),
 			'last_name' => $request->input('last_name'),
@@ -79,37 +82,12 @@ class CustomerInvoiceController extends CustomersController
 			'source' => 'portfolioinsider',
 			'tags' => 'portfolioinsider,portfolio-insider-prime'
 		];
-		//////////// sending data to stripe
-		$stripe_res = $this->sendDataToStripe($dataToSend);
-		if(!$stripe_res){
-			return redirect()->route('customers-invoices.create')
-			                 ->withErrors(['Can\'t send data to stripe'])
-			                 ->withInput();
-		}
-		else{
-			if(!$stripe_res['success']){
-				$message = 'Error! Can\'t send data to stripe';
-				if(!empty($stripe_res['message'])){
-					$message = $stripe_res['message'];
-				}
-				return redirect()->route('customers-invoices.create')
-				                 ->withErrors([$message])
-				                 ->withInput();
-			}
-			else{
-				if(empty($stripe_res['data']) || empty($stripe_res['data']['id']) || empty($stripe_res['data']['customer'])){
-					return redirect()->route('customers-invoices.create')
-					                 ->withErrors(['Unknown error! Can\'t send data to stripe'])
-					                 ->withInput();
-				}
-			}
-		}
+		$stripe_res = $this->sendToStripe($dataToSend);
+
 		//////sending data to FireBase
 		$dataToSend['customerId'] = $stripe_res['data']['customer'];
 		$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
-		$firebase_res = $this->sendDataToFirebase($dataToSend);
-
-
+		$firebase_res = $this->sendToFirebase($dataToSend);
 
 		$customer = Customers::create([
 			'first_name' => $request->input('first_name'),
@@ -132,12 +110,30 @@ class CustomerInvoiceController extends CustomersController
 
 		if($customer && !empty($customer->id)){
 
-			//saving data to stripedata
-			$stripeData = StripeData::create([
-				'stripe_customer_id' => $stripe_res['data']['customer'],
-				'stripe_subs_id' => $stripe_res['data']['id'],
-				'customer_id' => $customer->id
-			]);
+			/////////////////////saving data to log
+			if(!empty($stripe_res)){
+				SentData::create([
+					'customer_id' => $customer->id,
+					'value' => $stripe_res['data']['id'],
+					'field' => 'subscriber_id',
+					'service_name' => 'stripe',
+				]);
+				SentData::create([
+					'customer_id' => $customer->id,
+					'value' => $stripe_res['data']['customer'],
+					'field' => 'customer_id',
+					'service_name' => 'stripe'
+				]);
+			}
+			if(!empty($firebase_res)){
+				SentData::create([
+					'customer_id' => $customer->id,
+					'value' => $firebase_res['data']['customer'],
+					'field' => 'uid',
+					'service_name' => 'firebase',
+				]);
+			}
+			////////////////////////////////////////////
 
 			$invoice = Invoices::create([
 				'customer_id' => $customer->id,
@@ -151,9 +147,6 @@ class CustomerInvoiceController extends CustomersController
 
 			$invoice_instance = new InvoicesController();
 			$invoice_instance->generatePDF($invoice->id);
-
-			// updating stripedata record
-			StripeData::find($stripeData->id)->update(['invoice_id' => $invoice->id]);
 
 			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
 				foreach ($request->input('second_salespeople_id') as $val){
@@ -179,4 +172,61 @@ class CustomerInvoiceController extends CustomersController
 
 
 	}
+
+	protected function sendToStripe($dataToSend){
+		$stripe_res = $this->sendDataToStripe($dataToSend);
+		if(!$stripe_res){
+			return redirect()->route('customers-invoices.create')
+			                 ->withErrors(['Can\'t send data to stripe'])
+			                 ->withInput();
+		}
+		else{
+			if(!$stripe_res['success']){
+				$message = 'Error! Can\'t send data to stripe';
+				if(!empty($stripe_res['message'])){
+					$message = $stripe_res['message'];
+				}
+				return redirect()->route('customers-invoices.create')
+				                 ->withErrors([$message])
+				                 ->withInput();
+			}
+			else{
+				if(empty($stripe_res['data']) || empty($stripe_res['data']['id']) || empty($stripe_res['data']['customer'])){
+					return redirect()->route('customers-invoices.create')
+					                 ->withErrors(['Unknown error! Can\'t send data to stripe'])
+					                 ->withInput();
+				}
+			}
+		}
+		return $stripe_res;
+	}
+
+	protected function sendToFirebase($dataToSend){
+		$firebase_res = $this->sendDataToFirebase($dataToSend);
+		if(!$firebase_res){
+			return redirect()->route('customers-invoices.create')
+			                 ->withErrors(['Can\'t send data to firebase'])
+			                 ->withInput();
+		}
+		else{
+			if(!$firebase_res['success']){
+				$message = 'Error! Can\'t send data to firebase';
+				if(!empty($firebase_res['message'])){
+					$message = $firebase_res['message'];
+				}
+				return redirect()->route('customers-invoices.create')
+				                 ->withErrors([$message])
+				                 ->withInput();
+			}
+			else{
+				if(empty($firebase_res['data']) || empty($firebase_res['data']['uid'])){
+					return redirect()->route('customers-invoices.create')
+					                 ->withErrors(['Unknown error! Can\'t send data to firebase'])
+					                 ->withInput();
+				}
+			}
+		}
+		return $firebase_res;
+	}
+
 }
