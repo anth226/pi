@@ -17,9 +17,9 @@ class CreateSentDataTable extends Migration
             $table->bigIncrements('id');
             $table->timestamps();
 	        $table->unsignedBigInteger('customer_id')->default(0)->index();
-	        $table->string('service_name', 20)->nullable();
-	        $table->string('field', 20)->nullable();
-	        $table->string('value', 20)->nullable();
+	        $table->unsignedInteger('service_type')->default(0)->index();
+	        $table->string('field')->nullable();
+	        $table->string('value')->nullable();
         });
     }
 

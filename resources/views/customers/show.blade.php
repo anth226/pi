@@ -60,19 +60,38 @@
                                 {{ $customer->created_at }}
                             </small>
                         </div>
-                        {{--<div>--}}
-                            {{--<small>--}}
-                                {{--<strong>Updated at:</strong>--}}
-                                {{--{{ $customer->updated_at }}--}}
-                            {{--</small>--}}
-                        {{--</div>--}}
-                        @if($dataSentDate)
-                            <div>
-                                <small>
-                                    <strong>Sent to SMS system at: </strong>
-                                    {{ $dataSentDate }}
-                                </small>
-                            </div>
+                        @if($sentLog && count($sentLog))
+                            @foreach($sentLog as $d)
+                                @php
+                                    $service_name = '';
+                                    switch ($d->service_type){
+                                        case 1:
+                                            if($d->field == "subscriber_id"){
+                                                $service_name = 'Stripe';
+                                            }
+                                            break;
+                                        case 2:
+                                            $service_name = 'Firebase';
+                                            break;
+                                        case 3:
+                                            $service_name = 'Klaviyo';
+                                            break;
+                                        case 4:
+                                            $service_name = 'SMS System';
+                                            break;
+                                        default:
+                                            $service_name = '';
+                                    }
+                                @endphp
+                                @if($service_name)
+                                    <div>
+                                        <small>
+                                            <strong>Sent to {{$service_name}} at: </strong>
+                                            {{ $d->created_at}}
+                                        </small>
+                                    </div>
+                                @endif
+                            @endforeach
                         @endif
                     </div>
                 </div>

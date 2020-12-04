@@ -11,6 +11,7 @@ use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
+use App\SentData;
 use App\SentDataLog;
 use Illuminate\Http\Request;
 use PDF;
@@ -125,13 +126,9 @@ class InvoicesController extends Controller
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
 			$template = EmailTemplates::getIdsAndFullNames();
-			$sentLog = SentDataLog::where('customer_id', $invoice->customer->id)->orderBy('id', 'desc')->first();
-			$dataSentDate = '';
-			if($sentLog && $sentLog->count() && !empty($sentLog->created_at)){
-				$dataSentDate = $sentLog->created_at;
-			}
+			$sentLog = SentData::where('customer_id', $invoice->customer->id)->orderBy('id', 'asc')->get();
 			$logs = EmailLogs::where('invoice_id', $id)->get();
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','dataSentDate') );
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog') );
 		}
 		return abort(404);
 	}
