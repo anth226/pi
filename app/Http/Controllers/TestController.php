@@ -18,6 +18,7 @@ class TestController extends Controller
 
 	public function index()
 	{
+		dd(phpinfo());
 		$c = new CustomersController();
 		$userProperties = [
 			'email'         => 'qzzze@example.com',
