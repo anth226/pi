@@ -70,7 +70,7 @@ class CustomerInvoiceController extends CustomersController
 			                 ->withInput();
 		}
 
-		//////////// sending data to stripe
+		//////////// sending data
 		$dataToSend = [
 			'first_name' => $request->input('first_name'),
 			'last_name' => $request->input('last_name'),
@@ -80,13 +80,13 @@ class CustomerInvoiceController extends CustomersController
 			'source' => 'portfolioinsider',
 			'tags' => 'portfolioinsider,portfolio-insider-prime'
 		];
-		$stripe_res = $this->sendToStripe($dataToSend);
 
-		//////sending data to FireBase
-		$dataToSend['customerId'] = $stripe_res['data']['customer'];
-		$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
-		$firebase_res = $this->sendToFirebase($dataToSend);
-		$klaviyo_res = $this->sendToKlaviyo($dataToSend);
+//
+//		$stripe_res = $this->sendToStripe($dataToSend);
+//		$dataToSend['customerId'] = $stripe_res['data']['customer'];
+//		$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
+//		$firebase_res = $this->sendToFirebase($dataToSend);
+//		$klaviyo_res = $this->sendToKlaviyo($dataToSend);
 
 		$customer = Customers::create([
 			'first_name' => $request->input('first_name'),
@@ -99,7 +99,7 @@ class CustomerInvoiceController extends CustomersController
 			'email' => $request->input('email'),
 			'phone_number' => $request->input('phone_number'),
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
-			'stripe_customer_id' => $stripe_res['data']['customer'],
+//			'stripe_customer_id' => $stripe_res['data']['customer'],
 		]);
 
 		if($customer && !empty($customer->id)){
