@@ -12,13 +12,15 @@ use App\SentDataLog;
 use Illuminate\Http\Request;
 use Stripe\StripeClient;
 use Kreait\Firebase\Factory;
+use Klaviyo\Klaviyo as Klaviyo;
+use Klaviyo\Model\ProfileModel as KlaviyoProfile;
 use Validator;
 use Exception;
 
 
 class CustomersController extends Controller
 {
-	protected $stripe, $firebase;
+	protected $stripe, $firebase, $klaviyo, $klaviyo_listId;
 	function __construct()
 	{
 		$this->middleware( [ 'auth', 'verified' ] );
@@ -33,6 +35,7 @@ class CustomersController extends Controller
 		$this->middleware( 'permission:customer-delete', [ 'only' => [ 'destroy' ] ] );
 		$this->createStripe();
 		$this->createFirebase();
+		$this->createKlaviyo();
 	}
 
 
@@ -396,6 +399,32 @@ class CustomersController extends Controller
 
 	}
 
+	public function sendDataToKlaviyo($input, $list_id = ''){
+		try {
+			if(!$list_id){
+				$list_id = $this->klaviyo_listId;
+			}
+			$klaviyo_data = [
+				'$email' => $input['email'],
+				'$phone_number' => $input['phone'],
+				'$first_name' => $input['first_name'],
+				'$last_name' => $input['last_name'],
+			];
+			$profile = new KlaviyoProfile($klaviyo_data);
+			$res = $this->klaviyo->lists->addMembersToList( $list_id, [$profile] );
+			return $this->sendResponse($res);
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'sendDataToKlaviyo'
+			]);
+			return $this->sendError($error);
+		}
+	}
+
 	public function getFirebaseUser($uid){
 		try {
 			$auth = $this->firebase->createAuth();
@@ -459,6 +488,21 @@ class CustomersController extends Controller
 				'error' => $error,
 				'controller' => 'CustomersController',
 				'function' => 'createStripe'
+			]);
+		}
+	}
+
+	protected function createKlaviyo(){
+		try{
+			$this->klaviyo = new Klaviyo( config( 'klaviyo.apiKey' ), config( 'klaviyo.pubKey' ) );
+			$this->klaviyo_listId = config( 'klaviyo.listId' );
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'createKlaviyo'
 			]);
 		}
 	}

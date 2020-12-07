@@ -26,6 +26,7 @@ class CustomerInvoiceController extends CustomersController
 		$this->middleware('permission:customer-delete', ['only' => ['destroy']]);
 		$this->createStripe();
 		$this->createFirebase();
+		$this->createKlaviyo();
 	}
 
 	public function create()
@@ -85,6 +86,7 @@ class CustomerInvoiceController extends CustomersController
 		$dataToSend['customerId'] = $stripe_res['data']['customer'];
 		$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
 		$firebase_res = $this->sendToFirebase($dataToSend);
+		$klaviyo_res = $this->sendToKlaviyo($dataToSend);
 
 		$customer = Customers::create([
 			'first_name' => $request->input('first_name'),
@@ -123,6 +125,14 @@ class CustomerInvoiceController extends CustomersController
 					'value' => $firebase_res['data']->uid,
 					'field' => 'uid',
 					'service_type' => 2 // firebase,
+				]);
+			}
+			if(!empty($klaviyo_res)){
+				SentData::create([
+					'customer_id' => $customer->id,
+					'value' => $klaviyo_res['data'][0]['id'],
+					'field' => 'id',
+					'service_type' => 3 // klaviyo,
 				]);
 			}
 			////////////////////////////////////////////
@@ -219,6 +229,34 @@ class CustomerInvoiceController extends CustomersController
 			}
 		}
 		return $firebase_res;
+	}
+
+	protected function sendToKlaviyo($dataToSend){
+		$klaviyo_res = $this->sendDataToKlaviyo($dataToSend);
+		if(!$klaviyo_res){
+			return redirect()->route('customers-invoices.create')
+			                 ->withErrors(['Can\'t send data to klaviyo'])
+			                 ->withInput();
+		}
+		else{
+			if(!$klaviyo_res['success']){
+				$message = 'Error! Can\'t send data to klaviyo';
+				if(!empty($stripe_res['message'])){
+					$message = $stripe_res['message'];
+				}
+				return redirect()->route('customers-invoices.create')
+				                 ->withErrors([$message])
+				                 ->withInput();
+			}
+			else{
+				if(empty($klaviyo_res['data']) || empty($klaviyo_res['data'][0]) || empty($klaviyo_res['data'][0]['id'])){
+					return redirect()->route('customers-invoices.create')
+					                 ->withErrors(['Unknown error! Can\'t send data to klaviyo'])
+					                 ->withInput();
+				}
+			}
+		}
+		return $klaviyo_res;
 	}
 
 }
