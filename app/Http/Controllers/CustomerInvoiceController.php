@@ -134,7 +134,7 @@ class CustomerInvoiceController extends CustomersController
 				'sales_price' => $sales_price,
 				'qty' => $request->input('qty'),
 				'access_date' => Elements::createDateTime($request->input('access_date')),
-				'cc' => $request->input('cc')
+				'cc_number' => $request->input('cc')
 			]);
 
 			$invoice_instance = new InvoicesController();
