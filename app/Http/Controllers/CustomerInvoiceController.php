@@ -11,6 +11,7 @@ use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
 use App\SentData;
+use App\SentDataLog;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -27,14 +28,16 @@ class CustomerInvoiceController extends CustomersController
 		$this->createStripe();
 		$this->createFirebase();
 		$this->createKlaviyo();
+		$this->createSMSsystem();
 	}
 
-	public function create()
+	public function create(Request $request)
 	{
 		$states = UsStates::statesUS();
 		$salespeople = Salespeople::getIdsAndFullNames();
 		$products = Products::getIdsAndFullNames();
-		return view('customers.createandsend', compact('states', 'salespeople','products'));
+		$test_mode = !empty($request->input('test_mode')) ? $request->input('test_mode') : 0;
+		return view('customers.createandsend', compact('states', 'salespeople','products', 'test_mode'));
 	}
 
 
@@ -63,6 +66,8 @@ class CustomerInvoiceController extends CustomersController
 			'cc' => 'required|digits:4'
 		]);
 
+		$test_mode = !empty($request->input('test_mode')) ? $request->input('test_mode') : 0;
+
 		$sales_price = !empty($request->input('sales_price')) ? Elements::moneyToDecimal($request->input('sales_price')) : 0;
 		if(!$sales_price){
 			return redirect()->route('customers-invoices.create')
@@ -70,7 +75,7 @@ class CustomerInvoiceController extends CustomersController
 			                 ->withInput();
 		}
 
-		//////////// sending data
+
 		$dataToSend = [
 			'first_name' => $request->input('first_name'),
 			'last_name' => $request->input('last_name'),
@@ -78,29 +83,34 @@ class CustomerInvoiceController extends CustomersController
 			'email' => $request->input('email'),
 			'phone' => $request->input('phone_number'),
 			'source' => 'portfolioinsider',
-			'tags' => 'portfolioinsider,portfolio-insider-prime'
-		];
-
-//
-//		$stripe_res = $this->sendToStripe($dataToSend);
-//		$dataToSend['customerId'] = $stripe_res['data']['customer'];
-//		$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
-//		$firebase_res = $this->sendToFirebase($dataToSend);
-//		$klaviyo_res = $this->sendToKlaviyo($dataToSend);
-
-		$customer = Customers::create([
-			'first_name' => $request->input('first_name'),
-			'last_name' => $request->input('last_name'),
+			'tags' => 'portfolioinsider,portfolio-insider-prime',
 			'address_1' => $request->input('address_1'),
 			'address_2' => !empty($request->input('address_2')) ? $request->input('address_2') : '',
 			'city' => $request->input('city'),
 			'state' => $request->input('state'),
 			'zip' => $request->input('zip'),
-			'email' => $request->input('email'),
 			'phone_number' => $request->input('phone_number'),
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
-//			'stripe_customer_id' => $stripe_res['data']['customer'],
-		]);
+		];
+
+		if(!$test_mode) {
+			//////////// sending data
+			$stripe_res = $this->sendToStripe($dataToSend);
+			$dataToSend['customerId'] = $stripe_res['data']['customer'];
+			$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
+			$firebase_res = $this->sendToFirebase($dataToSend);
+			$klaviyo_res = $this->sendToKlaviyo($dataToSend);
+			$smssystem_res = $this->sendToSMSsystem($dataToSend);
+		}
+		else{
+			switch($test_mode){
+				case 2:
+					dd($dataToSend);
+					break;
+			}
+		}
+
+		$customer = Customers::create($dataToSend);
 
 		if($customer && !empty($customer->id)){
 
@@ -135,6 +145,18 @@ class CustomerInvoiceController extends CustomersController
 					'service_type' => 3 // klaviyo,
 				]);
 			}
+			if(!empty($smssystem_res)){
+				SentDataLog::create( [
+					'customer_id' => $customer->id,
+					'lead_id'     => $smssystem_res['data']->id
+				] );
+				SentData::create([
+					'customer_id' => $customer->id,
+					'value' => $smssystem_res['data']->id,
+					'field' => 'lead_id',
+					'service_type' => 4 // sms_system
+				]);
+			}
 			////////////////////////////////////////////
 
 			$invoice = Invoices::create([
@@ -158,10 +180,6 @@ class CustomerInvoiceController extends CustomersController
 					] );
 				}
 			}
-
-			//////sending data to SMS system
-			$this->sendDataToSMSSystem( $dataToSend, $customer->id );
-
 
 			return redirect()->route('invoices.show', $invoice->id)
 			                 ->with('success','Invoice created successfully');
@@ -257,6 +275,34 @@ class CustomerInvoiceController extends CustomersController
 			}
 		}
 		return $klaviyo_res;
+	}
+
+	protected function sendToSMSsystem($dataToSend){
+		$smssystem_res = $this->sendDataToSMSSystem($dataToSend);
+		if(!$smssystem_res){
+			return redirect()->route('customers-invoices.create')
+			                 ->withErrors(['Can\'t send data to SMS System'])
+			                 ->withInput();
+		}
+		else{
+			if(!$smssystem_res['success']){
+				$message = 'Error! Can\'t send data to SMS System';
+				if(!empty($smssystem_res['message'])){
+					$message = $smssystem_res['message'];
+				}
+				return redirect()->route('customers-invoices.create')
+				                 ->withErrors([$message])
+				                 ->withInput();
+			}
+			else{
+				if(empty($smssystem_res['data']) || empty($smssystem_res['data']->id)){
+					return redirect()->route('customers-invoices.create')
+					                 ->withErrors(['Unknown error! Can\'t send data to SMS System'])
+					                 ->withInput();
+				}
+			}
+		}
+		return $smssystem_res;
 	}
 
 }

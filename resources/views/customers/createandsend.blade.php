@@ -68,7 +68,7 @@
 
 
             {!! Form::open(array('route' => 'customers-invoices.store','method'=>'POST')) !!}
-            <div class="row">
+	        <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                         <strong>First Name *:</strong>
@@ -180,6 +180,10 @@
                     </div>
                 </div>
             </div>
+
+            @if(!empty($test_mode))
+                <input type="hidden" name="test_mode" value="{{$test_mode}}">
+            @endif
 
 
             <div class="row">
@@ -311,6 +315,18 @@
                 caret_pos = updated_len - original_len + caret_pos;
                 input[0].setSelectionRange(caret_pos, caret_pos);
             }
+
+            var submit_button = $('button[type="submit"]');
+            submit_button.on('click', function(){
+                $('form').submit();
+                var ajax_img = '<img width="40" src="<?php echo e(url('/img/ajax_3.gif')); ?>" alt="ajax loader">';
+                $('button').prop('disabled', true);
+                $('input').prop('disabled', true);
+                $('select').prop('disabled', true);
+                $('a').addClass('disabled');
+                var button_title = submit_button.html();
+                submit_button.html(button_title + ' ' + ajax_img);
+            })
 
         });
     </script>
