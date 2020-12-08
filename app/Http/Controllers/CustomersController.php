@@ -20,7 +20,7 @@ use Exception;
 
 class CustomersController extends Controller
 {
-	protected $stripe, $firebase, $klaviyo, $klaviyo_listId;
+	protected $stripe, $firebase, $klaviyo, $klaviyo_listId, $smssystem;
 	function __construct()
 	{
 		$this->middleware( [ 'auth', 'verified' ] );
@@ -36,6 +36,7 @@ class CustomersController extends Controller
 		$this->createStripe();
 		$this->createFirebase();
 		$this->createKlaviyo();
+		$this->createSMSsystem();
 	}
 
 
@@ -58,10 +59,11 @@ class CustomersController extends Controller
 	 *
 	 * @return \Illuminate\Http\Response
 	 */
-	public function create()
+	public function create(Request $request)
 	{
 		$states = UsStates::statesUS();
-		return view('customers.create', compact('states'));
+		$test_mode = !empty($request->input('test_mode')) ? $request->input('test_mode') : 0;
+		return view('customers.create', compact('states', 'test_mode'));
 	}
 
 
@@ -204,12 +206,9 @@ class CustomersController extends Controller
 	}
 
 
-	protected function sendDataToSMSSystem($input, $customer_id){
+	protected function sendDataToSMSSystem($input){
 		try {
-			$url      = 'https://magicstarsystem.com/api/ulp';
-			if(config('app.env') == 'local') {
-				$url      = 'https://test.magicstarsystem.com/api/ulp';
-			}
+			$url      = $this->smssystem;
 			$postvars = http_build_query( $input );
 			$ch       = curl_init();
 			curl_setopt( $ch, CURLOPT_URL, $url );
@@ -220,19 +219,8 @@ class CustomersController extends Controller
 			curl_close( $ch );
 			if($res) {
 				$result = json_decode($res);
-				if ( $result && ! empty( $result->success ) && $result->success && ! empty( $result->data ) && ! empty( $result->data->id ) ) {
-					SentDataLog::create( [
-						'customer_id' => $customer_id,
-						'lead_id'     => $result->data->id
-					] );
-					SentData::create([
-						'customer_id' => $customer_id,
-						'value' => $result->data->id,
-						'field' => 'lead_id',
-						'service_type' => 4 // sms_system
-					]);
-
-					return true;
+				if ( $result && ! empty( $result->success ) && $result->success && ! empty( $result->data ) ) {
+					return $this->sendResponse($result->data);
 				} else {
 					$error = "Wrong response from " . $url;
 					if ( $result && ! empty( $result->success ) && ! $result->success && ! empty( $result->message ) ) {
@@ -243,7 +231,7 @@ class CustomersController extends Controller
 						'controller' => 'CustomersController',
 						'function'   => 'sendLead'
 					] );
-					return false;
+					return $this->sendError($error);
 				}
 			}
 			else{
@@ -253,7 +241,7 @@ class CustomersController extends Controller
 					'controller' => 'CustomersController',
 					'function'   => 'sendLead'
 				] );
-				return false;
+				return $this->sendError($error);
 			}
 		}
 		catch (Exception $ex){
@@ -505,5 +493,9 @@ class CustomersController extends Controller
 				'function' => 'createKlaviyo'
 			]);
 		}
+	}
+
+	protected function createSMSsystem(){
+		$this->smssystem = config( 'smssystem.url' );
 	}
 }
