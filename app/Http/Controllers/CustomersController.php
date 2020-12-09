@@ -252,12 +252,13 @@ class CustomersController extends Controller
 			return $this->sendError($error);
 		}
 		catch (Exception $ex){
+			$error = $ex->getMessage();
 			Errors::create([
-				'error' => $ex->getMessage(),
+				'error' => $error,
 				'controller' => 'CustomersController',
 				'function' => 'sendLead'
 			]);
-			return false;
+			return $this->sendError($error);
 		}
 	}
 
@@ -497,14 +498,14 @@ class CustomersController extends Controller
 				$this->firebase = ( new Factory )->withServiceAccount( storage_path( config( 'firebase.file_name' ) ) );
 				return $this->firebase;
 			}
+			$this->firebase = '';
 			$error = "No Firebase Configuration Found";
 			Errors::create([
 				'error' => $error,
 				'controller' => 'CustomersController',
 				'function' => 'createFirebase'
 			]);
-			return back()->withErrors([$error])
-			             ->withInput();
+			return false;
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -513,15 +514,25 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'createFirebase'
 			]);
-			return back()->withErrors([$error])
-			             ->withInput();
+			$this->firebase = '';
+			return false;
 		}
 	}
 
 	protected function createStripe(){
 		try{
-			$this->stripe = new StripeClient( config( 'stripe.stripeKey' ) );
-			return $this->stripe;
+			if(config( 'stripe.stripeKey' )) {
+				$this->stripe = new StripeClient( config( 'stripe.stripeKey' ) );
+				return $this->stripe;
+			}
+			$this->stripe = '';
+			$error = "No Stripe Configuration Found";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'createStripe'
+			]);
+			return false;
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -530,19 +541,30 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'createStripe'
 			]);
-			return back()->withErrors([$error])
-			             ->withInput();
+			return false;
+
 		}
 	}
 
 	protected function createKlaviyo(){
 		try{
-			$this->klaviyo = new Klaviyo( config( 'klaviyo.apiKey' ), config( 'klaviyo.pubKey' ) );
-			$this->klaviyo_listId = config( 'klaviyo.listId' );
-			return [
-				'klaviyo' => $this->klaviyo,
-				'klaviyo_listId' => $this->klaviyo_listId
-			];
+			if(config( 'klaviyo.apiKey' ) && config( 'klaviyo.pubKey' ) && config( 'klaviyo.listId' )) {
+				$this->klaviyo        = new Klaviyo( config( 'klaviyo.apiKey' ), config( 'klaviyo.pubKey' ) );
+				$this->klaviyo_listId = config( 'klaviyo.listId' );
+				return [
+					'klaviyo'        => $this->klaviyo,
+					'klaviyo_listId' => $this->klaviyo_listId
+				];
+			}
+			$this->klaviyo = '';
+			$this->klaviyo_listId =  '';
+			$error = "No Klaviyo Configuration Found";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'createKlaviyo'
+			]);
+			return false;
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -551,13 +573,25 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'createKlaviyo'
 			]);
-			return back()->withErrors([$error])
-			             ->withInput();
+			$this->klaviyo = '';
+			$this->klaviyo_listId = !empty($this->klaviyo_listId) ? $this->klaviyo_listId : '';
+			return false;
+
 		}
 	}
 
 	protected function createSMSsystem(){
-		$this->smssystem = config( 'smssystem.url' );
-		return $this->smssystem;
+		if(config( 'smssystem.url' )) {
+			$this->smssystem = config( 'smssystem.url' );
+			return $this->smssystem;
+		}
+		$error = "No SMS System URL Found";
+		Errors::create([
+			'error' => $error,
+			'controller' => 'CustomersController',
+			'function' => 'createSMSsystem'
+		]);
+		$this->smssystem = '';
+		return false;
 	}
 }
