@@ -34,12 +34,13 @@ class EmailSender {
 					$name = '',
 					$salesperson = '',
 					$pathToFile = '',
+					$customer_email = '',
 					$mime = 'application/pdf'
 
 	){
 		$data = array();
 		$data['name'] = $name;
-		$data['email'] = $to[0];
+		$data['email'] = $customer_email;
 		$data['salesperson'] = $salesperson;
 
 		try {
