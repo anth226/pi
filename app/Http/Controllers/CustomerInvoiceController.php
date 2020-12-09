@@ -91,12 +91,52 @@ class CustomerInvoiceController extends CustomersController
 
 		if(!$test_mode) {
 			//////////// sending data
-			$stripe_res = $this->sendToStripe($dataToSend);
-			$dataToSend['customerId'] = $stripe_res['data']['customer'];
-			$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
-			$firebase_res = $this->sendToFirebase($dataToSend);
-			$klaviyo_res = $this->sendToKlaviyo($dataToSend);
-			$smssystem_res = $this->sendToSMSsystem($dataToSend);
+//			$stripe_res = $this->sendDataToStripe($dataToSend);
+//			if(!$stripe_res['success']){
+//				$message = 'Error! Can\'t send data to stripe';
+//				if(!empty($stripe_res['message'])){
+//					$message = $stripe_res['message'];
+//				}
+//				return back()->withErrors([$message])
+//				             ->withInput();
+//			}
+//			else {
+//				$dataToSend['customerId']     = $stripe_res['data']['customer'];
+//				$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
+//
+//				$firebase_res = $this->sendDataToFirebase( $dataToSend );
+//				if ( ! $firebase_res['success'] ) {
+//					$message = 'Error! Can\'t send data to firebase';
+//					if ( ! empty( $firebase_res['message'] ) ) {
+//						$message = $firebase_res['message'];
+//					}
+//
+//					return back()->withErrors( [ $message ] )
+//					             ->withInput();
+//				}
+//
+//				$klaviyo_res = $this->sendDataToKlaviyo( $dataToSend );
+//				if ( ! $klaviyo_res['success'] ) {
+//					$message = 'Error! Can\'t send data to klaviyo';
+//					if ( ! empty( $stripe_res['message'] ) ) {
+//						$message = $stripe_res['message'];
+//					}
+//
+//					return back()->withErrors( [ $message ] )
+//					             ->withInput();
+//				}
+//			}
+
+			$smssystem_res = $this->sendDataToSMSSystem($dataToSend);
+			if(!$smssystem_res['success']){
+				$message = 'Error! Can\'t send data to SMS System';
+				if(!empty($smssystem_res['message'])){
+					$message = $smssystem_res['message'];
+				}
+				return back()->withErrors([$message])
+				             ->withInput();
+			}
+
 		}
 		else{
 			switch($test_mode){
@@ -111,7 +151,7 @@ class CustomerInvoiceController extends CustomersController
 		if($customer && !empty($customer->id)){
 
 			/////////////////////saving data to log
-			if(!empty($stripe_res)){
+			if(!empty($stripe_res) && !empty($stripe_res['data']) && !empty($stripe_res['data']['id']) && !empty($stripe_res['data']['customer'])){
 				SentData::create([
 					'customer_id' => $customer->id,
 					'value' => $stripe_res['data']['id'],
@@ -125,7 +165,7 @@ class CustomerInvoiceController extends CustomersController
 					'service_type' => 1 // stripe
 				]);
 			}
-			if(!empty($firebase_res)){
+			if(!empty($firebase_res) && !empty($firebase_res['data']) && !empty($firebase_res['data']->uid)){
 				SentData::create([
 					'customer_id' => $customer->id,
 					'value' => $firebase_res['data']->uid,
@@ -133,7 +173,7 @@ class CustomerInvoiceController extends CustomersController
 					'service_type' => 2 // firebase,
 				]);
 			}
-			if(!empty($klaviyo_res)){
+			if(!empty($klaviyo_res) && !empty($klaviyo_res['data']) && !empty($klaviyo_res['data'][0]) && !empty($klaviyo_res['data'][0]['id'])){
 				SentData::create([
 					'customer_id' => $customer->id,
 					'value' => $klaviyo_res['data'][0]['id'],
@@ -141,7 +181,7 @@ class CustomerInvoiceController extends CustomersController
 					'service_type' => 3 // klaviyo,
 				]);
 			}
-			if(!empty($smssystem_res)){
+			if(!empty($smssystem_res) && !empty($smssystem_res['data']) && !empty($smssystem_res['data']->id)){
 				SentDataLog::create( [
 					'customer_id' => $customer->id,
 					'lead_id'     => $smssystem_res['data']->id
@@ -189,116 +229,5 @@ class CustomerInvoiceController extends CustomersController
 
 	}
 
-	protected function sendToStripe($dataToSend){
-		$stripe_res = $this->sendDataToStripe($dataToSend);
-		if(!$stripe_res){
-			return redirect()->route('customers-invoices.create')
-			                 ->withErrors(['Can\'t send data to stripe'])
-			                 ->withInput();
-		}
-		else{
-			if(!$stripe_res['success']){
-				$message = 'Error! Can\'t send data to stripe';
-				if(!empty($stripe_res['message'])){
-					$message = $stripe_res['message'];
-				}
-				return redirect()->route('customers-invoices.create')
-				                 ->withErrors([$message])
-				                 ->withInput();
-			}
-			else{
-				if(empty($stripe_res['data']) || empty($stripe_res['data']['id']) || empty($stripe_res['data']['customer'])){
-					return redirect()->route('customers-invoices.create')
-					                 ->withErrors(['Unknown error! Can\'t send data to stripe'])
-					                 ->withInput();
-				}
-			}
-		}
-		return $stripe_res;
-	}
-
-	protected function sendToFirebase($dataToSend){
-		$firebase_res = $this->sendDataToFirebase($dataToSend);
-		if(!$firebase_res){
-			return redirect()->route('customers-invoices.create')
-			                 ->withErrors(['Can\'t send data to firebase'])
-			                 ->withInput();
-		}
-		else{
-			if(!$firebase_res['success']){
-				$message = 'Error! Can\'t send data to firebase';
-				if(!empty($firebase_res['message'])){
-					$message = $firebase_res['message'];
-				}
-				return redirect()->route('customers-invoices.create')
-				                 ->withErrors([$message])
-				                 ->withInput();
-			}
-			else{
-				if(empty($firebase_res['data']) || empty($firebase_res['data']->uid)){
-					return redirect()->route('customers-invoices.create')
-					                 ->withErrors(['Unknown error! Can\'t send data to firebase'])
-					                 ->withInput();
-				}
-			}
-		}
-		return $firebase_res;
-	}
-
-	protected function sendToKlaviyo($dataToSend){
-		$klaviyo_res = $this->sendDataToKlaviyo($dataToSend);
-		if(!$klaviyo_res){
-			return redirect()->route('customers-invoices.create')
-			                 ->withErrors(['Can\'t send data to klaviyo'])
-			                 ->withInput();
-		}
-		else{
-			if(!$klaviyo_res['success']){
-				$message = 'Error! Can\'t send data to klaviyo';
-				if(!empty($stripe_res['message'])){
-					$message = $stripe_res['message'];
-				}
-				return redirect()->route('customers-invoices.create')
-				                 ->withErrors([$message])
-				                 ->withInput();
-			}
-			else{
-				if(empty($klaviyo_res['data']) || empty($klaviyo_res['data'][0]) || empty($klaviyo_res['data'][0]['id'])){
-					return redirect()->route('customers-invoices.create')
-					                 ->withErrors(['Unknown error! Can\'t send data to klaviyo'])
-					                 ->withInput();
-				}
-			}
-		}
-		return $klaviyo_res;
-	}
-
-	protected function sendToSMSsystem($dataToSend){
-		$smssystem_res = $this->sendDataToSMSSystem($dataToSend);
-		if(!$smssystem_res){
-			return redirect()->route('customers-invoices.create')
-			                 ->withErrors(['Can\'t send data to SMS System'])
-			                 ->withInput();
-		}
-		else{
-			if(!$smssystem_res['success']){
-				$message = 'Error! Can\'t send data to SMS System';
-				if(!empty($smssystem_res['message'])){
-					$message = $smssystem_res['message'];
-				}
-				return redirect()->route('customers-invoices.create')
-				                 ->withErrors([$message])
-				                 ->withInput();
-			}
-			else{
-				if(empty($smssystem_res['data']) || empty($smssystem_res['data']->id)){
-					return redirect()->route('customers-invoices.create')
-					                 ->withErrors(['Unknown error! Can\'t send data to SMS System'])
-					                 ->withInput();
-				}
-			}
-		}
-		return $smssystem_res;
-	}
 
 }
