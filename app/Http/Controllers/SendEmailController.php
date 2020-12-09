@@ -108,7 +108,8 @@ class SendEmailController extends BaseController
 							$subject             = $customer_first_name . ', a warm welcome! (Here\'s your access)';
 							$pdfFilename         = $invoiceController->generateFileName( $invoice );
 							$path_to_file        = $invoiceController->pdf_path . $pdfFilename;
-							$res                 = $sender->sendEmail( $to, $bcc, $cc, $from_email, $template, $subject, $from_name, $customer_first_name, $salesperson, $path_to_file );
+							$customer_email      = $invoice->customer->email;
+							$res                 = $sender->sendEmail( $to, $bcc, $cc, $from_email, $template, $subject, $from_name, $customer_first_name, $salesperson, $path_to_file, $customer_email );
 							if ( $res && $res['success'] ) {
 								EmailLogs::insert( $dataToLog );
 								$logs = EmailLogs::where( 'invoice_id', $invoice_id )->get();
