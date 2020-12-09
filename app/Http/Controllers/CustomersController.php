@@ -33,10 +33,6 @@ class CustomersController extends Controller
 		$this->middleware( 'permission:customer-create', [ 'only' => [ 'create', 'store' ] ] );
 		$this->middleware( 'permission:customer-edit', [ 'only' => [ 'edit', 'update' ] ] );
 		$this->middleware( 'permission:customer-delete', [ 'only' => [ 'destroy' ] ] );
-		$this->createStripe();
-		$this->createFirebase();
-		$this->createKlaviyo();
-		$this->createSMSsystem();
 	}
 
 
@@ -208,41 +204,52 @@ class CustomersController extends Controller
 
 	protected function sendDataToSMSSystem($input){
 		try {
-			$url      = $this->smssystem;
-			$postvars = http_build_query( $input );
-			$ch       = curl_init();
-			curl_setopt( $ch, CURLOPT_URL, $url );
-			curl_setopt( $ch, CURLOPT_POST, count( $input ) );
-			curl_setopt( $ch, CURLOPT_POSTFIELDS, $postvars );
-			curl_setopt( $ch, CURLOPT_RETURNTRANSFER , true );
-			$res = curl_exec( $ch );
-			curl_close( $ch );
-			if($res) {
-				$result = json_decode($res);
-				if ( $result && ! empty( $result->success ) && $result->success && ! empty( $result->data ) ) {
-					return $this->sendResponse($result->data);
-				} else {
-					$error = "Wrong response from " . $url;
-					if ( $result && ! empty( $result->success ) && ! $result->success && ! empty( $result->message ) ) {
-						$error = $result->message;
+			$this->createSMSsystem();
+			if($this->smssystem) {
+				$url      = $this->smssystem;
+				$postvars = http_build_query( $input );
+				$ch       = curl_init();
+				curl_setopt( $ch, CURLOPT_URL, $url );
+				curl_setopt( $ch, CURLOPT_POST, count( $input ) );
+				curl_setopt( $ch, CURLOPT_POSTFIELDS, $postvars );
+				curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+				$res = curl_exec( $ch );
+				curl_close( $ch );
+				if ( $res ) {
+					$result = json_decode( $res );
+					if ( $result && ! empty( $result->success ) && $result->success && ! empty( $result->data ) ) {
+						return $this->sendResponse( $result->data );
+					} else {
+						$error = "Wrong response from " . $url;
+						if ( $result && ! empty( $result->success ) && ! $result->success && ! empty( $result->message ) ) {
+							$error = $result->message;
+						}
+						Errors::create( [
+							'error'      => $error,
+							'controller' => 'CustomersController',
+							'function'   => 'sendLead'
+						] );
+
+						return $this->sendError( $error );
 					}
+				} else {
+					$error = "No response from " . $url;
 					Errors::create( [
 						'error'      => $error,
 						'controller' => 'CustomersController',
 						'function'   => 'sendLead'
 					] );
-					return $this->sendError($error);
+
+					return $this->sendError( $error );
 				}
 			}
-			else{
-				$error = "No response from " . $url;
-				Errors::create( [
-					'error'      => $error,
-					'controller' => 'CustomersController',
-					'function'   => 'sendLead'
-				] );
-				return $this->sendError($error);
-			}
+			$error = "No SMS System Url found";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'sendDataToStripe'
+			]);
+			return $this->sendError($error);
 		}
 		catch (Exception $ex){
 			Errors::create([
@@ -306,11 +313,21 @@ class CustomersController extends Controller
 
 	public function sendDataToStripe($input){
 		try {
-			$res = $this->createStripeCustomer( $input );
-			if ( $res && $res['success'] && ! empty( $res['data'] ) ) {
-				return $this->createStripeSubscription( $res['data'] );
+			$this->createStripe();
+			if($this->stripe) {
+				$res = $this->createStripeCustomer( $input );
+				if ( $res && $res['success'] && ! empty( $res['data'] ) ) {
+					return $this->createStripeSubscription( $res['data'] );
+				}
+				return $res;
 			}
-			return $res;
+			$error = "No Stripe API Key found";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'sendDataToStripe'
+			]);
+			return $this->sendError($error);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -341,39 +358,50 @@ class CustomersController extends Controller
 
 	public function sendDataToFirebase($user, $collection = 'users') {
 		try {
-			$auth = $this->firebase->createAuth();
-			$userProperties = [
-				'email'         => $user['email'],
-				'password'      => 'warrenbuffett1',
-				'emailVerified' => false,
-				'disabled'      => false,
-				'metadata'      => [
-					'lastSignInDate' => date( 'D M d Y H:i:s O' ),
-				],
-			];
-			$createdUser    = $auth->createUser( $userProperties );
-			if($createdUser && $createdUser->uid){
-				$firestore = $this->firebase->createFirestore();
-				$database = $firestore->database();
-				$data = [
-					'firstName' => $user['first_name'],
-					'lastName' => $user['last_name'],
+			$this->createFirebase();
+			if($this->firebase) {
+				$auth           = $this->firebase->createAuth();
+				$userProperties = [
 					'email'         => $user['email'],
-					'phoneNumber' => $user['phone'],
-					'userId' =>  $createdUser->uid,
-				    'customerId' => $user['customerId'],
-				    'subscriptionId' => $user['subscriptionId'],
-				    'isPrime' => true,
-				    'subscriptionStatus' => "active",
+					'password'      => 'warrenbuffett1',
+					'emailVerified' => false,
+					'disabled'      => false,
+					'metadata'      => [
+						'lastSignInDate' => date( 'D M d Y H:i:s O' ),
+					],
 				];
-				$database->collection($collection)->document($createdUser->uid)->set($data);
+				$createdUser    = $auth->createUser( $userProperties );
+				if ( $createdUser && $createdUser->uid ) {
+					$firestore = $this->firebase->createFirestore();
+					$database  = $firestore->database();
+					$data      = [
+						'firstName'          => $user['first_name'],
+						'lastName'           => $user['last_name'],
+						'email'              => $user['email'],
+						'phoneNumber'        => $user['phone'],
+						'userId'             => $createdUser->uid,
+						'customerId'         => $user['customerId'],
+						'subscriptionId'     => $user['subscriptionId'],
+						'isPrime'            => true,
+						'subscriptionStatus' => "active",
+					];
+					$database->collection( $collection )->document( $createdUser->uid )->set( $data );
 
-				$auth->setCustomUserClaims($createdUser->uid, [
-						'customer_id' => $user['customerId'],
+					$auth->setCustomUserClaims( $createdUser->uid, [
+						'customer_id'     => $user['customerId'],
 						'subscription_id' => $user['subscriptionId'],
-				]);
+					] );
+				}
+
+				return $this->sendResponse( $createdUser );
 			}
-			return $this->sendResponse($createdUser);
+			$error = "No Firebase API Key found";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'sendDataToStripe'
+			]);
+			return $this->sendError($error);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -389,18 +417,29 @@ class CustomersController extends Controller
 
 	public function sendDataToKlaviyo($input, $list_id = ''){
 		try {
-			if(!$list_id){
-				$list_id = $this->klaviyo_listId;
+			$this->createKlaviyo();
+			if($this->klaviyo && $this->klaviyo_listId) {
+				if ( ! $list_id ) {
+					$list_id = $this->klaviyo_listId;
+				}
+				$klaviyo_data = [
+					'$email'        => $input['email'],
+					'$phone_number' => $input['phone'],
+					'$first_name'   => $input['first_name'],
+					'$last_name'    => $input['last_name'],
+				];
+				$profile      = new KlaviyoProfile( $klaviyo_data );
+				$res          = $this->klaviyo->lists->addMembersToList( $list_id, [ $profile ] );
+
+				return $this->sendResponse( $res );
 			}
-			$klaviyo_data = [
-				'$email' => $input['email'],
-				'$phone_number' => $input['phone'],
-				'$first_name' => $input['first_name'],
-				'$last_name' => $input['last_name'],
-			];
-			$profile = new KlaviyoProfile($klaviyo_data);
-			$res = $this->klaviyo->lists->addMembersToList( $list_id, [$profile] );
-			return $this->sendResponse($res);
+			$error = "No Klaviyo API Key found";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'sendDataToStripe'
+			]);
+			return $this->sendError($error);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -454,7 +493,18 @@ class CustomersController extends Controller
 
 	protected function createFirebase(){
 		try{
-			$this->firebase = ( new Factory )->withServiceAccount( storage_path( config( 'firebase.file_name' ) ) );
+			if(config( 'firebase.file_name' )) {
+				$this->firebase = ( new Factory )->withServiceAccount( storage_path( config( 'firebase.file_name' ) ) );
+				return $this->firebase;
+			}
+			$error = "No Firebase Configuration Found";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'createFirebase'
+			]);
+			return back()->withErrors([$error])
+			             ->withInput();
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -463,12 +513,15 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'createFirebase'
 			]);
+			return back()->withErrors([$error])
+			             ->withInput();
 		}
 	}
 
 	protected function createStripe(){
 		try{
 			$this->stripe = new StripeClient( config( 'stripe.stripeKey' ) );
+			return $this->stripe;
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -477,6 +530,8 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'createStripe'
 			]);
+			return back()->withErrors([$error])
+			             ->withInput();
 		}
 	}
 
@@ -484,6 +539,10 @@ class CustomersController extends Controller
 		try{
 			$this->klaviyo = new Klaviyo( config( 'klaviyo.apiKey' ), config( 'klaviyo.pubKey' ) );
 			$this->klaviyo_listId = config( 'klaviyo.listId' );
+			return [
+				'klaviyo' => $this->klaviyo,
+				'klaviyo_listId' => $this->klaviyo_listId
+			];
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -492,10 +551,13 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'createKlaviyo'
 			]);
+			return back()->withErrors([$error])
+			             ->withInput();
 		}
 	}
 
 	protected function createSMSsystem(){
 		$this->smssystem = config( 'smssystem.url' );
+		return $this->smssystem;
 	}
 }

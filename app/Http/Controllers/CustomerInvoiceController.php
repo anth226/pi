@@ -25,10 +25,6 @@ class CustomerInvoiceController extends CustomersController
 		$this->middleware('permission:customer-create|invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:customer-edit', ['only' => ['edit','update']]);
 		$this->middleware('permission:customer-delete', ['only' => ['destroy']]);
-		$this->createStripe();
-		$this->createFirebase();
-		$this->createKlaviyo();
-		$this->createSMSsystem();
 	}
 
 	public function create(Request $request)
@@ -95,11 +91,11 @@ class CustomerInvoiceController extends CustomersController
 
 		if(!$test_mode) {
 			//////////// sending data
-//			$stripe_res = $this->sendToStripe($dataToSend);
-//			$dataToSend['customerId'] = $stripe_res['data']['customer'];
-//			$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
-//			$firebase_res = $this->sendToFirebase($dataToSend);
-//			$klaviyo_res = $this->sendToKlaviyo($dataToSend);
+			$stripe_res = $this->sendToStripe($dataToSend);
+			$dataToSend['customerId'] = $stripe_res['data']['customer'];
+			$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
+			$firebase_res = $this->sendToFirebase($dataToSend);
+			$klaviyo_res = $this->sendToKlaviyo($dataToSend);
 			$smssystem_res = $this->sendToSMSsystem($dataToSend);
 		}
 		else{
