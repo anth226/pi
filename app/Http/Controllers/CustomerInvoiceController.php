@@ -27,6 +27,17 @@ class CustomerInvoiceController extends CustomersController
 		$this->middleware('permission:customer-delete', ['only' => ['destroy']]);
 	}
 
+
+	public function index(Request $request)
+	{
+		return view('customers.createandsendindex');
+	}
+
+	public function anyData(Request $request){
+		$query =  Customers::with('invoices')->with('invoices.salespersone')->with('invoices.salespeople.salespersone');
+		return datatables()->eloquent($query)->toJson();
+	}
+
 	public function create(Request $request)
 	{
 		$states = UsStates::statesUS();
