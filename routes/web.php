@@ -37,11 +37,12 @@ Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail');
 Route::resource('/roles','RoleController');
 Route::resource('/users','UserController');
 Route::resource('/customers','CustomersController', ['only' => ['show', 'index']]);
-Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['store', 'create']]);
+Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['index', 'store', 'create']]);
 Route::resource('/salespeople','SalespeopleController');
 Route::resource('/invoices','InvoicesController', ['only' => ['show']]);
 
-Route::get('/dashboard', 'CustomersController@index');
+Route::get('/datatables.data', 'CustomerInvoiceController@anyData');
+Route::get('/dashboard', 'CustomerInvoiceController@index');
 
 
 
