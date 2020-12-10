@@ -4,6 +4,7 @@
 /public/images
 /public/sms_support_images
 /storage/*.key
+/storage/*.json
 /vendor
 .env
 .phpunit.result.cache
