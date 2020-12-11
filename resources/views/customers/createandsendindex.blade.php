@@ -57,7 +57,7 @@
                 serverSide: true,
                 order: [[ 0, "desc" ]],
                 ajax: '/datatables.data',
-                searching: false,
+                // searching: false,
                 bStateSave: true,
                 // dom: 'Bflrtip',
                 // buttons: [
