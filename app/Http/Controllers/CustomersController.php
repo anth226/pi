@@ -341,20 +341,30 @@ class CustomersController extends Controller
 		}
 	}
 
-	public function sendResponse($result)
+	public function sendResponse($result, $json = false)
 	{
-		return [
+		$response = [
 			'success' => true,
-			'data'    => $result
+			'data'    => $result,
+			'message' => ''
 		];
+		if($json){
+			return response()->json($response, 200);
+		}
+		return $response;
 	}
 
-	public function sendError($error)
+	public function sendError($error, $json = false)
 	{
-		return [
+		$response = [
 			'success' => false,
+			'data' => [],
 			'message' => $error,
 		];
+		if($json){
+			return response()->json($response, 404);
+		}
+		return $response;
 	}
 
 	public function sendDataToFirebase($user, $collection = 'users') {
@@ -453,13 +463,29 @@ class CustomersController extends Controller
 		}
 	}
 
-	public function getFirebaseUser($uid){
+	public function getFirebaseUser($value, $by = 'uid'){
 		try {
-			$auth = $this->firebase->createAuth();
-			return $auth->getUser($uid);
-//			$user = $auth->getUserByEmail('user@domain.tld');
-//			$user = $auth->getUserByPhoneNumber('+49-123-456789');
-			return $user;
+			$this->createFirebase();
+			if($this->firebase) {
+				$auth = $this->firebase->createAuth();
+				switch($by){
+					case 'email':
+						return $this->sendResponse($auth->getUserByEmail($value), true);
+					case 'phone':
+						return $this->sendResponse($auth->getUserByPhoneNumber($value), true);
+					case 'uid':
+					default:
+						return $this->sendResponse($auth->getUser( $value ), true);
+				}
+
+			}
+			$error = "Wrong Firebase credentials or connection issue";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'getFirebaseUser'
+			]);
+			return $this->sendError($error, true);
 		} catch (Exception $ex){
 			$error = $ex->getMessage();
 			Errors::create([
@@ -467,19 +493,29 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'getFirebaseUser'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, true);
 		}
 
 	}
 
 	public function getFirebaseCollectionRecord($id, $collection= 'users'){
 		try {
-			$firestore         = $this->firebase->createFirestore();
-			$database          = $firestore->database();
-			$collection        = $database->collection( $collection );
-			$documentReference = $collection->document( $id );
-			$snapshot = $documentReference->snapshot();
-			return $this->sendResponse($snapshot);
+			$this->createFirebase();
+			if($this->firebase) {
+				$firestore         = $this->firebase->createFirestore();
+				$database          = $firestore->database();
+				$collection        = $database->collection( $collection );
+				$documentReference = $collection->document( $id );
+				$snapshot = $documentReference->snapshot();
+				return $this->sendResponse($snapshot, true);
+			}
+			$error = "Wrong Firebase credentials or connection issue";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'getFirebaseUser'
+			]);
+			return $this->sendError($error, true);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -488,7 +524,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'getFirebaseCollectionRecord'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, true);
 		}
 	}
 

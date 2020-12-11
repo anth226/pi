@@ -193,10 +193,6 @@ class CustomerInvoiceController extends CustomersController
 				]);
 			}
 			if(!empty($smssystem_res) && !empty($smssystem_res['data']) && !empty($smssystem_res['data']->id)){
-				SentDataLog::create( [
-					'customer_id' => $customer->id,
-					'lead_id'     => $smssystem_res['data']->id
-				] );
 				SentData::create([
 					'customer_id' => $customer->id,
 					'value' => $smssystem_res['data']->id,

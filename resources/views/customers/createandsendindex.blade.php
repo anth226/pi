@@ -1,6 +1,5 @@
 @extends('layouts.app')
 
-
 @section('content')
     <div class="container">
         <div class="col-lg-12 m-auto">
@@ -28,7 +27,7 @@
             @endif
 
 
-            <table class="table table-striped table-bordered w-100" id="customers_table">
+            <table class="table table-striped table-bordered table-responsive-lg w-100" id="customers_table">
                 <thead>
                 <tr>
                     <th>Date</th>
@@ -56,8 +55,10 @@
                 // stateSave: true,
                 processing: true,
                 serverSide: true,
-                "order": [[ 0, "desc" ]],
+                order: [[ 0, "desc" ]],
                 ajax: '/datatables.data',
+                searching: false,
+                bStateSave: true,
                 // dom: 'Bflrtip',
                 // buttons: [
                 //     'copy', 'excel', 'pdf', 'print', 'colvis'
