@@ -30,8 +30,9 @@ class TestController extends Controller
 //		];
 //		dd($c->sendDataToKlaviyo($userProperties));
 //		$customer = $c->sendDataToFirebase($userProperties);
-//		dd($c->getFirebaseUser($customer->uid));
-//		dd($c->getFirebaseUser('JAWGa9pT2OeqS6wQoj1bdw6f56r2')); //JAWGa9pT2OeqS6wQoj1bdw6f56r2
+//		dd($c->getFirebaseUser('kevin@portfolioinsider.com', 'email'));
+//		dd($c->getFirebaseCollectionRecord('JAWGa9pT2OeqS6wQoj1bdw6f56r2')); //kevin@portfolioinsider.com
+//		dd($c->getFirebaseCollectionRecord('oird7Wwc8UMF8NXi9fJunSY85ai2'));
 
 	}
 
