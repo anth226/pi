@@ -70,7 +70,7 @@
                     { data: 'first_name', name: 'first_name',"sortable": false,  render: function ( data, type, row ){
                             return '<a href="/customers/'+row.id+'" target="_blank">'+row.first_name+' '+row.last_name+'</a>'
                         }},
-                    { data: 'invoices.sales_price', name: 'invoices.sales_price', "searchable": false, render: function ( data, type, row ){
+                    { data: 'invoices.sales_price', name: 'invoices.sales_price', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 return moneyFormat(data);
                             }
