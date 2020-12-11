@@ -126,7 +126,8 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <strong>Phone Number *:</strong>
-                        {!! Form::text('phone_number', null, array('placeholder' => 'Phone Number','class' => 'form-control')) !!}
+                        {!! Form::text('phone_number', null, array('placeholder' => 'Phone Number','class' => 'form-control phone-number')) !!}
+                        <label>{!! Form::checkbox('is_formated', null, array('class' => 'form-control')) !!}<small class="small align-text-top"> Format as US Phone number</small></label>
                     </div>
                 </div>
             </div>
@@ -199,6 +200,7 @@
 @section('script')
     <script src="{{ url('/js/jquery.datetimepicker.full.min.js') }}"></script>
     <script src="{{ url('/js/select2.min.js') }}"></script>
+    <script src="{{ url('/js/jquery-input-mask-phone-number.min.js') }}"></script>
     <script>
         $(document).ready(function() {
             $("select").select2({
@@ -326,8 +328,26 @@
                 $('a').addClass('disabled');
                 var button_title = submit_button.html();
                 submit_button.html(button_title + ' ' + ajax_img);
-            })
+            });
 
+            $('.phone-number').usPhoneFormat({
+                format: '(xxx) xxx-xxxx',
+                international: true
+            });
+
+            $('input[name="is_formated"]').click(function(){
+                var phone_number =$('input[name="phone_number"]');
+                if($(this).prop("checked") == true){
+                    phone_number.addClass('phone-number');
+                    $('.phone-number').usPhoneFormat({
+                        format: '(xxx) xxx-xxxx',
+                        international: true
+                    });
+                }
+                else if($(this).prop("checked") == false){
+                    phone_number.removeClass('phone-number').off();
+                }
+            });
         });
     </script>
 @endsection
