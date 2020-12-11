@@ -102,41 +102,41 @@ class CustomerInvoiceController extends CustomersController
 
 		if(!$test_mode) {
 			//////////// sending data
-//			$stripe_res = $this->sendDataToStripe($dataToSend);
-//			if(!$stripe_res['success']){
-//				$message = 'Error! Can\'t send data to stripe';
-//				if(!empty($stripe_res['message'])){
-//					$message = $stripe_res['message'];
-//				}
-//				return back()->withErrors([$message])
-//				             ->withInput();
-//			}
-//			else {
-//				$dataToSend['customerId']     = $stripe_res['data']['customer'];
-//				$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
-//
-//				$firebase_res = $this->sendDataToFirebase( $dataToSend );
-//				if ( ! $firebase_res['success'] ) {
-//					$message = 'Error! Can\'t send data to firebase';
-//					if ( ! empty( $firebase_res['message'] ) ) {
-//						$message = $firebase_res['message'];
-//					}
-//
-//					return back()->withErrors( [ $message ] )
-//					             ->withInput();
-//				}
-//
-//				$klaviyo_res = $this->sendDataToKlaviyo( $dataToSend );
-//				if ( ! $klaviyo_res['success'] ) {
-//					$message = 'Error! Can\'t send data to klaviyo';
-//					if ( ! empty( $stripe_res['message'] ) ) {
-//						$message = $stripe_res['message'];
-//					}
-//
-//					return back()->withErrors( [ $message ] )
-//					             ->withInput();
-//				}
-//			}
+			$stripe_res = $this->sendDataToStripe($dataToSend);
+			if(!$stripe_res['success']){
+				$message = 'Error! Can\'t send data to stripe';
+				if(!empty($stripe_res['message'])){
+					$message = $stripe_res['message'];
+				}
+				return back()->withErrors([$message])
+				             ->withInput();
+			}
+			else {
+				$dataToSend['customerId']     = $stripe_res['data']['customer'];
+				$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
+
+				$firebase_res = $this->sendDataToFirebase( $dataToSend );
+				if ( ! $firebase_res['success'] ) {
+					$message = 'Error! Can\'t send data to firebase';
+					if ( ! empty( $firebase_res['message'] ) ) {
+						$message = $firebase_res['message'];
+					}
+
+					return back()->withErrors( [ $message ] )
+					             ->withInput();
+				}
+
+				$klaviyo_res = $this->sendDataToKlaviyo( $dataToSend );
+				if ( ! $klaviyo_res['success'] ) {
+					$message = 'Error! Can\'t send data to klaviyo';
+					if ( ! empty( $stripe_res['message'] ) ) {
+						$message = $stripe_res['message'];
+					}
+
+					return back()->withErrors( [ $message ] )
+					             ->withInput();
+				}
+			}
 
 			$smssystem_res = $this->sendDataToSMSSystem($dataToSend);
 			if(!$smssystem_res['success']){
