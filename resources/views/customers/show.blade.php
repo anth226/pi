@@ -10,7 +10,7 @@
                         <h2> {{ $customer->first_name }} {{ $customer->last_name }}</h2>
                     </div>
                     <div class="pull-right mb-4">
-                        <a class="btn btn-primary mt-2" href="{{ route('customers.index') }}"> Dashboard</a>
+                        <a class="btn btn-primary mt-2" href="/dashboard"> Dashboard</a>
 
                         {{--@can('customer-edit')--}}
                             {{--<a class="btn btn-info mt-2" href="{{ route('customers.edit',$customer->id) }}"> Edit</a>--}}

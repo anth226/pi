@@ -36,7 +36,7 @@ Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail');
 
 Route::resource('/roles','RoleController');
 Route::resource('/users','UserController');
-Route::resource('/customers','CustomersController', ['only' => ['show', 'index']]);
+Route::resource('/customers','CustomersController', ['only' => ['show']]);
 Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['index', 'store', 'create']]);
 Route::resource('/salespeople','SalespeopleController');
 Route::resource('/invoices','InvoicesController', ['only' => ['show']]);
