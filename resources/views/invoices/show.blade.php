@@ -98,7 +98,7 @@
                     <div class="pull-right mb-4 ">
                         <a class="btn btn-primary mt-2" href="/dashboard"> Dashboard</a>
                         @can('invoice-edit')
-                            <button class="btn btn-danger mt-2" data-toggle="modal" data-target="#editinvoice">Edit Invoice</button>
+                            <button class="btn btn-info mt-2" data-toggle="modal" data-target="#editinvoice">Edit Invoice</button>
                         @endcan
                         {{--@can('invoice-delete')--}}
                             {{--{!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline;']) !!}--}}
@@ -457,14 +457,14 @@
                 var submitButton = $('#saveAndGenerate');
                 var button_text = submitButton.html();
                 var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
-                submitButton.html(ajax_img);
+                submitButton.html(button_text+ajax_img);
                 $('#editinvoice').find('button').prop('disabled', true);
 
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
+                // $.ajaxSetup({
+                //     headers: {
+                //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                //     }
+                // });
 
                 $.ajax({
                     url: '/invoices/update/{{$invoice->id}}',
@@ -489,10 +489,10 @@
                     error: function (response) {
                         if (response && response.responseJSON) {
                             if (response.responseJSON.message) {
-                                err_box.html(response.responseJSON.message);
+                                popup_err_box.html(response.responseJSON.message);
                             }
                             else {
-                                err_box.html('Error!');
+                                popup_err_box.html('Error!');
                             }
                         }
                         submitButton.html(button_text);

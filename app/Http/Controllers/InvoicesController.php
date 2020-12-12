@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Customers;
 use App\EmailLogs;
 use App\EmailTemplates;
+use App\Errors;
 use App\Http\Controllers\API\BaseController;
 use App\Invoices;
 use App\KmClasses\Sms\Elements;
@@ -14,7 +15,7 @@ use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
 use App\SentData;
-use App\SentDataLog;
+use Exception;
 use Illuminate\Http\Request;
 use PDF;
 
@@ -170,26 +171,43 @@ class InvoicesController extends BaseController
 	 */
 	public function update(Request $request, $id)
 	{
-		dd($id);
-		$this->validate($request, [
-			'first_name' => 'required|max:120',
-			'last_name' => 'max:120',
-			'name_for_invoice' => 'max:120',
-			'email' => 'required|max:120',
-			'phone_number' => 'max:120|min:10',
-		]);
+		try{
+			$dataToUpdate = [];
+			$this->validate($request, [
+				'salespeople_id' => 'required|numeric|min:1',
+				'sales_price' => 'required',
+				'access_date' => 'required',
+				'cc_number' => 'required|digits:4'
+			]);
+			$dataToUpdate['sales_price'] = Elements::moneyToDecimal($request->input('sales_price'));
+			$dataToUpdate['access_date'] = Elements::createDateTime($request->input('access_date'));
+			$dataToUpdate['cc_number'] = $request->input('cc_number');
+			$dataToUpdate['salespeople_id'] = $request->input('salespeople_id');
 
-		$last_name = !empty($request->input('last_name')) ? $request->input('last_name') : '';
+			$invoice = Invoices::where('id', $id)->update($dataToUpdate);
 
-		$invoice = Invoices::find($id);
-		$invoice->first_name = $request->input('first_name');
-		$invoice->last_name =  $last_name;
-		$invoice->name_for_invoice =  !empty($request->input('name_for_invoice')) ? $request->input('name_for_invoice') : $request->input('first_name'). ' ' .$last_name;
-		$invoice->phone_number = !empty($request->input('phone_number')) ? $request->input('phone_number') : '';
-		$invoice->save();
+			SecondarySalesPeople::where('invoice_id', $id)->delete();
+			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
+				foreach ($request->input('second_salespeople_id') as $val){
+					SecondarySalesPeople::create( [
+						'salespeople_id' => $val,
+						'invoice_id'     => $id
+					] );
+				}
+			}
 
-		return redirect()->route('invoices.index')
-		                 ->with('success','Invoice updated successfully');
+			$this->generatePDF($id);
+
+			return $this->sendResponse($invoice, '');
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'InvoicesController',
+				'function' => 'update'
+			]);
+			return $this->sendError( $ex->getMessage() );
+		}
 	}
 	/**
 	 * Remove the specified resource from storage.

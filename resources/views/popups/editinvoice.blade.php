@@ -21,6 +21,7 @@
                             <div class="form-group">
                                 <strong>Salespeople:</strong>
                                 @php
+                                    $sec_salespeople = [];
                                     if(!empty($invoice->salespeople)){
                                         foreach($invoice->salespeople as $sp){
                                             if(!empty($sp->salespeople_id)){
@@ -38,7 +39,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <strong>Sales Price *:</strong>
-                                {!! Form::text('sales_price', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Sales Price"', 'required="required"')) !!}
+                                {!! Form::text('sales_price', $total, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Sales Price"', 'required="required"')) !!}
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -56,11 +57,14 @@
                     </div>
                 </div>
             </div>
+            <div class="p-2">
+                <div class="popup_err_box text-danger"></div>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button type="submit" class="btn btn-primary" id="saveAndGenerate">Save changes and regenerate invoice</button>
-                <div class="popup_err_box text-danger"></div>
             </div>
+
             {!! Form::close() !!}
         </div>
     </div>

@@ -30,8 +30,8 @@ Route::get('/test', 'TestController@index')->name('test');
 
 //Ajax
 
-Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail');
-Route::post('/invoices/update/{id}', 'InvoicesController@update');
+Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail', ['middleware' => 'csrf']);
+Route::post('/invoices/update/{id}', 'InvoicesController@update' ,  ['middleware' => 'csrf']);
 //
 
 
@@ -44,8 +44,6 @@ Route::resource('/invoices','InvoicesController', ['only' => ['show']]);
 
 Route::get('/datatables.data', 'CustomerInvoiceController@anyData');
 Route::get('/dashboard', 'CustomerInvoiceController@index');
-Route::get('/dashboard', 'CustomerInvoiceController@index');
-
 
 
 Route::get('/email-templates', 'TemplatesController@index');
