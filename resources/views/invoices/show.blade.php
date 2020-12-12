@@ -1,5 +1,47 @@
 @extends('layouts.app')
 
+@section('style')
+    <link href="{{ asset('css/jquery.datetimepicker.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
+    <style>
+        .select2-selection.select2-selection--single {
+            display: block;
+            width: 100%;
+            height: calc(1.6em + .75rem + 2px);
+            padding: .45rem .75rem;
+            font-size: .9rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+        .select2-selection.select2-selection--single:focus,
+        .select2-selection.select2-selection--single:hover {
+            color: #495057;
+            background-color: #fff;
+            border-color: #a1cbef;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(52,144,220,.25);
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 90%;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: .9rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #495057;
+        }
+    </style>
+@endsection
+
+@section('popup')
+    @include('popups.editinvoice')
+@endsection
 
 @section('content')
     <div class="container">
@@ -55,9 +97,9 @@
                     </div>
                     <div class="pull-right mb-4 ">
                         <a class="btn btn-primary mt-2" href="/dashboard"> Dashboard</a>
-                        {{--@can('invoice-edit')--}}
-                            {{--<a class="btn btn-info mt-2" href="{{ route('invoices.edit',$invoice->id) }}">Edit Invoice</a>--}}
-                        {{--@endcan--}}
+                        @can('invoice-edit')
+                            <button class="btn btn-danger mt-2" data-toggle="modal" data-target="#editinvoice">Edit Invoice</button>
+                        @endcan
                         {{--@can('invoice-delete')--}}
                             {{--{!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline;']) !!}--}}
                             {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}--}}
@@ -81,6 +123,10 @@
                         <small>
                             {{ $invoice->customer->email }}
                         </small>
+                    </div>
+                    <div>
+                        <strong>Address:</strong>
+                        {{ $invoice->customer->address_1 }} {{ $invoice->customer->address_2 }}, {{ $invoice->customer->city }}, {{ $invoice->customer->state }}, {{ $invoice->customer->zip }}
                     </div>
                     <div>
                         <strong>Salesperson:</strong>
@@ -175,19 +221,20 @@
             </div>
             <a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a><br>
             <a  href="/pdfdownload/{{$invoice->id }}" title="Download a PDF file">Download</a><br>
-            <div class="mt-2" style="width:900px;height:1250px;">
+            <div class="mt-2 d-none d-md-block" style="width:900px;height:1250px;">
                 <object style="width:100%;height:100%;" data="{{ $full_path.$invoice->id }}">{{$file_name}}" type="application/pdf">
                     <iframe style="width:100%;height:100%;" src="https://docs.google.com/viewer?url={{ $full_path.$invoice->id }}&embedded=true"></iframe>
                 </object>
             </div>
 
-            {{--@include('pdfview')--}}
         </div>
     </div>
 
 @endsection
 
 @section('script')
+    <script src="{{ url('/js/jquery.datetimepicker.full.min.js') }}"></script>
+    <script src="{{ url('/js/select2.min.js') }}"></script>
     <script>
         function isEmail(email) {
             // var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,6})+$/;
@@ -279,7 +326,183 @@
             }
 
 
-        })
+        });
+
+        $(document).ready(function() {
+            $("select").select2({
+                width: '100%',
+                placeholder: 'Please select',
+                allowClear: true
+            });
+            $("input[data-type='currency']").on({
+                keyup: function() {
+                    formatCurrency($(this));
+                },
+                blur: function() {
+                    formatCurrency($(this), "blur");
+                }
+            });
+
+            $('#access_date').datetimepicker({
+                timepicker:false,
+                format:'m-d-Y',
+                value: '{{ $access_date }}'
+            });
+            $.datetimepicker.setLocale('en');
+
+            $('select[name="salespeople_id"]').on('change', function(){
+                const s_val = $(this).val();
+                const second_sel = $('select[name="second_salespeople_id[]"]');
+                if(s_val) {
+                    second_sel.prop('disabled', false);
+                    second_sel.find($('option')).prop('disabled', false);
+                    second_sel.find($('option[value="' + s_val + '"]')).prop('disabled', true);
+                }
+                else{
+                    second_sel.val([]).trigger('change');
+                    second_sel.prop('disabled', true);
+                }
+            });
+            $('select[name="second_salespeople_id[]"]').on('change', function(){
+                const s_val = $(this).val();
+                const second_sel = $('select[name="salespeople_id"]');
+                second_sel.prop('disabled', false);
+                second_sel.find($('option')).prop('disabled', false);
+                second_sel.find($('option[value="'+s_val+'"]')).prop('disabled', true);
+            });
+
+
+            function formatNumber(n) {
+                // format number 1000000 to 1,234,567
+                return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            }
+
+
+            function formatCurrency(input, blur) {
+                // appends $ to value, validates decimal side
+                // and puts cursor back in right position.
+
+                // get input value
+                var input_val = input.val();
+
+                // don't validate empty input
+                if (input_val === "") { return; }
+
+                // original length
+                var original_len = input_val.length;
+
+                // initial caret position
+                var caret_pos = input.prop("selectionStart");
+
+                // check for decimal
+                if (input_val.indexOf(".") >= 0) {
+
+                    // get position of first decimal
+                    // this prevents multiple decimals from
+                    // being entered
+                    var decimal_pos = input_val.indexOf(".");
+
+                    // split number by decimal point
+                    var left_side = input_val.substring(0, decimal_pos);
+                    var right_side = input_val.substring(decimal_pos);
+
+                    // add commas to left side of number
+                    left_side = formatNumber(left_side);
+
+                    // validate right side
+                    right_side = formatNumber(right_side);
+
+                    // On blur make sure 2 numbers after decimal
+                    if (blur === "blur") {
+                        right_side += "00";
+                    }
+
+                    // Limit decimal to only 2 digits
+                    right_side = right_side.substring(0, 2);
+
+                    // join number by .
+                    input_val = "$" + left_side + "." + right_side;
+
+                } else {
+                    // no decimal entered
+                    // add commas to number
+                    // remove all non-digits
+                    input_val = formatNumber(input_val);
+                    input_val = "$" + input_val;
+
+                    // final formatting
+                    if (blur === "blur") {
+                        input_val += ".00";
+                    }
+                }
+
+                // send updated string to input
+                input.val(input_val);
+
+                // put caret back in the right position
+                var updated_len = input_val.length;
+                caret_pos = updated_len - original_len + caret_pos;
+                input[0].setSelectionRange(caret_pos, caret_pos);
+            }
+
+            $(document).on('submit', '#invoiceEdit', function (event) {
+                event.preventDefault();
+
+                var popup_err_box = $('.popup_err_box');
+                popup_err_box.html('');
+
+                var $form = $(this);
+                var submitData = $form.serialize();
+
+                var submitButton = $('#saveAndGenerate');
+                var button_text = submitButton.html();
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                submitButton.html(ajax_img);
+                $('#editinvoice').find('button').prop('disabled', true);
+
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+
+                $.ajax({
+                    url: '/invoices/update/{{$invoice->id}}',
+                    type: "POST",
+                    dataType: "json",
+                    data: submitData,
+                    success: function (response) {
+                        if (response) {
+                            if (response.success) {
+                                location.reload();
+                            }
+                            else {
+                                popup_err_box.html('Error: ' + response.message);
+                            }
+                        }
+                        else {
+                            popup_err_box.html('Error!');
+                        }
+                        submitButton.html(button_text);
+                        $('#editinvoice').find('button').prop('disabled', false);
+                    },
+                    error: function (response) {
+                        if (response && response.responseJSON) {
+                            if (response.responseJSON.message) {
+                                err_box.html(response.responseJSON.message);
+                            }
+                            else {
+                                err_box.html('Error!');
+                            }
+                        }
+                        submitButton.html(button_text);
+                        $('#editinvoice').find('button').prop('disabled', false);
+                    }
+                });
+
+            });
+
+        });
 
     </script>
 @endsection
