@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Customers;
 use App\EmailLogs;
 use App\EmailTemplates;
+use App\Http\Controllers\API\BaseController;
 use App\Invoices;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
+use App\KmClasses\Sms\UsStates;
 use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
@@ -16,7 +18,7 @@ use App\SentDataLog;
 use Illuminate\Http\Request;
 use PDF;
 
-class InvoicesController extends Controller
+class InvoicesController extends BaseController
 {
 	protected $full_path, $app_url;
 	public $pdf_path;
@@ -128,7 +130,10 @@ class InvoicesController extends Controller
 			$template = EmailTemplates::getIdsAndFullNames();
 			$sentLog = SentData::where('customer_id', $invoice->customer->id)->orderBy('id', 'asc')->get();
 			$logs = EmailLogs::where('invoice_id', $id)->get();
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog') );
+
+			$states = UsStates::statesUS();
+			$salespeople = Salespeople::getIdsAndFullNames();
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople') );
 		}
 		return abort(404);
 	}
@@ -165,6 +170,7 @@ class InvoicesController extends Controller
 	 */
 	public function update(Request $request, $id)
 	{
+		dd($id);
 		$this->validate($request, [
 			'first_name' => 'required|max:120',
 			'last_name' => 'max:120',
