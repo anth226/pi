@@ -93,7 +93,7 @@ class SendEmailController extends BaseController
 						}
 					}
 				}
-				$invoice = Invoices::with('customer')->with('salespersone')
+				$invoice = Invoices::with('customer')->with('salespeople.salespersone')
 				                   ->with('product')
 				                   ->find($invoice_id);
 				$template_slug = EmailTemplates::where('id', $email_template_id)->value('template_slug');
@@ -104,7 +104,14 @@ class SendEmailController extends BaseController
 							$sender              = new EmailSender();
 							$invoiceController   = new InvoicesController();
 							$customer_first_name = $invoice->customer->first_name;
-							$salesperson         = $invoice->salespersone->name_for_invoice;
+							$salesperson         = '';
+							if($invoice->salespeople && $invoice->salespeople->count()){
+								foreach($invoice->salespeople as  $sp){
+									if($sp->sp_type){
+										$salesperson = $sp->salespersone->name_for_invoice;
+									}
+								}
+							}
 							$subject             = $customer_first_name . ', a warm welcome! (Here\'s your access)';
 							$pdfFilename         = $invoiceController->generateFileName( $invoice );
 							$path_to_file        = $invoiceController->pdf_path . $pdfFilename;

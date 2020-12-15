@@ -116,7 +116,6 @@ class InvoicesController extends BaseController
 	{
 		$invoice = Invoices::
 							with('customer')
-		                   ->with('salespersone')
 		                   ->with('salespeople.salespersone')
 		                   ->with('product')
 		                   ->find($id);
@@ -187,6 +186,13 @@ class InvoicesController extends BaseController
 			$invoice = Invoices::where('id', $id)->update($dataToUpdate);
 
 			SecondarySalesPeople::where('invoice_id', $id)->delete();
+
+			SecondarySalesPeople::create( [
+				'salespeople_id' => $request->input('salespeople_id'),
+				'invoice_id'     => $id,
+				'sp_type' => 1
+			] );
+
 			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
 				foreach ($request->input('second_salespeople_id') as $val){
 					SecondarySalesPeople::create( [
