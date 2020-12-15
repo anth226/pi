@@ -210,8 +210,21 @@
                 allowClear: true
             });
 
-            $('select[name="second_salespeople_id[]"]').val('[]').trigger('change');
-            $('select[name="salespeople_id"]').val('').trigger('change');
+            var pr_salesperson = $('select[name="salespeople_id"]');
+            var second_salesperson = $('select[name="second_salespeople_id[]"]');
+
+            var pr_salesperson_val = pr_salesperson.val();
+            if(pr_salesperson_val){
+                second_salesperson.find($('option[value="' + pr_salesperson_val + '"]')).prop('disabled', true);
+            }
+
+            var second_salesperson_val = second_salesperson.val();
+            if(second_salesperson_val && second_salesperson_val.length){
+                second_salesperson.prop('disabled', false);
+                $.each(second_salesperson_val, function(i,v){
+                    pr_salesperson.find($('option[value="' + v + '"]')).prop('disabled', true);
+                });
+            }
 
 
             $("input[data-type='currency']").on({
