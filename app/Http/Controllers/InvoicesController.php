@@ -38,16 +38,14 @@ class InvoicesController extends BaseController
 	}
 
 
-	/**
-	 * Display a listing of the resource.
-	 *
-	 * @return \Illuminate\Http\Response
-	 */
 	public function index(Request $request)
 	{
-		$invoices = Invoices::orderBy('id','DESC')->paginate(10);
-		return view('invoices.index',compact('invoices'))
-			->with('i', ($request->input('page', 1) - 1) * 10);
+		return view('invoices.index');
+	}
+
+	public function anyData(Request $request){
+		$query =  Invoices::with('customer')->with('salespeople.salespersone');
+		return datatables()->eloquent($query)->toJson();
 	}
 
 
