@@ -128,31 +128,37 @@
                         <strong>Address:</strong>
                         {{ $invoice->customer->address_1 }} {{ $invoice->customer->address_2 }}, {{ $invoice->customer->city }}, {{ $invoice->customer->state }}, {{ $invoice->customer->zip }}
                     </div>
-                    <div>
-                        <strong>Salesperson:</strong>
-                        <a target="_blank" href="{{ route('salespeople.show', $invoice->salespeople_id) }}" title="({{ $invoice->salespersone->first_name }} {{ $invoice->salespersone->last_name }})">
-                            {{ $invoice->salespersone->name_for_invoice }}
-                        </a>
-                    </div>
                     @php
                         $salespeople = [];
-                        $salespeople[] = $invoice->salespersone->email;
                         $cc = '';
                         $bcc = 'corporate@portfolioinsider.com';
                     @endphp
                     @if(count($invoice->salespeople))
                         @foreach($invoice->salespeople as  $sp)
-                            @php
-                                $salespeople[] = $sp->salespersone->email;
-                            @endphp
-                            <div class="px-2">
-                                <small>
+                            @if($sp->sp_type)
+                                @php
+                                    $salespeople[] = $sp->salespersone->email;
+                                @endphp
+                                <div>
                                     <strong>Salesperson:</strong>
                                     <a target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
                                         {{ $sp->salespersone->name_for_invoice }}
                                     </a>
-                                </small>
+                                </div>
+                            @endif
+                        @endforeach
+                        @foreach($invoice->salespeople as  $sp)
+                            @if(!$sp->sp_type)
+                            @php
+                                $salespeople[] = $sp->salespersone->email;
+                            @endphp
+                            <div class="px-2 small">
+                                <strong>Salesperson:</strong>
+                                <a target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
+                                    {{ $sp->salespersone->name_for_invoice }}
+                                </a>
                             </div>
+                            @endif
                         @endforeach
                     @endif
                     @php

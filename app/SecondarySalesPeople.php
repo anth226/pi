@@ -8,7 +8,8 @@ class SecondarySalesPeople extends Model
 {
 	protected $fillable = [
 		'invoice_id',
-		'salespeople_id'
+		'salespeople_id',
+		'sp_type' // 0 -secondary, 1 - primary (for invoice)
 	];
 
 	public function salespersone()

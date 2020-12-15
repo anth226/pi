@@ -215,6 +215,12 @@ class CustomerInvoiceController extends CustomersController
 			$invoice_instance = new InvoicesController();
 			$invoice_instance->generatePDF($invoice->id);
 
+			SecondarySalesPeople::create( [
+				'salespeople_id' => $request->input('salespeople_id'),
+				'invoice_id'     => $invoice->id,
+				'type' => 1
+			] );
+
 			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
 				foreach ($request->input('second_salespeople_id') as $val){
 					SecondarySalesPeople::create( [
