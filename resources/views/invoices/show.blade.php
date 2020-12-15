@@ -131,7 +131,7 @@
                     @php
                         $salespeople = [];
                         $cc = '';
-                        $bcc = 'corporate@portfolioinsider.com';
+                        $bcc = 'corporate@portfolioinsider.com, crystal@portfolioinsider.com';
                     @endphp
                     @if(count($invoice->salespeople))
                         @foreach($invoice->salespeople as  $sp)
