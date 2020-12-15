@@ -27,7 +27,7 @@
             @endif
 
 
-            <table class="table table-striped table-bordered table-responsive-lg w-100" id="customers_table">
+            <table class="table table-striped table-bordered table-responsive-sm w-100" id="customers_table">
                 <thead>
                 <tr>
                     <th>Date</th>
@@ -82,7 +82,7 @@
                             return generateSalespeople(row);
                         }  },
                     { data: 'email', name: 'email', "sortable": false },
-                    { data: 'phone_number', name: 'phone_number', "sortable": false },
+                    { data: 'phone_number', name: 'phone_number', "sortable": false, className:"text-nowrap" },
                     { data: 'invoices.id', name: 'invoices.id', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 return '<a title="Open invoice in a new tab" target="_blank" href="/invoices/' + data + '"><span class="badge badge-success">View</span></a>';
