@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 
+use App\Customers;
+use App\Http\Controllers\API\BaseController;
 use App\Invoices;
 use App\SecondarySalesPeople;
+use Exception;
 
-class TestController extends Controller
+class TestController extends BaseController
 {
 	public function __construct()
 	{
@@ -24,19 +27,20 @@ class TestController extends Controller
 //		dd(phpinfo());
 //		$c = new CustomersController();
 //		$userProperties = [
-//			'email'         => 'qzzzeeee@example.com',
-//			'phone'         => '464-654-6464',
-//			'first_name' => 'Kevin',
-//			'last_name' => 'Mart',
-//			'customerId' => 'cus_IMR5waCodpvTWw',
-//			'subscriptionId' => 'sub_IMR5gIal1yW5Bq'
+//			'email'         => '',
+//			'phone'         => '310 405 9772',
+//			'first_name' => 'Dan',
+//			'last_name' => '',
+//			'source' => 'portfolioinsider',
+//			'tags' => 'portfolioinsider,portfolio-insider-prime',
 //		];
-//		dd($c->sendDataToKlaviyo($userProperties));
+//		dd($this->sendDataToSMSSystem($userProperties));
 //		$customer = $c->sendDataToFirebase($userProperties);
 //		dd($c->getFirebaseUser('kevin@portfolioinsider.com', 'email'));
 //		dd($c->getFirebaseCollectionRecord('JAWGa9pT2OeqS6wQoj1bdw6f56r2')); //kevin@portfolioinsider.com
 //		dd($c->getFirebaseCollectionRecord('oird7Wwc8UMF8NXi9fJunSY85ai2'));
 //		$this->moveSP();
+//		dd(Invoices::with('customer')->with('salespeople.salespersone')->get()->toArray());
 
 	}
 
@@ -51,6 +55,38 @@ class TestController extends Controller
 				'salespeople_id' => $sp_id,
 				'sp_type' => 1
 			]);
+		}
+	}
+
+	public function sendDataToSMSSystem($input, $url = 'https://magicstarsystem.com/api/ulp'){
+		try {
+			$postvars = http_build_query( $input );
+			$ch       = curl_init();
+			curl_setopt( $ch, CURLOPT_URL, $url );
+			curl_setopt( $ch, CURLOPT_POST, count( $input ) );
+			curl_setopt( $ch, CURLOPT_POSTFIELDS, $postvars );
+			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+			$res = curl_exec( $ch );
+			curl_close( $ch );
+			if ( $res ) {
+				$result = json_decode( $res );
+				if ( $result && ! empty( $result->success ) && $result->success && ! empty( $result->data ) ) {
+					return $this->sendResponse( $result->data, '' );
+				} else {
+					$error = "Wrong response from " . $url;
+					if ( $result && ! empty( $result->success ) && ! $result->success && ! empty( $result->message ) ) {
+						$error = $result->message;
+					}
+					return $this->sendError( $error );
+				}
+			} else {
+				$error = "No response from " . $url;
+				return $this->sendError( $error );
+			}
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			return $this->sendError($error);
 		}
 	}
 

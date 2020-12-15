@@ -40,10 +40,12 @@ Route::resource('/users','UserController');
 Route::resource('/customers','CustomersController', ['only' => ['show']]);
 Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['index', 'store', 'create']]);
 Route::resource('/salespeople','SalespeopleController');
-Route::resource('/invoices','InvoicesController', ['only' => ['show']]);
+Route::resource('/invoices','InvoicesController', ['only' => ['show', 'index']]);
 
 Route::get('/datatables.data', 'CustomerInvoiceController@anyData');
+Route::get('/invoicesdatatables.data', 'InvoicesController@anyData');
 Route::get('/dashboard', 'CustomerInvoiceController@index');
+Route::get('/new-dashboard', 'InvoicesController@index');
 
 
 Route::get('/email-templates', 'TemplatesController@index');
