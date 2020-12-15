@@ -218,7 +218,7 @@ class CustomerInvoiceController extends CustomersController
 			SecondarySalesPeople::create( [
 				'salespeople_id' => $request->input('salespeople_id'),
 				'invoice_id'     => $invoice->id,
-				'type' => 1
+				'sp_type' => 1
 			] );
 
 			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {

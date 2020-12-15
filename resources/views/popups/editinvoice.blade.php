@@ -14,7 +14,17 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <strong>Salesperson for invoice *:</strong>
-                                {!! Form::select('salespeople_id', [null=>'Please Select'] + $salespeople,$invoice->salespeople_id, array('class' => 'form-control')) !!}
+                                @php
+                                    $pr_salespeople = 0;
+                                    if(!empty($invoice->salespeople)){
+                                        foreach($invoice->salespeople as $sp){
+                                            if($sp->sp_type && !empty($sp->salespeople_id)){
+                                                $pr_salespeople = $sp->salespeople_id;
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                {!! Form::select('salespeople_id', [null=>'Please Select'] + $salespeople, $pr_salespeople, array('class' => 'form-control')) !!}
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -24,7 +34,7 @@
                                     $sec_salespeople = [];
                                     if(!empty($invoice->salespeople)){
                                         foreach($invoice->salespeople as $sp){
-                                            if(!empty($sp->salespeople_id)){
+                                            if(!empty(!$sp->sp_type && $sp->salespeople_id)){
                                                 $sec_salespeople[] = $sp->salespeople_id;
                                             }
                                         }

@@ -98,12 +98,16 @@
             function generateSalespeople(row){
                 var ret_data = '';
                 if(isSet(row) &&  isSet(row.invoices) ) {
-                    if(isSet(row.invoices.salespersone) && isSet(row.invoices.salespersone.name_for_invoice)){
-                        ret_data +=  '<div><a href="/salespeople/'+row.invoices.salespersone.id+'" target="_blank" title="'+row.invoices.salespersone.first_name+' '+row.invoices.salespersone.last_name+'">'+row.invoices.salespersone.name_for_invoice+'</a></div>';
-                    }
                     if(isSet(row.invoices.salespeople) && row.invoices.salespeople.length){
                         $.each(row.invoices.salespeople, function( index, value ) {
-                            ret_data += '<div style="line-height: 1.1"><a href="/salespeople/'+value.salespersone.id+'" target="_blank" title="'+value.salespersone.first_name+' '+value.salespersone.last_name+'"><small>'+value.salespersone.name_for_invoice+'</small></a></div>';
+                            if(value.sp_type) {
+                                ret_data += '<div><a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' + value.salespersone.name_for_invoice + '</a></div>';
+                            }
+                        });
+                        $.each(row.invoices.salespeople, function( index, value ) {
+                            if(!value.sp_type) {
+                                ret_data += '<div style="line-height: 1.1"><a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '"><small>' + value.salespersone.name_for_invoice + '</small></a></div>';
+                            }
                         });
                     }
                 }

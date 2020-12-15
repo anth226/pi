@@ -203,11 +203,17 @@
     <script src="{{ url('/js/jquery-input-mask-phone-number.min.js') }}"></script>
     <script>
         $(document).ready(function() {
+
             $("select").select2({
                 width: '100%',
                 placeholder: 'Please select',
                 allowClear: true
             });
+
+            $('select[name="second_salespeople_id[]"]').val('[]').trigger('change');
+            $('select[name="salespeople_id"]').val('').trigger('change');
+
+
             $("input[data-type='currency']").on({
                 keyup: function() {
                     formatCurrency($(this));
