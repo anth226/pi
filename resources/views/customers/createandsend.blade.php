@@ -247,7 +247,11 @@
                 const second_sel = $('select[name="salespeople_id"]');
                 second_sel.prop('disabled', false);
                 second_sel.find($('option')).prop('disabled', false);
-                second_sel.find($('option[value="'+s_val+'"]')).prop('disabled', true);
+                if(s_val) {
+                    $.each(s_val, function(i,v){
+                        second_sel.find($('option[value="' + v + '"]')).prop('disabled', true);
+                    });
+                }
             });
 
 
