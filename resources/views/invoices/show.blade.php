@@ -340,6 +340,22 @@
                 placeholder: 'Please select',
                 allowClear: true
             });
+
+            var pr_salesperson = $('select[name="salespeople_id"]');
+            var second_salesperson = $('select[name="second_salespeople_id[]"]');
+
+            var pr_salesperson_val = pr_salesperson.val();
+            if(pr_salesperson_val){
+                second_salesperson.find($('option[value="' + pr_salesperson_val + '"]')).prop('disabled', true);
+            }
+
+            var second_salesperson_val = second_salesperson.val();
+            if(second_salesperson_val){
+                $.each(second_salesperson_val, function(i,v){
+                    pr_salesperson.find($('option[value="' + v + '"]')).prop('disabled', true);
+                });
+            }
+
             $("input[data-type='currency']").on({
                 keyup: function() {
                     formatCurrency($(this));
@@ -374,7 +390,11 @@
                 const second_sel = $('select[name="salespeople_id"]');
                 second_sel.prop('disabled', false);
                 second_sel.find($('option')).prop('disabled', false);
-                second_sel.find($('option[value="'+s_val+'"]')).prop('disabled', true);
+                if(s_val) {
+                    $.each(s_val, function(i,v){
+                        second_sel.find($('option[value="' + v + '"]')).prop('disabled', true);
+                    });
+                }
             });
 
 
