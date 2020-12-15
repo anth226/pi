@@ -36,7 +36,7 @@ class TestController extends Controller
 //		dd($c->getFirebaseUser('kevin@portfolioinsider.com', 'email'));
 //		dd($c->getFirebaseCollectionRecord('JAWGa9pT2OeqS6wQoj1bdw6f56r2')); //kevin@portfolioinsider.com
 //		dd($c->getFirebaseCollectionRecord('oird7Wwc8UMF8NXi9fJunSY85ai2'));
-		$this->moveSP();
+//		$this->moveSP();
 
 	}
 
