@@ -45,6 +45,11 @@
                             echo FormatUsPhoneNumber::nicePhoneNumberFormat($salespeople->phone_number, $salespeople->formated_phone_number);
                         @endphp
                     </div>
+
+                    <div>
+                        <strong>Level:</strong>
+                        {{ $salespeople->level->title }} | {{ $salespeople->level->percentage }}%
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <div class="p-2 text-muted details_bgcolor">
