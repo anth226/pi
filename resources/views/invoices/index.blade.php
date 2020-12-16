@@ -31,6 +31,7 @@
                 <thead>
                 <tr>
                     <th>Access Date</th>
+                    <th>ID</th>
                     <th>Name</th>
                     <th>Amount</th>
                     <th>Salesperson</th>
@@ -55,10 +56,13 @@
                 // stateSave: true,
                 processing: true,
                 serverSide: true,
-                order: [[ 0, "desc" ]],
+                order: [
+                    [ 0, "desc" ],
+                    [ 1, "desc" ]
+                ],
                 ajax: '/invoicesdatatables.data',
                 // searching: false,
-                bStateSave: true,
+                // bStateSave: true,
                 // dom: 'Bflrtip',
                 // buttons: [
                 //     'copy', 'excel', 'pdf', 'print', 'colvis'
@@ -67,6 +71,8 @@
                     { data: 'access_date', name: 'access_date', "searchable": false,  render: function ( data, type, row ){
                             return formatDate(data);
                         } },
+                    { data: 'id', name: 'id', "searchable": false,  "visible": false },
+
                     { data: 'customer.first_name', name: 'customer.first_name',"sortable": false,  render: function ( data, type, row ){
                             return '<a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a>'
                         }},
@@ -98,7 +104,6 @@
             function generateSalespeople(row){
                 var ret_data = '';
                 if(isSet(row) ) {
-                    console.log(row);
                     if(row.salespeople.length){
                         $.each(row.salespeople, function( index, value ) {
                             if(value.sp_type) {
