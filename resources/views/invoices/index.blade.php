@@ -68,7 +68,7 @@
                 //     'copy', 'excel', 'pdf', 'print', 'colvis'
                 // ],
                 columns: [
-                    { data: 'access_date', name: 'access_date', "searchable": false,  render: function ( data, type, row ){
+                    { data: 'access_date', name: 'access_date', "searchable": false, orderData: [ 0, 1 ],  render: function ( data, type, row ){
                             return formatDate(data);
                         } },
                     { data: 'id', name: 'id', "searchable": false,  "visible": false },
