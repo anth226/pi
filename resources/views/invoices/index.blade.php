@@ -141,7 +141,7 @@
             };
 
             function formatDate(date){
-                var formattedDate = new Date(date+' 00:00:01');
+                var formattedDate = new Date(date+'T00:00:01');
                 var d = formattedDate.getDate();
                 var m =  formattedDate.getMonth();
                 m += 1;  // JavaScript months are 0-11
