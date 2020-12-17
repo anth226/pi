@@ -40,12 +40,17 @@ class InvoicesController extends BaseController
 
 	public function index(Request $request)
 	{
-		$firstReportDate = Invoices::orderBy('access_date', 'asc')->value('access_date');
+//		$firstReportDate = Invoices::orderBy('access_date', 'asc')->value('access_date');
+		$lastReportDate = Invoices::orderBy('access_date', 'desc')->value('access_date');
 		$firstDate = date("F j, Y");
-		if($firstReportDate) {
-			$firstDate = date( "F j, Y", strtotime( $firstReportDate ) );
+		$lastDate = date("F j, Y");
+//		if($firstReportDate) {
+//			$firstDate = date( "F j, Y", strtotime( $firstReportDate ) );
+//		}
+		if($lastReportDate) {
+			$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
 		}
-		return view('invoices.index', compact('firstDate'));
+		return view('invoices.index', compact('firstDate', 'lastDate'));
 	}
 
 	public function anyData(Request $request){
