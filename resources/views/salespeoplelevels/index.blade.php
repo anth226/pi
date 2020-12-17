@@ -7,11 +7,11 @@
             <div class="row">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
-                        <h2>Salespeople</h2>
+                        <h2>Salespeople Levels</h2>
                     </div>
                     <div class="pull-right">
                         @can('salespeople-create')
-                        <a class="btn btn-success mb-4 mt-2" href="{{ route('salespeople.create') }}"> Add New Salesperson</a>
+                        <a class="btn btn-success mb-4 mt-2" href="{{ route('levels.create') }}"> Add New Level</a>
                         @endcan
                     </div>
                 </div>
@@ -27,29 +27,18 @@
 
             <table class="table table-responsive">
                 <tr>
-                    <th>Name</th>
-                    <th>Details</th>
-                    <th>Level</th>
+                    <th>Title</th>
+                    <th>Percentage</th>
                     <th></th>
                 </tr>
-                @php
-                    use App\KmClasses\Sms\FormatUsPhoneNumber;
-                @endphp
-                @foreach ($salespeoples as $key => $user)
+
+                @foreach ($salespeoplelevels as $key => $level)
                     <tr>
-                        <td>{{ $user->name_for_invoice }}</td>
+                        <td>{{ $level->title }}</td>
+                        <td>{{ $level->percentage }}%</td>
                         <td>
-                            <small>
-                                <div>{{ $user->first_name }} {{ $user->last_name }}</div>
-                                <div>{{ $user->email }}</div>
-                                <div>@php echo FormatUsPhoneNumber::nicePhoneNumberFormat($user->phone_number, $user->formated_phone_number); @endphp</div>
-                            </small>
-                        </td>
-                        <td>{{ $user->level->level->title }}</td>
-                        <td>
-                            <a class="btn btn-info mb-1" href="{{ route('salespeople.show',$user->id) }}">Show</a>
                             @can('salespeople-edit')
-                            <a class="btn btn-primary mb-1" href="{{ route('salespeople.edit',$user->id) }}">Edit</a>
+                            <a class="btn btn-primary mb-1" href="{{ route('levels.edit',$level->id) }}">Edit</a>
                             @endcan
                             {{--@can('salespeople-delete')--}}
                             {{--{!! Form::open(['method' => 'DELETE','route' => ['salespeople.destroy', $user->id],'style'=>'display:inline']) !!}--}}
@@ -60,7 +49,7 @@
                     </tr>
                 @endforeach
             </table>
-            {!! $salespeoples->render() !!}
+            {!! $salespeoplelevels->render() !!}
         </div>
     </div>
 @endsection
