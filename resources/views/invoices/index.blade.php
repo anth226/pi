@@ -32,7 +32,7 @@
                         <div class="card order-card" style="background: linear-gradient(45deg, #1E567D, #1D5871);">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="subscriptions">0</span></h3>
-                                <h3 class="lead text-center">Subscriptions</h3>
+                                <h3 class="lead text-center">Prime Sales</h3>
                             </div>
                         </div>
                     </div>
