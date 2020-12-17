@@ -18,6 +18,33 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <label class="w-100">
+                        Date range
+                        <input class="form-control" type="text" id="reportRange">
+                    </label>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                    <div class="col-md-6 col-lg-3 pr-md-0 mb-1">
+                        <div class="card order-card" style="background: linear-gradient(45deg, #1E567D, #1D5871);">
+                            <div class="text-center p-2 text-white">
+                                <h3 class="text-center"><span id="subscriptions">0</span></h3>
+                                <h3 class="lead text-center">Subscriptions</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 pr-md-1 pl-md-1 mb-1">
+                        <div class="card order-card" style="background: linear-gradient(45deg, #2B97D6, #239FDE);">
+                            <div class="text-center p-2 text-white">
+                                <h3 class="text-center"><span id="revenue">0</span></h3>
+                                <h3 class="lead text-center">Revenue</h3>
+                            </div>
+                        </div>
+                    </div>
+            </div>
 
 
             @if ($message = Session::get('success'))
@@ -51,6 +78,90 @@
 @section('script')
     <script>
         $(document).ready(function() {
+
+            const dateRangeField = document.querySelector("#reportRange");
+
+            const dateRangeInput = flatpickr(dateRangeField, {
+                mode:"range",
+                defaultDate:['{{$firstDate}}','{{sprintf("%s",date("F j, Y"))}}'],
+                dateFormat:"F j, Y",
+                allowInput:false,
+                onClose: function() {
+                    getReportData();
+                },
+                plugins: [
+                    ShortcutButtonsPlugin({
+                        button: [
+                            {
+                                label: "Today"
+                            },
+                            {
+                                label: "Yesterday"
+                            },
+                            {
+                                label: "All dates"
+                            }
+                        ],
+                        label: "",
+                        onClick: function(index, fp) {
+                            var date;
+                            switch (index) {
+                                case 0:
+                                    date = new Date();
+                                    break;
+                                case 1:
+                                    date = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                                    break;
+                                case 2:
+                                    date = ['{{$firstDate}}','{{sprintf("%s",date("F j, Y"))}}'];
+                                    break;
+
+                            }
+                            fp.setDate(date);
+                            fp.close();
+                            // fp.set('defaultDate', date);
+                        }
+                    })
+                ]
+            });
+
+            getDashboardData();
+
+            function getReportData()
+            {
+                getDashboardData();
+                table_dt.draw();
+            }
+
+            function getDashboardData()
+            {
+                $.ajax({
+                    url: '/invoicesdatatables.data?summary=1&date_range='+$("#reportRange").val(),
+                    type: "GET",
+                    dataType: "json",
+                    success: function (response) {
+                        if (response) {
+                            if (response.success) {
+                               $('#subscriptions').html(response.data.count);
+                               $('#revenue').html(moneyFormat(response.data.revenue));
+                            }
+                            else {
+                                console.log("Error");
+                            }
+                        }
+                        else {
+                            console.log('No response');
+                        }
+                    },
+                    error: function (response) {
+                        console.log(response);
+                    }
+                });
+
+            }
+
+
+
             var table = $('table#customers_table');
             var table_dt = table.DataTable({
                 // stateSave: true,
@@ -60,7 +171,15 @@
                     [ 0, "desc" ],
                     [ 1, "desc" ]
                 ],
-                ajax: '/invoicesdatatables.data',
+                ajax: {
+                    url: "/invoicesdatatables.data",
+                    data: function ( d ) {
+                        return $.extend( {}, d, {
+                            date_range: $("#reportRange").val()
+                        } );
+                    }
+                },
+                pageLength: 100,
                 // searching: false,
                 // bStateSave: true,
                 // dom: 'Bflrtip',
