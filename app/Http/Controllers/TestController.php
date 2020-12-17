@@ -8,7 +8,6 @@ use App\Http\Controllers\API\BaseController;
 use App\Invoices;
 use App\Salespeople;
 use App\SalespeoplePecentageLog;
-use App\SalespeopleReport;
 use App\SecondarySalesPeople;
 use Exception;
 use DB;
@@ -46,9 +45,7 @@ class TestController extends BaseController
 //		$this->moveSP();
 //		dd(Invoices::with('customer')->with('salespeople.salespersone')->get()->toArray());
 
-		$invoice = Invoices::where('id', 83)->first();
-		$res = SalespeopleReport::saveToReport($invoice);
-		dd($res);
+
 	}
 
 
