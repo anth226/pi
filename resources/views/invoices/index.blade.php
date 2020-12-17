@@ -83,7 +83,8 @@
 
             const dateRangeInput = flatpickr(dateRangeField, {
                 mode:"range",
-                defaultDate:['{{$firstDate}}','{{sprintf("%s",date("F j, Y"))}}'],
+                {{--defaultDate:['{{$firstDate}}','{{sprintf("%s",date("F j, Y"))}}'],--}}
+                defaultDate:['{{$lastDate}}','{{$lastDate}}'],
                 dateFormat:"F j, Y",
                 allowInput:false,
                 onClose: function() {
@@ -98,9 +99,9 @@
                             {
                                 label: "Yesterday"
                             },
-                            {
-                                label: "All dates"
-                            }
+                            // {
+                            //     label: "All dates"
+                            // }
                         ],
                         label: "",
                         onClick: function(index, fp) {
@@ -112,9 +113,9 @@
                                 case 1:
                                     date = new Date(Date.now() - 24 * 60 * 60 * 1000);
                                     break;
-                                case 2:
-                                    date = ['{{$firstDate}}','{{sprintf("%s",date("F j, Y"))}}'];
-                                    break;
+                                {{--case 2:--}}
+                                    {{--date = ['{{$firstDate}}','{{sprintf("%s",date("F j, Y"))}}'];--}}
+                                    {{--break;--}}
 
                             }
                             fp.setDate(date);
