@@ -40,12 +40,40 @@ class InvoicesController extends BaseController
 
 	public function index(Request $request)
 	{
-		return view('invoices.index');
+//		$firstReportDate = Invoices::orderBy('access_date', 'asc')->value('access_date');
+		$lastReportDate = Invoices::orderBy('access_date', 'desc')->value('access_date');
+		$firstDate = date("F j, Y");
+		$lastDate = date("F j, Y");
+//		if($firstReportDate) {
+//			$firstDate = date( "F j, Y", strtotime( $firstReportDate ) );
+//		}
+		if($lastReportDate) {
+			$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
+		}
+		return view('invoices.index', compact('firstDate', 'lastDate'));
 	}
 
 	public function anyData(Request $request){
-		$query =  Invoices::with('customer')->with('salespeople.salespersone');
-		return datatables()->eloquent($query)->toJson();
+		$query =  Invoices::with('customer')
+		                  ->with('salespeople.salespersone');
+		if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
+			$date      = $request['date_range'];
+			$dateArray = $this->parseDateRange( $date );
+			$dateFrom  = date( "Y-m-d", $dateArray[0] );
+			$dateTo    = date( "Y-m-d", $dateArray[1] );
+			$query->where( 'access_date', '>=', $dateFrom )
+			      ->where( 'access_date', '<=', $dateTo );
+		}
+		if( ! empty( $request['summary'] )){
+			$res = [
+				'revenue' => $query->sum('sales_price'),
+				'count' => $query->count()
+			];
+			return $this->sendResponse($res,'');
+		}
+		else {
+			return datatables()->eloquent( $query )->toJson();
+		}
 	}
 
 
@@ -311,6 +339,19 @@ class InvoicesController extends BaseController
 		}
 		return abort(404);
 
+	}
+
+	public static function parseDateRange($range):?array
+	{
+		$dateArray = explode(" to ",$range);
+
+		if (count($dateArray) == 2) {
+			return [strtotime($dateArray[0]),strtotime($dateArray[1])];
+		}else if (count($dateArray) == 1) {
+			return [strtotime($dateArray[0]),strtotime($dateArray[0])];
+		}
+
+		return null;
 	}
 
 }
