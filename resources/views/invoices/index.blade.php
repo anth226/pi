@@ -26,7 +26,7 @@
                     </label>
                 </div>
             </div>
-
+            @can('invoice-create')
             <div class="row mb-4">
                     <div class="col-md-6 col-lg-3 pr-md-0 mb-1">
                         <div class="card order-card" style="background: linear-gradient(45deg, #1E567D, #1D5871);">
@@ -45,7 +45,7 @@
                         </div>
                     </div>
             </div>
-
+            @endcan
 
             @if ($message = Session::get('success'))
                 <div class="alert alert-success">
