@@ -2,16 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Errors;
-use App\KmClasses\Sms\FormatUsPhoneNumber;
-use App\Salespeople;
 use App\SalespeopleLevels;
-use App\SalespeoplePecentageLog;
 use Illuminate\Http\Request;
 use Validator;
 use Exception;
 
-class SalespeopleController extends Controller
+class SalespeopleLevelsController extends Controller
 {
 	function __construct()
 	{
@@ -30,8 +26,8 @@ class SalespeopleController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		$salespeoples = Salespeople::orderBy('id','DESC')->with('level.level')->paginate(100);
-		return view('salespeople.index',compact('salespeoples'))
+		$salespeoplelevels = SalespeopleLevels::orderBy('id','DESC')->paginate(100);
+		return view('salespeoplelevels.index',compact('salespeoplelevels'))
 			->with('i', ($request->input('page', 1) - 1) * 100);
 	}
 
@@ -43,7 +39,7 @@ class SalespeopleController extends Controller
 	 */
 	public function create()
 	{
-		return view('salespeople.create');
+		return view('salespeoplelevels.create');
 	}
 
 
@@ -159,7 +155,7 @@ class SalespeopleController extends Controller
 				'function' => 'update'
 			]);
 			return back()->withErrors( [ $ex->getMessage() ] )
-			                    ->withInput();
+			             ->withInput();
 		}
 	}
 	/**
@@ -170,7 +166,7 @@ class SalespeopleController extends Controller
 	 */
 	public function destroy($id)
 	{
-		Salespeople::where('id',$id)->delete();
+		SalespeopleLevels::where('id',$id)->delete();
 		return redirect()->route('salespeople.index')
 		                 ->with('success','Salesperson deleted successfully');
 	}
