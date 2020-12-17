@@ -48,7 +48,7 @@
 
                     <div>
                         <strong>Level:</strong>
-                        {{ $salespeople->level->title }} | {{ $salespeople->level->percentage }}%
+                        {{ $salespeople->level->level->title }} | {{ $salespeople->level->percentage }}%
                     </div>
                 </div>
                 <div class="col-md-6">

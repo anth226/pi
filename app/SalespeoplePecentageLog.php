@@ -11,4 +11,12 @@ class SalespeoplePecentageLog extends Model
 		'salespeople_id',
 		'percentage'
 	];
+
+	public function level(){
+		return $this->hasOne('App\SalespeopleLevels', 'id','level_id');
+	}
+
+//	public function salespeople()	{
+//		return $this->belongsTo('App\Salespeople', 'salespeople_id','id');
+//	}
 }

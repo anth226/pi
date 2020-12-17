@@ -72,6 +72,14 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <strong>level:</strong>
+                        {!! Form::select('level_id', $levels,[$salespeople->level->level_id], array('class' => 'form-control')) !!}
+                    </div>
+                </div>
+            </div>
 
             <div class="row">
                 <div class="col-xs-12 col-sm-12 col-md-12 text-center">

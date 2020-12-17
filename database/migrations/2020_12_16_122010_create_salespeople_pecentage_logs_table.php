@@ -25,13 +25,13 @@ class CreateSalespeoplePecentageLogsTable extends Migration
 	        $table->foreign('level_id')->references('id')->on('salespeople_levels')->onUpdate('CASCADE')->onDelete('CASCADE');
 	    });
 
-	    $salespeople = \App\Salespeople::with('level')->get();
+	    $salespeople = Salespeople::get();
 	    if($salespeople && $salespeople->count()){
 		    foreach ($salespeople  as $s){
 			    $data = [
-			    	'level_id' => $s->level->id,
+			    	'level_id' => 1,
 			    	'salespeople_id' => $s->id,
-				    'percentage' => $s->level->percentage
+				    'percentage' => 50
 			    ];
 			    SalespeoplePecentageLog::create($data);
 		    }
