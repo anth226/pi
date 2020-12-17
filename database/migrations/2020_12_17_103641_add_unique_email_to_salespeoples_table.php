@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddLevelFieldToSalespeopleTable extends Migration
+class AddUniqueEmailToSalespeoplesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,7 +14,6 @@ class AddLevelFieldToSalespeopleTable extends Migration
     public function up()
     {
         Schema::table('salespeoples', function (Blueprint $table) {
-            $table->unsignedBigInteger('level_id')->default(1);
 	        $table->unique(['email'], 'u_email');
         });
     }
@@ -27,8 +26,7 @@ class AddLevelFieldToSalespeopleTable extends Migration
     public function down()
     {
         Schema::table('salespeoples', function (Blueprint $table) {
-            $table->dropColumn('level_id');
-            $table->dropIndex('u_email');
+	        $table->dropIndex('u_email');
         });
     }
 }

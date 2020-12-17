@@ -17,8 +17,7 @@ class Salespeople extends Model
 		'name_for_invoice',
 		'email',
 		'phone_number',
-		'formated_phone_number',
-		'level_id'
+		'formated_phone_number'
 	];
 
 	public static function getIdsAndFullNames(){
@@ -34,8 +33,9 @@ class Salespeople extends Model
 		return $this->hasMany('App\Invoices', 'salespeople_id','id');
 	}
 
+
 	public function level(){
-		return $this->hasOne('App\SalespeopleLevels', 'id','level_id');
+		return $this->hasOne('App\SalespeoplePecentageLog', 'salespeople_id','id')->latest();
 	}
 
 }

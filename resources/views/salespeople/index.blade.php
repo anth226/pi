@@ -47,7 +47,7 @@
                                 <div>@php echo FormatUsPhoneNumber::nicePhoneNumberFormat($user->phone_number, $user->formated_phone_number); @endphp</div>
                             </small>
                         </td>
-                        <td>{{ $user->level->title }}</td>
+                        <td>{{ $user->level->level->title }}</td>
                         <td>
                             <a class="btn btn-info mb-1" href="{{ route('salespeople.show',$user->id) }}">Show</a>
                             @can('salespeople-edit')
