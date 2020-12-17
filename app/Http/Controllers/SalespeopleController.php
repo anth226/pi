@@ -140,7 +140,7 @@ class SalespeopleController extends Controller
 			$salespeople->formated_phone_number = ! empty( $request->input( 'phone_number' ) ) ? FormatUsPhoneNumber::formatPhoneNumber( $request->input( 'phone_number' ) ) : '';
 			$salespeople->save();
 
-			if ( $salespeople->level->level_id !== $request->input( 'level_id' ) ) {
+			if ( $salespeople->level->level_id != $request->input( 'level_id' ) ) {
 				$new_level = SalespeopleLevels::find($request->input( 'level_id' ));
 				SalespeoplePecentageLog::create([
 					'level_id' => $new_level->id,
