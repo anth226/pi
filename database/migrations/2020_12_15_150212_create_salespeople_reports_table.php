@@ -17,14 +17,15 @@ class CreateSalespeopleReportsTable extends Migration
             $table->bigIncrements('id');
             $table->timestamps();
 	        $table->date('report_date')->nullable()->index();
+	        $table->unsignedBigInteger('invoice_id');
 	        $table->unsignedBigInteger('salespeople_id');
 	        $table->unsignedDecimal('percentage',5,2)->default(0);
-	        $table->unsignedInteger('total_sales')->default(0);
-	        $table->unsignedDecimal('sales',10,2)->default(0);
+	        $table->unsignedDecimal('sales_price',10,2)->default(0);
 	        $table->unsignedDecimal('earnings',10,2)->default(0);
 	        $table->foreign('salespeople_id')->references('id')->on('salespeoples')->onUpdate('CASCADE')->onDelete('CASCADE');
-	        $table->unique(['salespeople_id', 'report_date']);
-        });
+	        $table->foreign('invoice_id')->references('id')->on('invoices')->onUpdate('CASCADE')->onDelete('CASCADE');
+	        $table->unique(['report_date', 'invoice_id', 'salespeople_id']);
+	    });
     }
 
     /**
