@@ -10,7 +10,7 @@
                         <h2>Edit Level</h2>
                     </div>
                     <div class="pull-right">
-                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('salespeople.index') }}"> All Levels</a>
+                        <a class="btn btn-primary mb-4 mt-2" href="{{ route('levels.index') }}"> All Levels</a>
                     </div>
                 </div>
             </div>
@@ -28,52 +28,23 @@
             @endif
 
 
-            {!! Form::model($salespeople, ['method' => 'PATCH','route' => ['salespeople.update', $salespeople->id]]) !!}
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <strong>Name for Invoice:</strong>
-                        {!! Form::text('name_for_invoice', null, array('placeholder' => 'Name for Invoice','class' => 'form-control')) !!}
-                    </div>
-                </div>
-            </div>
+            {!! Form::model($salespeoplelevels, ['method' => 'PATCH','route' => ['levels.update', $salespeoplelevels->id]]) !!}
 
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <strong>First Name *:</strong>
-                        {!! Form::text('first_name', null, array('placeholder' => 'First Name','class' => 'form-control')) !!}
+                        <strong>Title *:</strong>
+                        {!! Form::text('title', null, array('placeholder' => 'Title','class' => 'form-control', 'disabled' => true)) !!}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <strong>Last Name:</strong>
-                        {!! Form::text('last_name', null, array('placeholder' => 'Last Name','class' => 'form-control')) !!}
+                        <strong>Percentage:</strong>
+                        {!! Form::text('percentage', null, array('placeholder' => 'Percentage','class' => 'form-control')) !!}
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Email:</strong>
-                        {!! Form::text('email', null, array('placeholder' => 'Email','class' => 'form-control')) !!}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Phone Number:</strong>
-                        {!! Form::text('phone_number', null, array('placeholder' => 'Phone Number','class' => 'form-control')) !!}
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>level:</strong>
-                        {!! Form::select('level_id', $levels,[$salespeople->level->level_id], array('class' => 'form-control')) !!}
-                    </div>
-                </div>
-            </div>
+
 
             <div class="row">
                 <div class="col-xs-12 col-sm-12 col-md-12 text-center">
