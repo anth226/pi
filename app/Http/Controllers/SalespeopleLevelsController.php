@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Errors;
+use App\Salespeople;
 use App\SalespeopleLevels;
+use App\SalespeoplePecentageLog;
 use Illuminate\Http\Request;
 use Validator;
 use Exception;
@@ -51,28 +54,29 @@ class SalespeopleLevelsController extends Controller
 	 */
 	public function store(Request $request)
 	{
-		$this->validate($request, [
-			'first_name' => 'required|max:120',
-			'last_name' => 'max:120',
-			'name_for_invoice' => 'max:120',
-			'email' => 'required|email|max:120',
-			'phone_number' => 'nullable|max:120|min:10',
-		]);
+		try {
+			$this->validate( $request, [
+				'title'      => 'required|max:120',
+				'percentage' => 'required|numeric|min:1|max:100',
+			] );
 
-		$last_name = !empty($request->input('last_name')) ? $request->input('last_name') : '';
+			SalespeopleLevels::create( [
+				'title'     => $request->input( 'title' ),
+				'percentage' => $request->input( 'percentage' ),
+			] );
 
-		Salespeople::create([
-			'first_name' => $request->input('first_name'),
-			'last_name' => $last_name,
-			'name_for_invoice' => !empty($request->input('name_for_invoice')) ? $request->input('name_for_invoice') : $request->input('first_name'). ' ' .$last_name,
-			'email' => !empty($request->input('email')) ? $request->input('email') : '',
-			'phone_number' => !empty($request->input('phone_number')) ? $request->input('phone_number') : '',
-			'formated_phone_number' => !empty($request->input('phone_number')) ? FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')) : '',
-
-		]);
-
-		return redirect()->route('salespeople.index')
-		                 ->with('success','Salesperson created successfully');
+			return redirect()->route( 'levels.index' )
+			                 ->with( 'success', 'Level created successfully' );
+		}
+		catch(Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'SalespeopleLevelsController',
+				'function' => 'store'
+			]);
+			return back()->withErrors( [ $ex->getMessage() ] )
+			             ->withInput();
+		}
 	}
 	/**
 	 * Display the specified resource.
@@ -82,10 +86,6 @@ class SalespeopleLevelsController extends Controller
 	 */
 	public function show($id)
 	{
-		$salespeople = Salespeople::with('level.level')->find($id);
-		if($salespeople) {
-			return view( 'salespeople.show', compact( 'salespeople' ) );
-		}
 		return abort(404);
 	}
 
@@ -98,10 +98,9 @@ class SalespeopleLevelsController extends Controller
 	 */
 	public function edit($id)
 	{
-		$salespeople = Salespeople::with('level.level')->find($id);
-		if($salespeople) {
-			$levels = SalespeopleLevels::getIdsAndFullNames();
-			return view( 'salespeople.edit', compact( 'salespeople', 'levels' ) );
+		$salespeoplelevels = SalespeopleLevels::find($id);
+		if($salespeoplelevels) {
+			return view( 'salespeoplelevels.edit', compact( 'salespeoplelevels' ) );
 		}
 		return abort(404);
 	}
@@ -118,40 +117,27 @@ class SalespeopleLevelsController extends Controller
 	{
 		try {
 			$this->validate( $request, [
-				'first_name'       => 'required|max:120',
-				'last_name'        => 'max:120',
-				'name_for_invoice' => 'max:120',
-				'email'            => 'required|email|max:120',
-				'phone_number'     => 'nullable|max:120|min:10',
+//				'title'      => 'required|max:120',
+				'percentage' => 'required|numeric|min:1|max:100',
 			] );
 
-			$last_name = ! empty( $request->input( 'last_name' ) ) ? $request->input( 'last_name' ) : '';
-
-			$salespeople                        = Salespeople::with( 'level' )->find( $id );
-			$salespeople->first_name            = $request->input( 'first_name' );
-			$salespeople->last_name             = $last_name;
-			$salespeople->email                 = ! empty( $request->input( 'email' ) ) ? $request->input( 'email' ) : '';
-			$salespeople->name_for_invoice      = ! empty( $request->input( 'name_for_invoice' ) ) ? $request->input( 'name_for_invoice' ) : $request->input( 'first_name' ) . ' ' . $last_name;
-			$salespeople->phone_number          = ! empty( $request->input( 'phone_number' ) ) ? $request->input( 'phone_number' ) : '';
-			$salespeople->formated_phone_number = ! empty( $request->input( 'phone_number' ) ) ? FormatUsPhoneNumber::formatPhoneNumber( $request->input( 'phone_number' ) ) : '';
-			$salespeople->save();
-
-			if ( $salespeople->level->level_id != $request->input( 'level_id' ) ) {
-				$new_level = SalespeopleLevels::find($request->input( 'level_id' ));
-				SalespeoplePecentageLog::create([
-					'level_id' => $new_level->id,
-					'salespeople_id' => $salespeople->id,
-					'percentage' => $new_level->percentage
-				]);
+			if(!($this->updateLevelsLog($id, $request->input( 'percentage' )))){
+				return back()->withErrors( [ 'Error updating level. Something went wrong.' ] )
+				             ->withInput();
 			}
 
-			return redirect()->route( 'salespeople.index' )
-			                 ->with( 'success', 'Salesperson updated successfully' );
+			$level = SalespeopleLevels::where('id', $id)->update( [
+//				'title'     => $request->input( 'title' ),
+				'percentage' => $request->input( 'percentage' ),
+			] );
+
+			return redirect()->route( 'levels.index' )
+			                 ->with( 'success', 'Level created successfully' );
 		}
 		catch(Exception $ex){
 			Errors::create([
 				'error' => $ex->getMessage(),
-				'controller' => 'SalespeopleController',
+				'controller' => 'SalespeopleLevelsController',
 				'function' => 'update'
 			]);
 			return back()->withErrors( [ $ex->getMessage() ] )
@@ -166,8 +152,32 @@ class SalespeopleLevelsController extends Controller
 	 */
 	public function destroy($id)
 	{
-		SalespeopleLevels::where('id',$id)->delete();
-		return redirect()->route('salespeople.index')
-		                 ->with('success','Salesperson deleted successfully');
+		return abort(404);
+	}
+
+	public function updateLevelsLog($level_id, $percentage){
+		try{
+			$salespeople = Salespeople::with('level')->withTrashed()->get();
+			if($salespeople && $salespeople->count()){
+				foreach($salespeople as $s){
+					if($s->level->level_id == $level_id && $s->level->pecentage != $percentage) {
+						SalespeoplePecentageLog::create( [
+							'level_id'       => $level_id,
+							'salespeople_id' => $s->id,
+							'percentage'     => $percentage
+						] );
+					}
+				}
+			}
+			return true;
+		}
+		catch(Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'SalespeopleLevelsController',
+				'function' => 'updateLevelsLog'
+			]);
+			return false;
+		}
 	}
 }

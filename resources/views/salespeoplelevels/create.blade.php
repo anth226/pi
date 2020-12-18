@@ -29,43 +29,23 @@
 
 
 
-            {!! Form::open(array('route' => 'salespeople.store','method'=>'POST')) !!}
+            {!! Form::open(array('route' => 'levels.store','method'=>'POST')) !!}
+
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-6">
                     <div class="form-group">
                         <strong>Title:</strong>
-                        {!! Form::text('name_for_invoice', null, array('placeholder' => 'Name for Invoice','class' => 'form-control')) !!}
+                        {!! Form::text('title', null, array('placeholder' => 'Title','class' => 'form-control')) !!}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <strong>Percentage:</strong>
+                        {!! Form::number('percentage', null, array('placeholder' => 'Percentage','class' => 'form-control')) !!}
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>First Name *:</strong>
-                        {!! Form::text('first_name', null, array('placeholder' => 'First Name','class' => 'form-control')) !!}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Last Name:</strong>
-                        {!! Form::text('last_name', null, array('placeholder' => 'Last Name','class' => 'form-control')) !!}
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Email *:</strong>
-                        {!! Form::text('email', null, array('placeholder' => 'Email','class' => 'form-control')) !!}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Phone Number:</strong>
-                        {!! Form::text('phone_number', null, array('placeholder' => 'Phone Number','class' => 'form-control')) !!}
-                    </div>
-                </div>
-            </div>
+
 
             <div class="row">
                 <div class="col-xs-12 col-sm-12 col-md-12 text-center">

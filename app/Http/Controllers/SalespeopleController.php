@@ -43,7 +43,8 @@ class SalespeopleController extends Controller
 	 */
 	public function create()
 	{
-		return view('salespeople.create');
+		$levels = SalespeopleLevels::getIdsAndFullNames();
+		return view( 'salespeople.create', compact( 'levels' ) );
 	}
 
 
@@ -59,21 +60,37 @@ class SalespeopleController extends Controller
 			'first_name' => 'required|max:120',
 			'last_name' => 'max:120',
 			'name_for_invoice' => 'max:120',
-			'email' => 'required|email|max:120',
+			'email' => 'required|unique:salespeoples,email,NULL,id,deleted_at,NULL|email|max:120',
 			'phone_number' => 'nullable|max:120|min:10',
+			'level_id' => 'required'
 		]);
 
 		$last_name = !empty($request->input('last_name')) ? $request->input('last_name') : '';
 
-		Salespeople::create([
+		$salespeople = Salespeople::create([
 			'first_name' => $request->input('first_name'),
 			'last_name' => $last_name,
 			'name_for_invoice' => !empty($request->input('name_for_invoice')) ? $request->input('name_for_invoice') : $request->input('first_name'). ' ' .$last_name,
 			'email' => !empty($request->input('email')) ? $request->input('email') : '',
 			'phone_number' => !empty($request->input('phone_number')) ? $request->input('phone_number') : '',
 			'formated_phone_number' => !empty($request->input('phone_number')) ? FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')) : '',
-
 		]);
+
+
+		$new_level = SalespeopleLevels::find( $request->input( 'level_id' ) );
+		if(!empty($new_level) && !empty($new_level->id)) {
+			$level_log_created = SalespeoplePecentageLog::create( [
+				'level_id'       => $new_level->id,
+				'salespeople_id' => $salespeople->id,
+				'percentage'     => $new_level->percentage
+			] );
+		}
+		if(empty($level_log_created) || empty($level_log_created->id) ){
+			Salespeople::where('id', $salespeople->id)->delete();
+			return back()->withErrors( [ 'Can\'t create record' ] )
+			             ->withInput();
+		}
+
 
 		return redirect()->route('salespeople.index')
 		                 ->with('success','Salesperson created successfully');
@@ -125,7 +142,7 @@ class SalespeopleController extends Controller
 				'first_name'       => 'required|max:120',
 				'last_name'        => 'max:120',
 				'name_for_invoice' => 'max:120',
-				'email'            => 'required|email|max:120',
+				'email'            => 'required|unique:salespeoples,email,NULL,id,deleted_at,NULL|email|max:120',
 				'phone_number'     => 'nullable|max:120|min:10',
 			] );
 
