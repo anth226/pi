@@ -215,17 +215,38 @@ class CustomerInvoiceController extends CustomersController
 			$invoice_instance = new InvoicesController();
 			$invoice_instance->generatePDF($invoice->id);
 
+			$current_percentages = $invoice_instance->getCurrentPercentage($invoice->access_date, $invoice->salespeople_id);
+			$percentage = 0;
+			$level_id  = 0;
+			if($current_percentages ){
+				$percentage = $current_percentages['percentage'];
+				$level_id  = $current_percentages['level_id'];
+			}
+
 			SecondarySalesPeople::create( [
 				'salespeople_id' => $request->input('salespeople_id'),
 				'invoice_id'     => $invoice->id,
-				'sp_type' => 1
+				'sp_type' => 1,
+				'earnings'=> 0,
+				'percentage' => $percentage,
+				'level_id' => $level_id
 			] );
 
 			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
 				foreach ($request->input('second_salespeople_id') as $val){
+					$current_percentages = $invoice_instance->getCurrentPercentage($invoice->access_date, $invoice->salespeople_id);
+					$percentage = 0;
+					$level_id  = 0;
+					if($current_percentages ){
+						$percentage = $current_percentages['percentage'];
+						$level_id  = $current_percentages['level_id'];
+					}
 					SecondarySalesPeople::create( [
 						'salespeople_id' => $val,
-						'invoice_id'     => $invoice->id
+						'invoice_id'     => $invoice->id,
+						'earnings'=> 0,
+						'percentage' => $percentage,
+						'level_id' => $level_id
 					] );
 				}
 			}
