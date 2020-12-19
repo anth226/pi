@@ -11,6 +11,8 @@ use App\SalespeoplePecentageLog;
 use App\SecondarySalesPeople;
 use Exception;
 use DB;
+use Klaviyo\Klaviyo as Klaviyo;
+use Klaviyo\Model\ProfileModel as KlaviyoProfile;
 
 class TestController extends BaseController
 {
@@ -30,14 +32,17 @@ class TestController extends BaseController
 //		dd(phpinfo());
 //		$c = new CustomersController();
 //		$userProperties = [
-//			'email'         => '',
-//			'phone'         => '310 405 9772',
-//			'first_name' => 'Dan',
-//			'last_name' => '',
+//			'email'         => 'gus@portfolioinsider.com',
+//			'phone'         => '8184563045',
+//			'first_name' => 'Gus',
+//			'last_name' => 'J',
+//			'full_name' => 'Gus J',
 //			'source' => 'portfolioinsider',
 //			'tags' => 'portfolioinsider,portfolio-insider-prime',
 //		];
 //		dd($this->sendDataToSMSSystem($userProperties));
+//		dd($this->sendDataToKlaviyo($userProperties));
+
 //		$customer = $c->sendDataToFirebase($userProperties);
 //		dd($c->getFirebaseUser('kevin@portfolioinsider.com', 'email'));
 //		dd($c->getFirebaseCollectionRecord('JAWGa9pT2OeqS6wQoj1bdw6f56r2')); //kevin@portfolioinsider.com
@@ -87,6 +92,28 @@ class TestController extends BaseController
 				$error = "No response from " . $url;
 				return $this->sendError( $error );
 			}
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			return $this->sendError($error);
+		}
+	}
+	public function sendDataToKlaviyo($input){
+		try {
+			$klaviyo = new Klaviyo( 'pk_91ce3fe4c8434e2895e341280a7264c1bf', 'UqjjZP' );
+			$klaviyo_listId = 'XnKisw';
+
+			$klaviyo_data = [
+				'$email'        => $input['email'],
+				'$phone_number' => $input['phone'],
+				'$first_name'   => $input['first_name'],
+				'$last_name'    => $input['last_name'],
+			];
+			$profile      = new KlaviyoProfile( $klaviyo_data );
+			$res          = $klaviyo->lists->addMembersToList( $klaviyo_listId, [ $profile ] );
+
+			return $this->sendResponse( $res , '');
+
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();

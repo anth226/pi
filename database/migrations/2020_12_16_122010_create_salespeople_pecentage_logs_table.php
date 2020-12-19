@@ -21,8 +21,8 @@ class CreateSalespeoplePecentageLogsTable extends Migration
 	        $table->unsignedBigInteger('level_id')->default(0);
 	        $table->unsignedBigInteger('salespeople_id')->index();
 	        $table->unsignedDecimal('percentage',5,2)->default(0);
-	        $table->foreign('salespeople_id')->references('id')->on('salespeoples')->onUpdate('CASCADE')->onDelete('CASCADE');
-	        $table->foreign('level_id')->references('id')->on('salespeople_levels')->onUpdate('CASCADE')->onDelete('CASCADE');
+	        $table->foreign('salespeople_id')->references('id')->on('salespeoples')->onUpdate('CASCADE');
+	        $table->foreign('level_id')->references('id')->on('salespeople_levels')->onUpdate('CASCADE');
 	    });
 
 	    $salespeople = Salespeople::get();

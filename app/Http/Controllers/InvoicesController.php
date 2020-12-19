@@ -355,25 +355,17 @@ class InvoicesController extends BaseController
 		return null;
 	}
 
-	protected function getCurrentPercentage(Invoices $invoice){
+	public function getInvoiceCurrentPercentage(Invoices $invoice){
 		try{
 			$report_date = $invoice->access_date;
 			$salespeople = $invoice->salespeople;
 			$sp_percentages = [];
 			foreach($salespeople as $sp){
 				$salespeople_id = $sp->salespeople_id;
-				$percentage = SalespeoplePecentageLog::where('salespeople_id', $salespeople_id)
-				                                     ->where('created_at', '<=', $report_date.' 23:59:59')
-				                                     ->orderBy('created_at', 'desc')
-				                                     ->value('percentage')
-				;
-				if(!$percentage) { // first available
-					$percentage = SalespeoplePecentageLog::where( 'salespeople_id', $salespeople_id )
-					                                     ->orderBy( 'created_at', 'asc' )
-					                                     ->value( 'percentage' )
-					;
+				$res = $this->getCurrentPercentage($report_date, $salespeople_id);
+				if($res){
+					$sp_percentages[$salespeople_id] = $res;
 				}
-				$sp_percentages[$salespeople_id] = $percentage;
 			}
 			return $sp_percentages;
 		}
@@ -381,34 +373,162 @@ class InvoicesController extends BaseController
 			Errors::create([
 				'error' => $ex->getMessage(),
 				'controller' => 'InvoicesController',
-				'function' => 'getCurrentPercentage'
+				'function' => 'getInvoiceCurrentPercentage'
 			]);
 			return false;
 		}
 	}
 
-	protected function calcEarning(Invoices $invoice, $salesperson_id){
+	public function calcEarning(Invoices $invoice, $salesperson_id){
 		try{
+			$max_percentage = 50;
 			$sales_price = $invoice->sales_price;
-			$percentages = $this->getCurrentPercentage($invoice);
-			if($invoice->salespeople->count() == 1){ // only one salesperson
-				$percentage = $percentages[$salesperson_id];
-				$earning = $sales_price/100*$percentage;
-				if($earning > $sales_price/2){
-					$earning = $sales_price/2;
-				}
-				return $earning;
-			}
-			else{// multiple salespeople
-				return false;
-			}
+			$max_earning  = $sales_price*$max_percentage/100;
+			$earnings = [];
+			$sales_price = $invoice->sales_price;
+			$percentages = $this->getInvoiceCurrentPercentage($invoice);
+			if($percentages && count($percentages)) {
+				$salespeople = $invoice->salespeople;
+				$salespeople_count = $salespeople->count();
+				if ($salespeople_count == 1 ) { // only one salesperson
+					$percentage = $percentages[ $salesperson_id ]['percentage'];
+					$level_id   = $percentages[ $salesperson_id ]['level_id'];
+					$earning    = $sales_price / 100 * $percentage;
+					if ( $earning > $max_earning ) {
+						$earning = $max_earning;
+					}
+					$earnings[ $salesperson_id ] = [
+						'earnings'   => $earning,
+						'percentage' => $percentage,
+						'level_id'   => $level_id
+					];
+				} else {// multiple salespeople
+					//find minimal and max percentages
+					$minPercentage = $max_percentage;
+					$maxPercentage = 0;
+					$sp_id_with_max_percentage = 0;
+					foreach ($percentages as $salespeople_id => $p) {
+						if($p->percentage < $minPercentage){
+							$minPercentage =  $p->percentage;
+						}
+						if($p->percentage > $maxPercentage){
+							$maxPercentage = $p->percentage;
+							$sp_id_with_max_percentage = $salespeople_id;
+						}
+					}
+					if($minPercentage > $max_percentage){
+						$minPercentage = $max_percentage;
+					}
+					if($maxPercentage > $max_percentage){
+						$maxPercentage = $max_percentage;
+					}
 
+					if($minPercentage == $maxPercentage){ // all percentages are the same
+						$earning = $sales_price/100*$minPercentage;
+						if($earning*$salespeople_count > $max_earning){
+							$earning = $max_earning/$salespeople_count;
+						}
+						foreach ($percentages as $salespeople_id => $p){
+							$percentage = $p['percentage'];
+							$level_id   = $p['level_id'];
+							$earnings[ $salesperson_id ] = [
+								'earnings'   => $earning,
+								'percentage' => $percentage,
+								'level_id'   => $level_id
+							];
+						}
+					}
+					else{
+						$all_earnings = 0;
+						foreach ($percentages as $salespeople_id => $p){
+							$percentage = $p['percentage'];
+							$level_id   = $p['level_id'];
+							$earning = $earning = $sales_price/100*$percentage;
+							$all_earnings += $earning;
+							$earnings[ $salesperson_id ] = [
+								'earnings'   => $earning,
+								'percentage' => $percentage,
+								'level_id'   => $level_id
+							];
+						}
+						if($all_earnings > $max_earning){
+							$all_earnings = 0;
+							foreach ($percentages as $salespeople_id => $p){
+								if($salespeople_id != $sp_id_with_max_percentage) { //excluding salesperson with max percentage
+									$percentage                  = $p['percentage'];
+									$level_id                    = $p['level_id'];
+									$earning                     = $earning = $sales_price / 100 * $percentage;
+									$all_earnings                += $earning;
+									$earnings[ $salesperson_id ] = [
+										'earnings'   => $earning,
+										'percentage' => $percentage,
+										'level_id'   => $level_id
+									];
+								}
+							}
+							if($all_earnings < $max_earning){  // checking again
+								$remaining_earning = $max_earning-$all_earnings;
+								$percentage = $percentages[ $sp_id_with_max_percentage ]['percentage'];
+								$level_id   = $percentages[ $sp_id_with_max_percentage ]['level_id'];
+								// adding remaining earning to excluded salesperson
+								$earnings[ $sp_id_with_max_percentage ] = [
+									'earnings'   => $remaining_earning,
+									'percentage' => $percentage,
+									'level_id'   => $level_id
+								];
+							}
+							else{ // earning will be same for all
+								$earning = $max_earning/$salespeople_count;
+								foreach ($percentages as $salespeople_id => $p){
+									$percentage = $p['percentage'];
+									$level_id   = $p['level_id'];
+									$earnings[ $salesperson_id ] = [
+										'earnings'   => $earning,
+										'percentage' => $percentage,
+										'level_id'   => $level_id
+									];
+								}
+							}
+						}
+					}
+					return false;
+				}
+			}
+			return $earnings;
 		}
 		catch (Exception $ex){
 			Errors::create([
 				'error' => $ex->getMessage(),
 				'controller' => 'InvoicesController',
 				'function' => 'calcEarning'
+			]);
+			return false;
+		}
+	}
+
+	public function getCurrentPercentage($report_date, $salespeople_id){
+		try{
+			$percentage = SalespeoplePecentageLog::where('salespeople_id', $salespeople_id)
+			                                     ->where('created_at', '<=', $report_date.' 23:59:59')
+			                                     ->orderBy('created_at', 'desc')
+			                                     ->first()
+			;
+			if(!$percentage || !$percentage->count()) { // first available
+				$percentage = SalespeoplePecentageLog::where( 'salespeople_id', $salespeople_id )
+				                                     ->orderBy( 'created_at', 'asc' )
+				                                     ->first()
+				;
+			}
+			return [
+				'percentage' => $percentage->percentage,
+				'level_id' => $percentage->level_id,
+			];
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'InvoicesController',
+				'function' => 'getCurrentPercentage'
 			]);
 			return false;
 		}
