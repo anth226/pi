@@ -27,4 +27,6 @@ class SalespeopleLevels extends Model
 		           ->toArray()
 			;
 	}
+
+
 }

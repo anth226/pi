@@ -20,4 +20,8 @@ class SecondarySalesPeople extends Model
 		return $this->hasOne('App\Salespeople', 'id','salespeople_id')->withTrashed();
 	}
 
+	public function level(){
+		return $this->hasOne('App\SalespeopleLevels', 'id','level_id')->latest();
+	}
+
 }

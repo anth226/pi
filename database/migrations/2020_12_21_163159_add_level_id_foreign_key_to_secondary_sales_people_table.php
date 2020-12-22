@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddEarningFieldsToSecondarySalesPeopleTable extends Migration
+class AddLevelIdForeignKeyToSecondarySalesPeopleTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,10 +14,8 @@ class AddEarningFieldsToSecondarySalesPeopleTable extends Migration
     public function up()
     {
         Schema::table('secondary_sales_people', function (Blueprint $table) {
-            $table->unsignedDecimal('earnings', 10,2)->default(0);
-            $table->unsignedDecimal('percentage', 5,2)->default(0);
-            $table->unsignedBigInteger('level_id')->default(1)->index();
-	    });
+	        $table->foreign('level_id')->references('id')->on('salespeople_levels')->onUpdate('CASCADE');
+        });
     }
 
     /**
@@ -28,9 +26,7 @@ class AddEarningFieldsToSecondarySalesPeopleTable extends Migration
     public function down()
     {
         Schema::table('secondary_sales_people', function (Blueprint $table) {
-            $table->dropColumn('earnings');
-            $table->dropColumn('percentage');
-            $table->dropColumn('level_id');
+            $table->dropForeign('secondary_sales_people_level_id_foreign');
         });
     }
 }
