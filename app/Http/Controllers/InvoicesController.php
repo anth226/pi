@@ -229,6 +229,7 @@ class InvoicesController extends BaseController
 				}
 			}
 
+			dd($this->calcEarning(Invoices::with('salespeople')->find($id)));
 			$this->generatePDF($id);
 
 			return $this->sendResponse($invoice, '');
@@ -379,7 +380,7 @@ class InvoicesController extends BaseController
 		}
 	}
 
-	public function calcEarning(Invoices $invoice, $salesperson_id){
+	public function calcEarning(Invoices $invoice){
 		try{
 			$max_percentage = 50;
 			$sales_price = $invoice->sales_price;
@@ -391,31 +392,32 @@ class InvoicesController extends BaseController
 				$salespeople = $invoice->salespeople;
 				$salespeople_count = $salespeople->count();
 				if ($salespeople_count == 1 ) { // only one salesperson
-					$percentage = $percentages[ $salesperson_id ]['percentage'];
-					$level_id   = $percentages[ $salesperson_id ]['level_id'];
-					$earning    = $sales_price / 100 * $percentage;
-					if ( $earning > $max_earning ) {
-						$earning = $max_earning;
+					foreach ($percentages as $salespeople_id => $p) {
+						$percentage = $percentages[ $salespeople_id ]['percentage'];
+						$level_id   = $percentages[ $salespeople_id ]['level_id'];
+						$earning    = $sales_price / 100 * $percentage;
+						if ( $earning > $max_earning ) {
+							$earning = $max_earning;
+						}
+						$earnings[ $salespeople_id ] = [
+							'earnings'   => $earning,
+							'percentage' => $percentage,
+							'level_id'   => $level_id
+						];
 					}
-					$earnings[ $salesperson_id ] = [
-						'earnings'   => $earning,
-						'percentage' => $percentage,
-						'level_id'   => $level_id
-					];
 				} else {// multiple salespeople
 					//find minimal and max percentages
 					$minPercentage = $max_percentage;
 					$maxPercentage = 0;
-					$sp_id_with_max_percentage = 0;
 					foreach ($percentages as $salespeople_id => $p) {
-						if($p->percentage < $minPercentage){
-							$minPercentage =  $p->percentage;
+						if($p['percentage'] < $minPercentage){
+							$minPercentage =  $p['percentage'];
 						}
-						if($p->percentage > $maxPercentage){
-							$maxPercentage = $p->percentage;
-							$sp_id_with_max_percentage = $salespeople_id;
+						if($p['percentage'] > $maxPercentage){
+							$maxPercentage = $p['percentage'];
 						}
 					}
+
 					if($minPercentage > $max_percentage){
 						$minPercentage = $max_percentage;
 					}
@@ -431,7 +433,7 @@ class InvoicesController extends BaseController
 						foreach ($percentages as $salespeople_id => $p){
 							$percentage = $p['percentage'];
 							$level_id   = $p['level_id'];
-							$earnings[ $salesperson_id ] = [
+							$earnings[ $salespeople_id ] = [
 								'earnings'   => $earning,
 								'percentage' => $percentage,
 								'level_id'   => $level_id
@@ -445,7 +447,7 @@ class InvoicesController extends BaseController
 							$level_id   = $p['level_id'];
 							$earning = $earning = $sales_price/100*$percentage;
 							$all_earnings += $earning;
-							$earnings[ $salesperson_id ] = [
+							$earnings[ $salespeople_id ] = [
 								'earnings'   => $earning,
 								'percentage' => $percentage,
 								'level_id'   => $level_id
@@ -453,36 +455,50 @@ class InvoicesController extends BaseController
 						}
 						if($all_earnings > $max_earning){
 							$all_earnings = 0;
+							$salespeople_with_maxPercentage = [];
 							foreach ($percentages as $salespeople_id => $p){
-								if($salespeople_id != $sp_id_with_max_percentage) { //excluding salesperson with max percentage
+								if($p['percentage'] != $maxPercentage) { //excluding salesperson with max percentage
 									$percentage                  = $p['percentage'];
 									$level_id                    = $p['level_id'];
 									$earning                     = $earning = $sales_price / 100 * $percentage;
 									$all_earnings                += $earning;
-									$earnings[ $salesperson_id ] = [
+									$earnings[ $salespeople_id ] = [
 										'earnings'   => $earning,
 										'percentage' => $percentage,
 										'level_id'   => $level_id
 									];
 								}
+								else{
+									$salespeople_with_maxPercentage[] = $salespeople_id;
+								}
 							}
 							if($all_earnings < $max_earning){  // checking again
 								$remaining_earning = $max_earning-$all_earnings;
-								$percentage = $percentages[ $sp_id_with_max_percentage ]['percentage'];
-								$level_id   = $percentages[ $sp_id_with_max_percentage ]['level_id'];
-								// adding remaining earning to excluded salesperson
-								$earnings[ $sp_id_with_max_percentage ] = [
-									'earnings'   => $remaining_earning,
-									'percentage' => $percentage,
-									'level_id'   => $level_id
-								];
+								$sp_maxPercentage_earning = $sales_price/100*$maxPercentage;
+								$sp_maxPercentage_total = count($salespeople_with_maxPercentage);
+								if($sp_maxPercentage_earning*$sp_maxPercentage_total >= $remaining_earning) {// check if all salespeople with max percentage earnings more then max earning allowed
+									$earning_for_each = $remaining_earning / count( $salespeople_with_maxPercentage );
+								}
+								else{
+									$earning_for_each = $sp_maxPercentage_earning;
+								}
+								foreach($salespeople_with_maxPercentage as $sp_max) {
+									$percentage = $percentages[ $sp_max ]['percentage'];
+									$level_id   = $percentages[ $sp_max ]['level_id'];
+									// adding remaining earning to excluded salesperson
+									$earnings[ $sp_max ] = [
+										'earnings'   => $earning_for_each,
+										'percentage' => $percentage,
+										'level_id'   => $level_id
+									];
+								}
 							}
 							else{ // earning will be same for all
 								$earning = $max_earning/$salespeople_count;
 								foreach ($percentages as $salespeople_id => $p){
 									$percentage = $p['percentage'];
 									$level_id   = $p['level_id'];
-									$earnings[ $salesperson_id ] = [
+									$earnings[ $salespeople_id ] = [
 										'earnings'   => $earning,
 										'percentage' => $percentage,
 										'level_id'   => $level_id
@@ -491,7 +507,6 @@ class InvoicesController extends BaseController
 							}
 						}
 					}
-					return false;
 				}
 			}
 			return $earnings;

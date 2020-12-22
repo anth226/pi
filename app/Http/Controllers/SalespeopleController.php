@@ -142,8 +142,9 @@ class SalespeopleController extends Controller
 				'first_name'       => 'required|max:120',
 				'last_name'        => 'max:120',
 				'name_for_invoice' => 'max:120',
-				'email'            => 'required|unique:salespeoples,email,NULL,id,deleted_at,NULL|email|max:120',
+				'email'            => 'required|email|max:120',
 				'phone_number'     => 'nullable|max:120|min:10',
+				'level_id' => 'required'
 			] );
 
 			$last_name = ! empty( $request->input( 'last_name' ) ) ? $request->input( 'last_name' ) : '';
