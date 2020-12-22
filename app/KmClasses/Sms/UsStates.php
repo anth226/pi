@@ -80,7 +80,20 @@ class UsStates {
 
 	}
 
-	public static function statesUS(){
+	public static function statesUS_v1(){
 		return self::$us_states;
+	}
+
+	public static function statesUS(){
+		$states = [];
+		foreach(self::$us_states as $short => $state) {
+			if($short != 'N/A') {
+				$states[ $short ] = $short . ' (' . $state . ')';
+			}
+			else{
+				$states[ $short ] = $state;
+			}
+		}
+		return $states;
 	}
 }
