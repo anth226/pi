@@ -56,7 +56,9 @@ class InvoicesController extends BaseController
 
 	public function anyData(Request $request){
 		$query =  Invoices::with('customer')
-		                  ->with('salespeople.salespersone');
+		                  ->with('salespeople.salespersone')
+						  ->with('salespeople.level')
+		;
 		if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
 			$date      = $request['date_range'];
 			$dateArray = $this->parseDateRange( $date );

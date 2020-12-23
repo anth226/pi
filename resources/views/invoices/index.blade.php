@@ -2,7 +2,8 @@
 
 @section('content')
     <div class="container">
-        <div class="col-lg-12 m-auto">
+        <div class="row">
+            <div class="col-lg-12 m-auto">
             <div class="row">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
@@ -27,9 +28,11 @@
                 </div>
             </div>
             @can('invoice-create')
-            <div class="row mb-4">
+
+                    <div style="padding-right: 11px;padding-left: 11px;">
+                        <div class="row mb-4">
                     <div class="col-md-6 col-lg-3 px-1 mb-1">
-                        <div class="card order-card" style="background: linear-gradient(45deg, #1E567D, #1D5871);">
+                        <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="subscriptions">0</span></h3>
                                 <h3 class="lead text-center">Prime Sales</h3>
@@ -37,23 +40,23 @@
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-3 px-1 mb-1">
-                        <div class="card order-card" style="background: linear-gradient(45deg, #2B97D6, #239FDE);">
+                        <div class="card order-card bg-primary">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="revenue">0</span></h3>
                                 <h3 class="lead text-center">Revenue</h3>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-3 px-1 mb-1">
-                        <div class="card order-card" style="background: linear-gradient(45deg, #2B97D6, #239FDE);">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1 d-none profit">
+                        <div class="card order-card bg-success">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="profit">0</span></h3>
                                 <h3 class="lead text-center">Profit</h3>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-3 px-1 mb-1">
-                        <div class="card order-card" style="background: linear-gradient(45deg, #2B97D6, #239FDE);">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1 d-none commission">
+                        <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="commissions">0</span></h3>
                                 <h3 class="lead text-center">Commissions</h3>
@@ -61,6 +64,8 @@
                         </div>
                     </div>
             </div>
+                    </div>
+
             @endcan
 
             @if ($message = Session::get('success'))
@@ -88,6 +93,7 @@
                 </tbody>
             </table>
 
+        </div>
         </div>
     </div>
 @endsection
@@ -161,8 +167,25 @@
                             if (response.success) {
                                $('#subscriptions').html(response.data.count);
                                $('#revenue').html(moneyFormat(response.data.revenue));
-                               $('#commissions').html(moneyFormat(response.data.commission));
-                               $('#profit').html(moneyFormat(response.data.profit));
+
+                               var commission = response.data.commission;
+                               if(commission) {
+                                   $('.commission').removeClass('d-none');
+                                   $('.profit').removeClass('d-none');
+                                   var percent_commission = commission*100/response.data.revenue;
+                                   $('#commissions').html(moneyFormat(commission) + '<span class="small text-muted" style="font-size: 1rem;"> '+percent_commission.toFixed(2)+'%</span>');
+                               }
+                               else{
+                                   $('.commission').addClass('d-none');
+                                   $('.profit').addClass('d-none');
+                               }
+
+                               var profit = response.data.profit;
+                               if(commission && profit) {
+                                   var percent_profit = profit*100/response.data.revenue;
+                                   $('#profit').html(moneyFormat(profit) + '<span class="small text-muted" style="font-size: 1rem;"> '+percent_profit.toFixed(2)+'%</span>');
+                               }
+
                             }
                             else {
                                 console.log("Error");
@@ -216,13 +239,13 @@
                         }},
                     { data: 'sales_price', name: 'sales_price', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
-                                return moneyFormat(data);
+                                return moneyFormat(data) + calculateEarnings(row);
                             }
                             else{
                                 return '';
                             }
                         } },
-                    { data: 'salespersone', name: 'salespersone',"sortable": false,"searchable": false, render: function ( data, type, row ){
+                    { data: 'salespersone', name: 'salespersone',"sortable": false,"searchable": false, className:"text-nowrap", render: function ( data, type, row ){
                             return generateSalespeople(row);
                         }  },
                     { data: 'customer.email', name: 'customer.email', "sortable": false },
@@ -244,18 +267,56 @@
                 if(isSet(row) ) {
                     if(row.salespeople.length){
                         $.each(row.salespeople, function( index, value ) {
+                            var additions = '';
+                            @can('invoice-create')
+                                if(value.earnings) {
+                                    additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">('+value.level.title+' | '+value.percentage+'%)</span></small></span>';
+                                }
+                            @endcan
                             if(value.sp_type) {
-                                ret_data += '<div><a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' + value.salespersone.name_for_invoice + '</a></div>';
+                                ret_data += '<div>' +
+                                    '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' + value.salespersone.name_for_invoice + '</a>' +
+                                    additions +
+                                    '</div>';
                             }
                         });
                         $.each(row.salespeople, function( index, value ) {
+                            var additions = '';
+                            @can('invoice-create')
+                                if(value.earnings) {
+                                    additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">('+value.level.title+' | '+value.percentage+'%)</span></small></span>';
+                                }
+                            @endcan
                             if(!value.sp_type) {
-                                ret_data += '<div style="line-height: 1.1"><a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '"><small>' + value.salespersone.name_for_invoice + '</small></a></div>';
+                                ret_data += '<div style="line-height: 1.1">' +
+                                    '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '"><small>' + value.salespersone.name_for_invoice + '</small></a>' +
+                                    additions +
+                                    '</div>';
                             }
                         });
                     }
                 }
                 return ret_data;
+            }
+
+            function calculateEarnings(row){
+                var earnings = '';
+                @can('invoice-create')
+                    earnings = 0;
+                    if(row.salespeople){
+                        $.each(row.salespeople, function(i, val){
+                            if(val.earnings){
+                                earnings = earnings*1 + val.earnings*1;
+                            }
+                        })
+                    }
+                    if(earnings){
+                        var percentage = earnings*100/row.sales_price;
+                        var profit = row.sales_price*1 - earnings;
+                        return '<div class="small"><span class="text-success">'+moneyFormat(profit)+'</span></div><div class="small"><small class="text-muted">'+moneyFormat(earnings)+'('+percentage.toFixed(2)+'%)</small></div>';
+                    }
+                @endcan
+                return earnings;
             }
 
             var moneyFormat = function(num){
