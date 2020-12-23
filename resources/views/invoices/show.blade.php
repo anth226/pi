@@ -132,9 +132,14 @@
                         $salespeople = [];
                         $cc = '';
                         $bcc = 'corporate@portfolioinsider.com, crystal@portfolioinsider.com';
+                        $inv = new \App\Http\Controllers\InvoicesController();
+                        $commission = 0;
                     @endphp
                     @if(count($invoice->salespeople))
                         @foreach($invoice->salespeople as  $sp)
+                            @php
+                                $commission += ($sp->earnings)*1;
+                            @endphp
                             @if($sp->sp_type)
                                 @php
                                     $salespeople[] = $sp->salespersone->email;
@@ -144,6 +149,15 @@
                                     <a target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
                                         {{ $sp->salespersone->name_for_invoice }}
                                     </a>
+                                    @can('invoice-create')
+                                        @if($sp->earnings > 0)
+                                            <span>
+                                                <small>
+                                                 Earning: {{ $inv->moneyFormat($sp->earnings) }} ({{ $sp->level->title }} / {{ $sp->percentage }}%)
+                                                </small>
+                                            </span>
+                                        @endif
+                                    @endcan
                                 </div>
                             @endif
                         @endforeach
@@ -157,6 +171,13 @@
                                 <a target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
                                     {{ $sp->salespersone->name_for_invoice }}
                                 </a>
+                                @can('invoice-create')
+                                    @if($sp->earnings > 0)
+                                        <span>
+                                             Earning: {{ $inv->moneyFormat($sp->earnings) }} ({{ $sp->level->title }} / {{ $sp->percentage }}%)
+                                        </span>
+                                    @endif
+                                @endcan
                             </div>
                             @endif
                         @endforeach
@@ -181,6 +202,17 @@
                     <div>
                         <strong>Sales Price:</strong>
                         {{ $formated_price }}
+                        @can('invoice-create')
+                            @if($commission)
+                                <small> (
+                                    @php
+                                        $profit = ($invoice->sales_price)*1 - (($commission)*1);
+                                        $percent =  $commission * 100/$invoice->sales_price;
+                                    @endphp
+                                    <span class="text-success">Profit: {{ $inv->moneyFormat($profit) }}</span> / Commission: {{$inv->moneyFormat($commission) }} | {{$percent}}% )
+                                </small>
+                            @endif
+                        @endcan
                     </div>
                     <div>
                         <strong>Access Date:</strong>

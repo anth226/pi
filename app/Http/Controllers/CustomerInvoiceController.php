@@ -251,6 +251,9 @@ class CustomerInvoiceController extends CustomersController
 				}
 			}
 
+			$invoice_percentages = $invoice_instance->calcEarning(Invoices::find($invoice->id));
+			$invoice_instance->savePercentages($invoice_percentages, $invoice->id);
+
 			return redirect()->route('invoices.show', $invoice->id)
 			                 ->with('success','Invoice created successfully');
 		}
