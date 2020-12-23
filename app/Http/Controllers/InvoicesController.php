@@ -18,7 +18,7 @@ use App\SecondarySalesPeople;
 use App\SentData;
 use Exception;
 use Illuminate\Http\Request;
-use PDF;
+use PDF, DB;
 
 class InvoicesController extends BaseController
 {
@@ -66,9 +66,28 @@ class InvoicesController extends BaseController
 			      ->where( 'access_date', '<=', $dateTo );
 		}
 		if( ! empty( $request['summary'] )){
+//			DB::enableQueryLog();
+//			$query->get();
+//			dd(DB::getQueryLog());
+			$commission = 0;
+			$revenue = $query->sum('sales_price');
+			$invoices = $query->get();
+			if($invoices && $invoices->count()){
+				foreach($invoices  as $inv){
+					$sp = $inv->salespeople;
+					if($sp && $sp->count()){
+						foreach($sp as $s){
+							$commission += $s->earnings;
+						}
+					}
+				}
+			}
+			$profit = $revenue - $commission;
 			$res = [
-				'revenue' => $query->sum('sales_price'),
-				'count' => $query->count()
+				'revenue' => $revenue,
+				'count' => $query->count(),
+				'commission' => $commission,
+				'profit' => $profit
 			];
 			return $this->sendResponse($res,'');
 		}
@@ -144,6 +163,7 @@ class InvoicesController extends BaseController
 		$invoice = Invoices::
 							with('customer')
 		                   ->with('salespeople.salespersone')
+		                   ->with('salespeople.level')
 		                   ->with('product')
 		                   ->find($id);
 		if($invoice) {
@@ -229,8 +249,9 @@ class InvoicesController extends BaseController
 				}
 			}
 
-			dd($this->calcEarning(Invoices::with('salespeople')->find($id)));
 			$this->generatePDF($id);
+			$invoice_percentages = $this->calcEarning(Invoices::find($id));
+			$this->savePercentages($invoice_percentages, $id);
 
 			return $this->sendResponse($invoice, '');
 		}
@@ -457,7 +478,7 @@ class InvoicesController extends BaseController
 							$all_earnings = 0;
 							$salespeople_with_maxPercentage = [];
 							foreach ($percentages as $salespeople_id => $p){
-								if($p['percentage'] != $maxPercentage) { //excluding salesperson with max percentage
+								if($p['percentage'] < $maxPercentage) { //excluding salesperson with max percentage
 									$percentage                  = $p['percentage'];
 									$level_id                    = $p['level_id'];
 									$earning                     = $earning = $sales_price / 100 * $percentage;
@@ -544,6 +565,42 @@ class InvoicesController extends BaseController
 				'error' => $ex->getMessage(),
 				'controller' => 'InvoicesController',
 				'function' => 'getCurrentPercentage'
+			]);
+			return false;
+		}
+	}
+
+	public function recalcAll(){
+		try {
+			$invoices = Invoices::get();
+			foreach ($invoices as $invoice) {
+				$percentages =  $this->calcEarning($invoice);
+				$this->savePercentages($percentages, $invoice->id);
+			}
+			return true;
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'InvoicesController',
+				'function' => 'recalcAll'
+			]);
+			return false;
+		}
+	}
+
+	public function savePercentages($percentages, $invoice_id){
+		try {
+			foreach ($percentages as $salespeople_id => $percentage){
+				SecondarySalesPeople::where('salespeople_id', $salespeople_id)->where('invoice_id', $invoice_id)->update($percentage);
+			}
+			return true;
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'InvoicesController',
+				'function' => 'savePercentages'
 			]);
 			return false;
 		}

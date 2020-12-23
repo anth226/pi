@@ -32,11 +32,11 @@ class TestController extends BaseController
 //		dd(phpinfo());
 //		$c = new CustomersController();
 //		$userProperties = [
-//			'email'         => 'gus@portfolioinsider.com',
-//			'phone'         => '8184563045',
-//			'first_name' => 'Gus',
-//			'last_name' => 'J',
-//			'full_name' => 'Gus J',
+//			'email'         => 'Bevnjoe@comcast.net',
+//			'phone'         => '3606337426',
+//			'first_name' => 'Joe L',
+//			'last_name' => 'Mcdonald',
+//			'full_name' => 'Joe L Mcdonald',
 //			'source' => 'portfolioinsider',
 //			'tags' => 'portfolioinsider,portfolio-insider-prime',
 //		];
@@ -49,7 +49,10 @@ class TestController extends BaseController
 //		dd($c->getFirebaseCollectionRecord('oird7Wwc8UMF8NXi9fJunSY85ai2'));
 //		$this->moveSP();
 //		dd(Invoices::with('customer')->with('salespeople.salespersone')->get()->toArray());
-
+		$i = new InvoicesController();
+//		$invoice = Invoices::find(112);
+//		dd($i->calcEarning($invoice));
+		dd($i->recalcAll());
 
 	}
 

@@ -28,7 +28,7 @@
             </div>
             @can('invoice-create')
             <div class="row mb-4">
-                    <div class="col-md-6 col-lg-3 pr-md-0 mb-1">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1">
                         <div class="card order-card" style="background: linear-gradient(45deg, #1E567D, #1D5871);">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="subscriptions">0</span></h3>
@@ -36,11 +36,27 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-3 pr-md-1 pl-md-1 mb-1">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1">
                         <div class="card order-card" style="background: linear-gradient(45deg, #2B97D6, #239FDE);">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="revenue">0</span></h3>
                                 <h3 class="lead text-center">Revenue</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 px-1 mb-1">
+                        <div class="card order-card" style="background: linear-gradient(45deg, #2B97D6, #239FDE);">
+                            <div class="text-center p-2 text-white">
+                                <h3 class="text-center"><span id="profit">0</span></h3>
+                                <h3 class="lead text-center">Profit</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 px-1 mb-1">
+                        <div class="card order-card" style="background: linear-gradient(45deg, #2B97D6, #239FDE);">
+                            <div class="text-center p-2 text-white">
+                                <h3 class="text-center"><span id="commissions">0</span></h3>
+                                <h3 class="lead text-center">Commissions</h3>
                             </div>
                         </div>
                     </div>
@@ -145,6 +161,8 @@
                             if (response.success) {
                                $('#subscriptions').html(response.data.count);
                                $('#revenue').html(moneyFormat(response.data.revenue));
+                               $('#commissions').html(moneyFormat(response.data.commission));
+                               $('#profit').html(moneyFormat(response.data.profit));
                             }
                             else {
                                 console.log("Error");
