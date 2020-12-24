@@ -10,7 +10,9 @@
                         <h2> {{ $salespeople->name_for_invoice }}</h2>
                     </div>
                     <div class="pull-right mb-4">
-                        <a class="btn btn-primary mt-2" href="{{ route('salespeople.index') }}"> All Salespeople</a>
+                        @if( Gate::check('salespeople-list') || Gate::check('salespeople-edit') || Gate::check('salespeople-delete'))
+                            <a class="btn btn-primary mt-2" href="{{ route('salespeople.index') }}"> All Salespeople</a>
+                        @endif
                         @can('salespeople-edit')
                             <a class="btn btn-info mt-2" href="{{ route('salespeople.edit',$salespeople->id) }}"> Edit</a>
                         @endcan
@@ -45,27 +47,30 @@
                             echo FormatUsPhoneNumber::nicePhoneNumberFormat($salespeople->phone_number, $salespeople->formated_phone_number);
                         @endphp
                     </div>
-
-                    <div>
-                        <strong>Level:</strong>
-                        {{ $salespeople->level->level->title }} | {{ $salespeople->level->percentage }}%
-                    </div>
+                    @can('salespeople-edit')
+                        <div>
+                            <strong>Level:</strong>
+                            {{ $salespeople->level->level->title }} | {{ $salespeople->level->percentage }}%
+                        </div>
+                    @endcan
                 </div>
                 <div class="col-md-6">
-                    <div class="p-2 text-muted details_bgcolor">
-                        <div>
-                            <small>
-                                <strong>Created at:</strong>
-                                {{ $salespeople->created_at }}
-                            </small>
+                    @can('salespeople-edit')
+                        <div class="p-2 text-muted details_bgcolor">
+                            <div>
+                                <small>
+                                    <strong>Created at:</strong>
+                                    {{ $salespeople->created_at }}
+                                </small>
+                            </div>
+                            <div>
+                                <small>
+                                    <strong>Updated at:</strong>
+                                    {{ $salespeople->updated_at }}
+                                </small>
+                            </div>
                         </div>
-                        <div>
-                            <small>
-                                <strong>Updated at:</strong>
-                                {{ $salespeople->updated_at }}
-                            </small>
-                        </div>
-                    </div>
+                    @endcan
                 </div>
             </div>
 

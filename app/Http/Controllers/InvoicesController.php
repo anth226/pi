@@ -18,6 +18,7 @@ use App\SecondarySalesPeople;
 use App\SentData;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use PDF, DB;
 
 class InvoicesController extends BaseController
@@ -28,10 +29,12 @@ class InvoicesController extends BaseController
 	function __construct()
 	{
 		$this->middleware(['auth','verified']);
-		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['index','show', 'showPdf']]);
+		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete|salespeople-reports-view-own', ['only' => ['index']]);
+		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['show', 'showPdf']]);
 		$this->middleware('permission:invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:invoice-edit', ['only' => ['edit','update']]);
 		$this->middleware('permission:invoice-delete', ['only' => ['destroy']]);
+
 		$this->pdf_path = base_path().'/resources/views/invoicesPdf/';
 		$this->full_path =  config('app.url').'/pdfview/';
 		$this->app_url =  config('app.url');
@@ -41,17 +44,29 @@ class InvoicesController extends BaseController
 
 	public function index(Request $request)
 	{
-//		$firstReportDate = Invoices::orderBy('access_date', 'asc')->value('access_date');
-		$lastReportDate = Invoices::orderBy('access_date', 'desc')->value('access_date');
-		$firstDate = date("F j, Y");
-		$lastDate = date("F j, Y");
-//		if($firstReportDate) {
-//			$firstDate = date( "F j, Y", strtotime( $firstReportDate ) );
-//		}
-		if($lastReportDate) {
-			$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
+		$user = Auth::user();
+		if( $user->hasRole('Salesperson')){
+			$salesperson_id = Salespeople::where('email', $user->email)->value('id');
+			if($salesperson_id) {
+				$salespeopleController = new SalespeopleController();
+				return $salespeopleController->show($salesperson_id);
+			}
+			return abort(404);
 		}
-		return view('invoices.index', compact('firstDate', 'lastDate'));
+		else {
+	//	    $firstReportDate = Invoices::orderBy('access_date', 'asc')->value('access_date');
+			$lastReportDate = Invoices::orderBy( 'access_date', 'desc' )->value( 'access_date' );
+			$firstDate      = date( "F j, Y" );
+			$lastDate       = date( "F j, Y" );
+	//		if($firstReportDate) {
+	//			$firstDate = date( "F j, Y", strtotime( $firstReportDate ) );
+	//		}
+			if ( $lastReportDate ) {
+				$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
+			}
+
+			return view( 'invoices.index', compact( 'firstDate', 'lastDate' ) );
+		}
 	}
 
 	public function anyData(Request $request){
