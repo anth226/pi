@@ -10,13 +10,15 @@ use App\SalespeoplePecentageLog;
 use Illuminate\Http\Request;
 use Validator;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class SalespeopleController extends Controller
 {
 	function __construct()
 	{
 		$this->middleware(['auth','verified']);
-		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete', ['only' => ['index','show']]);
+		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete||salespeople-reports-view-own', ['only' => ['show']]);
+		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete', ['only' => ['index']]);
 		$this->middleware('permission:salespeople-create', ['only' => ['create','store']]);
 		$this->middleware('permission:salespeople-edit', ['only' => ['edit','update']]);
 		$this->middleware('permission:salespeople-delete', ['only' => ['destroy']]);
@@ -103,11 +105,24 @@ class SalespeopleController extends Controller
 	 */
 	public function show($id)
 	{
-		$salespeople = Salespeople::with('level.level')->find($id);
-		if($salespeople) {
-			return view( 'salespeople.show', compact( 'salespeople' ) );
+		$user = Auth::user();
+		if( $user->hasRole('Salesperson')){
+			$salesperson_id = Salespeople::where('email', $user->email)->value('id');
+			if($salesperson_id && $id == $salesperson_id) {
+				$salespeople = Salespeople::with( 'level.level' )->find( $salesperson_id );
+				if ( $salespeople ) {
+					return view( 'salespeople.show', compact( 'salespeople' ) );
+				}
+			}
+			return abort(403);
 		}
-		return abort(404);
+		else {
+			$salespeople = Salespeople::with( 'level.level' )->find( $id );
+			if ( $salespeople ) {
+				return view( 'salespeople.show', compact( 'salespeople' ) );
+			}
+			return abort( 404 );
+		}
 	}
 
 

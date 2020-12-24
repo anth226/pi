@@ -45,6 +45,10 @@ Route::resource('/invoices','InvoicesController', ['only' => ['show', 'index']])
 
 Route::get('/datatables.data', 'CustomerInvoiceController@anyData');
 Route::get('/invoicesdatatables.data', 'InvoicesController@anyData');
+
+Route::get('/spreportsdatatables.data', 'SalespeopleReportsController@anyData');
+Route::get('/reports/salespeople', 'SalespeopleReportsController@index');
+
 //Route::get('/dashboard', 'CustomerInvoiceController@index');
 Route::get('/dashboard', 'InvoicesController@index');
 
