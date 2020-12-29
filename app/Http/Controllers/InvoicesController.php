@@ -244,7 +244,7 @@ class InvoicesController extends BaseController
 //					if ( ! empty( $pipedrive_res['message'] ) ) {
 //						$message = $pipedrive_res['message'];
 //					}
-//					return $this->sendError( $message );
+//					redirect()->route('invoices.show', $id)->withErrors([$message]);
 //				}
 //				else{
 //					SentData::create([
