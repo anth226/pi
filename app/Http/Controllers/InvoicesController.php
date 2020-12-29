@@ -209,6 +209,8 @@ class InvoicesController extends BaseController
 			$dataToUpdate['cc_number'] = $request->input('cc_number');
 			$dataToUpdate['salespeople_id'] = $request->input('salespeople_id');
 
+			$invoice_before = Invoices::with('customer')->find($id);
+
 			$invoice = Invoices::where('id', $id)->update($dataToUpdate);
 
 			SecondarySalesPeople::where('invoice_id', $id)->delete();
@@ -229,6 +231,30 @@ class InvoicesController extends BaseController
 			}
 
 			$this->generatePDF($id);
+
+			$customersController = new CustomersController();
+
+//			if($invoice_before && $invoice_before->sales_price && $invoice_before->customer->email && $invoice_before->sales_price != $dataToUpdate['sales_price']) {
+//				$pipedrive_res = $customersController->sendDataToPipedrive( [
+//					'email' => $invoice_before->customer->email,
+//					'sales_price' => $dataToUpdate['sales_price']
+//				] );
+//				if ( ! $pipedrive_res['success'] ) {
+//					$message = 'Error! Can\'t send data to Pipedrive';
+//					if ( ! empty( $pipedrive_res['message'] ) ) {
+//						$message = $pipedrive_res['message'];
+//					}
+//					return $this->sendError( $message );
+//				}
+//				else{
+//					SentData::create([
+//						'customer_id' => $invoice_before->customer->id,
+//						'value' => $pipedrive_res['data'],
+//						'field' => 'deal_id',
+//						'service_type' => 5 // pipedrive,
+//					]);
+//				}
+//			}
 
 			return $this->sendResponse($invoice, '');
 		}

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Customers;
 use App\Errors;
 use App\Invoices;
+use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\SentData;
@@ -629,5 +630,62 @@ class CustomersController extends Controller
 		]);
 		$this->smssystem = '';
 		return false;
+	}
+
+	public function sendDataToPipedrive($input){
+		try {
+			$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPerson( $input['email'] ) );
+
+			if (
+				!empty($searchPerson) &&
+				!empty($searchPerson->data) &&
+				!empty($searchPerson->data->items) &&
+				!empty($searchPerson->data->items[0]) &&
+				!empty($searchPerson->data->items[0]->item) &&
+				!empty($searchPerson->data->items[0]->item->id)
+			)
+			{
+				$deals = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchDeal( $searchPerson->data->items[0]->item->id ) );
+				if (
+					!empty($deals) &&
+					!empty($deals->data) &&
+					!empty($deals->data[0]) &&
+					!empty($deals->data[0]->id)
+				)
+				{
+					$deal = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\UpdateDeal( $deals->data[0]->id, $input['sales_price']  ) );
+					if (
+						!empty($deal) &&
+						!empty($deal->data) &&
+						!empty($deals->data[0]) &&
+						!empty($deals->data[0]->id)
+					) {
+						return $this->sendResponse( $deals->data[0]->id );
+					}
+					else {
+						$error = "Pipedrive: Unknown Error";
+						Errors::create( ['error' => $error, 'controller' => 'CustomersController', 'function' => 'sendDataToPipedrive'] );
+						return $this->sendError($error);
+					}
+				}
+				else {
+					$error = "Pipedrive: No deals associated with ".$input['email']." found";
+					Errors::create( ['error' => $error, 'controller' => 'CustomersController', 'function' => 'sendDataToPipedrive'] );
+					return $this->sendError($error);
+				}
+			}
+			else{
+				$error = "Pipedrive: No ".$input['email']." found on Pipedrive";
+				Errors::create( ['error' => $error, 'controller' => 'CustomersController', 'function' => 'sendDataToPipedrive'] );
+				return $this->sendError($error);
+			}
+
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create( ['error' => 'Pipedrive: '.$error, 'controller' => 'CustomersController', 'function' => 'sendDataToPipedrive'] );
+			return $this->sendError($error);
+		}
+
 	}
 }

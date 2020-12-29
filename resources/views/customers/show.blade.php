@@ -79,6 +79,9 @@
                                         case 4:
                                             $service_name = 'SMS System';
                                             break;
+                                         case 5:
+                                            $service_name = 'Pipedrive';
+                                            break;
                                         default:
                                             $service_name = '';
                                     }
