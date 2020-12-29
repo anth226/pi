@@ -36,6 +36,9 @@
             line-height: 1.6;
             color: #495057;
         }
+        .red_border{
+            border: 1px solid red;
+        }
     </style>
 @endsection
 
@@ -53,7 +56,9 @@
                 </div>
             </div>
 
+            <div class="error_box">
 
+            </div>
             @if (count($errors) > 0)
                 <div class="alert alert-danger">
                     <strong>Whoops!</strong> There were some problems with your input.<br><br>
@@ -67,7 +72,7 @@
 
 
 
-            {!! Form::open(array('route' => 'customers-invoices.store','method'=>'POST')) !!}
+            {!! Form::open(array('route' => 'customers-invoices.store','method'=>'POST', 'id' => 'invoiceCreate')) !!}
 	        <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -186,10 +191,12 @@
                 <input type="hidden" name="test_mode" value="{{$test_mode}}">
             @endif
 
+            <input type="hidden" name="ignore_pipedrive" >
+
 
             <div class="row">
                 <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-                    <button type="submit" class="btn btn-primary">Generate Invoice</button>
+                    <button id="invoiceGenerate" type="submit" class="btn btn-primary">Generate Invoice</button>
                 </div>
             </div>
             {!! Form::close() !!}
@@ -341,17 +348,79 @@
                 input[0].setSelectionRange(caret_pos, caret_pos);
             }
 
-            var submit_button = $('button[type="submit"]');
-            submit_button.on('click', function(){
-                $('form').submit();
+
+            $(document).on('submit', '#invoiceCreate', function (event) {
+                event.preventDefault();
+                var submit_button = $('button#invoiceGenerate');
+                var $form = $(this);
+                var submitData = $form.serialize();
+
+                var button_title = beforeSubmit(submit_button);
+
+                $.ajax({
+                    url: '/customers-invoices',
+                    type: "POST",
+                    dataType: "json",
+                    data: submitData,
+                    success: function (response) {
+                        if (response) {
+                            console.log(response);
+                            if (response.success) {
+                                window.location.href = "/invoices";
+                            }
+                            else {
+                                // popup_err_box.html('Error: ' + response.message);
+
+                            }
+                        }
+                        else {
+                            // popup_err_box.html('Error!');
+                        }
+                        afterSubmit(submit_button, button_title)
+
+                    },
+                    error: function (response) {
+                        if (response && response.responseJSON) {
+                            if (response.responseJSON.message) {
+                                $('.error_box').html('<div class="alert alert-danger">'+response.responseJSON.message+'</div>');
+                            }
+                            else {
+                                $('.error_box').append('<div class="alert alert-danger">Error!</div>');
+                            }
+
+                            if (response.responseJSON.errors){
+                                $.each(response.responseJSON.errors, function(key, value){
+                                    $('input[name="'+key+'"]').addClass('red_border').after('<div class="small error_form text-danger">'+value[0]+'</div>');
+                                    $('select[name="'+key+'"] ~ span:first').addClass('red_border').after('<div class="small error_form text-danger">'+value[0]+'</div>');
+                                });
+                            }
+                        }
+                        afterSubmit(submit_button, button_title)
+                    }
+                });
+            });
+
+            function beforeSubmit(submit_button){
+                $('input').removeClass('red_border').prop('disabled', true);
+                $('span').removeClass('red_border');
+                $('.error_form').remove();
+                $('.error_box').html("");
                 var ajax_img = '<img width="40" src="<?php echo e(url('/img/ajax_3.gif')); ?>" alt="ajax loader">';
                 $('button').prop('disabled', true);
-                $('input').prop('disabled', true);
                 $('select').prop('disabled', true);
                 $('a').addClass('disabled');
                 var button_title = submit_button.html();
                 submit_button.html(button_title + ' ' + ajax_img);
-            });
+                return button_title;
+            }
+
+            function afterSubmit(submit_button, button_title){
+                $('button').prop('disabled', false);
+                $('input').prop('disabled', false);
+                $('select').prop('disabled', false);
+                $('a').removeClass('disabled');
+                submit_button.html(button_title);
+            }
 
             $('.phone-number').usPhoneFormat({
                 format: '(xxx) xxx-xxxx',
