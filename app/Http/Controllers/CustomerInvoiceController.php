@@ -233,22 +233,22 @@ class CustomerInvoiceController extends CustomersController
 			if(!$test_mode) {
 				//////////// sending data to pipidrive
 				$dataToSend['sales_price'] = $sales_price;
-//				$pipedrive_res = $this->sendDataToPipedrive( $dataToSend );
-//				if ( ! $pipedrive_res['success'] ) {
-//					$message = 'Error! Can\'t send data to Pipedrive';
-//					if ( ! empty( $pipedrive_res['message'] ) ) {
-//						$message = $pipedrive_res['message'];
-//					}
-//					return redirect()->route('invoices.show', $invoice->id)->withErrors( [ $message ] );
-//				}
-//				else{
-//					SentData::create([
-//						'customer_id' => $customer->id,
-//						'value' => $pipedrive_res['data'],
-//						'field' => 'deal_id',
-//						'service_type' => 5 // pipedrive,
-//					]);
-//				}
+				$pipedrive_res = $this->sendDataToPipedrive( $dataToSend );
+				if ( ! $pipedrive_res['success'] ) {
+					$message = 'Error! Can\'t send data to Pipedrive';
+					if ( ! empty( $pipedrive_res['message'] ) ) {
+						$message = $pipedrive_res['message'];
+					}
+					return redirect()->route('invoices.show', $invoice->id)->withErrors( [ $message ] );
+				}
+				else{
+					SentData::create([
+						'customer_id' => $customer->id,
+						'value' => $pipedrive_res['data'],
+						'field' => 'deal_id',
+						'service_type' => 5 // pipedrive,
+					]);
+				}
 
 			}
 
