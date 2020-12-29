@@ -103,8 +103,8 @@ class CustomerInvoiceController extends CustomersController
 		if(!$test_mode) {
 			if(!$ignore_pipedrive) {
 				//////////// sending data to pipidrive
-				$pipedrive_deal = $this->checkPipedrive( $dataToSend );
-				if ( ! $pipedrive_deal['success'] ) {
+				$pipedrive_person = $this->checkPipedrive( $dataToSend );
+				if ( ! $pipedrive_person['success'] ) {
 					$message = 'Error! Can\'t send data to Pipedrive';
 					if ( ! empty( $pipedrive_res['message'] ) ) {
 						$message = $pipedrive_res['message'];
@@ -244,7 +244,7 @@ class CustomerInvoiceController extends CustomersController
 			if(!$test_mode) {
 				if ( ! $ignore_pipedrive ) {
 					//////////// sending data to pipidrive
-					$pipedrive_res = $this->updatePipedriveDeal( $pipedrive_deal['data'], $sales_price );
+					$pipedrive_res = $this->updateOrAddPipedriveDeal( $pipedrive_person['data'], $sales_price );
 					if ( ! $pipedrive_res['success'] ) {
 						$message = 'Error! Can\'t send data to Pipedrive';
 						if ( ! empty( $pipedrive_res['message'] ) ) {

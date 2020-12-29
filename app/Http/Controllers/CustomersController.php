@@ -676,7 +676,7 @@ class CustomersController extends BaseController
 				return $this->sendResponse( $deal->data[0]->id, '', false );
 			}
 			else {
-				$error = "Pipedrive: Unknown Error";
+				$error = "Pipedrive: Can't update deal";
 				Errors::create( ['error' => $error, 'controller' => 'CustomersController', 'function' => 'updatePipedriveDeal'] );
 				return $this->sendError($error, [], 404, false);
 			}
@@ -703,7 +703,7 @@ class CustomersController extends BaseController
 				!empty($searchPerson->data->items[0]->item->id)
 			)
 			{
-				return $this->findPipedriveDeals($searchPerson->data->items[0]->item->id);
+				return $this->sendResponse($searchPerson->data->items[0]->item, '', false);
 			}
 			else{
 				$searchPersonByName = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPersonByName( $input['full_name'] ) );
@@ -716,7 +716,7 @@ class CustomersController extends BaseController
 					!empty($searchPersonByName->data->items[0]->item->id)
 				)
 				{
-					return $this->findPipedriveDeals($searchPersonByName->data->items[0]->item->id, $input['email']);
+					return $this->sendError($searchPersonByName->data->items[0]->item->id, [$input['email']],200, false);
 				}
 				else {
 					$error = "Pipedrive: No " . $input['email'] . " found on Pipedrive";
@@ -737,9 +737,9 @@ class CustomersController extends BaseController
 
 	}
 
-	public function findPipedriveDeals($person_id, $email = ''){
+	public function updateOrAddPipedriveDeal($person, $sales_price){
 		try{
-			$deals = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchDeal( $person_id ) );
+			$deals = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchDeal( $person->id ) );
 			if (
 				!empty($deals) &&
 				!empty($deals->data) &&
@@ -747,24 +747,30 @@ class CustomersController extends BaseController
 				!empty($deals->data[0]->id)
 			)
 			{
-				$message = '';
-				if($email) {
-					if (! empty( $deals->data[0]->emails ) && ! empty( $deals->data[0]->emails[0] ) ) {
-						$message = $deals->data[0]->emails[0];
-					}
-					return $this->sendError('', [$message], 404, false);
-				}
-				return $this->sendResponse( $deals->data[0]->id, $message, false );
+				return $this->updatePipedriveDeal( $deals->data[0]->id, $sales_price );
 			}
 			else {
-				$error = "Pipedrive: No deals associated with user found";
-				Errors::create( ['error' => $error, 'controller' => 'CustomersController', 'function' => 'checkPipedrive'] );
-				return $this->sendError($error, [], 404, false);
+				$deal = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\CreateDeal( $person->id, $person->owner, $sales_price, $person->name ) );
+				if (
+					!empty($deal) &&
+					!empty($deals->data) &&
+					!empty($deals->data->id)
+				){
+					return $this->sendResponse($deals->data->id,'', false);
+				}
+				else {
+					$error = "Pipedrive: Can't create deal";
+					Errors::create( [ 'error'      => $error,
+					                  'controller' => 'CustomersController',
+					                  'function'   => 'updateOrAddPipedriveDeal'
+					] );
+					return $this->sendError( $error, [], 404, false );
+				}
 			}
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
-			Errors::create( ['error' => 'Pipedrive: '.$error, 'controller' => 'CustomersController', 'function' => 'findPipedriveDeals'] );
+			Errors::create( ['error' => 'Pipedrive: '.$error, 'controller' => 'CustomersController', 'function' => 'updateOrAddPipedriveDeal'] );
 			return $this->sendError($error, [], 404, false);
 		}
 	}
