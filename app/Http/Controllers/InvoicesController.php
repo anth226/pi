@@ -234,27 +234,27 @@ class InvoicesController extends BaseController
 
 			$customersController = new CustomersController();
 
-//			if($invoice_before && $invoice_before->sales_price && $invoice_before->customer->email && $invoice_before->sales_price != $dataToUpdate['sales_price']) {
-//				$pipedrive_res = $customersController->sendDataToPipedrive( [
-//					'email' => $invoice_before->customer->email,
-//					'sales_price' => $dataToUpdate['sales_price']
-//				] );
-//				if ( ! $pipedrive_res['success'] ) {
-//					$message = 'Error! Can\'t send data to Pipedrive';
-//					if ( ! empty( $pipedrive_res['message'] ) ) {
-//						$message = $pipedrive_res['message'];
-//					}
-//					redirect()->route('invoices.show', $id)->withErrors([$message]);
-//				}
-//				else{
-//					SentData::create([
-//						'customer_id' => $invoice_before->customer->id,
-//						'value' => $pipedrive_res['data'],
-//						'field' => 'deal_id',
-//						'service_type' => 5 // pipedrive,
-//					]);
-//				}
-//			}
+			if($invoice_before && $invoice_before->sales_price && $invoice_before->customer->email && $invoice_before->sales_price != $dataToUpdate['sales_price']) {
+				$pipedrive_res = $customersController->sendDataToPipedrive( [
+					'email' => $invoice_before->customer->email,
+					'sales_price' => $dataToUpdate['sales_price']
+				] );
+				if ( ! $pipedrive_res['success'] ) {
+					$message = 'Error! Can\'t send data to Pipedrive';
+					if ( ! empty( $pipedrive_res['message'] ) ) {
+						$message = $pipedrive_res['message'];
+					}
+					redirect()->route('invoices.show', $id)->withErrors([$message]);
+				}
+				else{
+					SentData::create([
+						'customer_id' => $invoice_before->customer->id,
+						'value' => $pipedrive_res['data'],
+						'field' => 'deal_id',
+						'service_type' => 5 // pipedrive,
+					]);
+				}
+			}
 
 			return $this->sendResponse($invoice, '');
 		}
