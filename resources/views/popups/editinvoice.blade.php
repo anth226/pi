@@ -61,7 +61,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <strong>CC *:</strong>
-                                {!! Form::number('cc_number', null, array('placeholder' => 'CC','class' => 'form-control', 'maxlength="4"', 'minlength="4"', 'required="required"')) !!}
+                                {!! Form::number('cc_number', $invoice['cc_number'], array('placeholder' => 'CC','class' => 'form-control', 'maxlength="4"', 'minlength="4"', 'required="required"')) !!}
                             </div>
                         </div>
                     </div>
