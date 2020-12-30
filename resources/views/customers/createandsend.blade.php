@@ -42,6 +42,11 @@
     </style>
 @endsection
 
+@section('popup')
+    @include('popups.pipedrive')
+    @include('popups.pipedrive2')
+@endsection
+
 @section('content')
     <div class="container">
         <div class="col-lg-12 m-auto">
@@ -350,13 +355,43 @@
 
 
             $(document).on('submit', '#invoiceCreate', function (event) {
+                makeAjaxCall();
+            });
+
+            $(document).on('click', '#save_and_ignore_pipedrive', function (event) {
+                $('input[name="ignore_pipedrive"]').val(1);
+                $('.modal').modal('hide');
+                makeAjaxCall();
+            });
+
+            $(document).on('click', '#save_and_ignore_pipedrive2', function (event) {
+                $('input[name="ignore_pipedrive"]').val(1);
+                $('.modal').modal('hide');
+                makeAjaxCall();
+            });
+
+            $(document).on('click', '.alternate_email', function (event) {
+                var em = $(this).data('email');
+                if(em){
+                    $('input[name="email"]').val(em);
+                    $('.modal').modal('hide');
+                    makeAjaxCall();
+                }
+            });
+
+            function makeAjaxCall(){
                 event.preventDefault();
                 var submit_button = $('button#invoiceGenerate');
-                var $form = $(this);
+                var $form = $('#invoiceCreate');
                 var submitData = $form.serialize();
 
                 var button_title = beforeSubmit(submit_button);
-
+                var  message = "Unknown Error";
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
                 $.ajax({
                     url: '/customers-invoices',
                     type: "POST",
@@ -364,29 +399,63 @@
                     data: submitData,
                     success: function (response) {
                         if (response) {
-                            console.log(response);
                             if (response.success) {
-                                window.location.href = "/invoices";
+                                if(response.message){
+                                    $('#'+response.message).modal('show');
+                                    afterSubmit(submit_button, button_title);
+                                    var pipedrivedata = '';
+                                    if(response.data && response.data.length){
+                                        $.each(response.data, function(key, value){
+                                            if(isSet(value) && isSet(value.item)) {
+                                                var person_name = '';
+                                                if(isSet(value.item.name)){
+                                                    person_name = value.item.name;
+                                                }
+                                                pipedrivedata += '<div class="row"><div class="col-12 text-center">' + person_name + '</div>';
+
+                                                if(isSet(value.item.emails) && value.item.emails.length){
+                                                    $.each(value.item.emails, function(i, em){
+                                                        if(isSet(em)){
+                                                            pipedrivedata += '<div class="col-12 text-center m-auto"><button class="btn btn-light mb-1 alternate_email" title="Continue using '+em+' " data-email="'+em+'">' + em + '</button></div>';
+                                                        }
+                                                    });
+                                                }
+
+                                                pipedrivedata += '</div><hr>';
+                                            }
+                                        });
+                                        if(pipedrivedata){
+                                            $('#'+response.message).find('.modal-body').html(pipedrivedata);
+                                        }
+                                    }
+                                }
+                                else {
+                                    window.location.href = "/invoices/" + response.data;
+                                }
                             }
                             else {
-                                // popup_err_box.html('Error: ' + response.message);
-
+                                if (response.message) {
+                                    message = response.message;
+                                }
+                                $('.error_box').html('<div class="alert alert-danger">' + message + '</div>');
+                                afterSubmit(submit_button, button_title);
                             }
                         }
                         else {
-                            // popup_err_box.html('Error!');
+                            $('.error_box').html('<div class="alert alert-danger">'+message+'</div>');
+                            afterSubmit(submit_button, button_title);
                         }
-                        afterSubmit(submit_button, button_title)
-
                     },
                     error: function (response) {
                         if (response && response.responseJSON) {
                             if (response.responseJSON.message) {
-                                $('.error_box').html('<div class="alert alert-danger">'+response.responseJSON.message+'</div>');
+                                message = response.responseJSON.message;
                             }
-                            else {
-                                $('.error_box').append('<div class="alert alert-danger">Error!</div>');
+                            else{
+                                message = 'Error!';
                             }
+                            $('.error_box').append('<div class="alert alert-danger">' + message + '</div>');
+
 
                             if (response.responseJSON.errors){
                                 $.each(response.responseJSON.errors, function(key, value){
@@ -395,10 +464,10 @@
                                 });
                             }
                         }
-                        afterSubmit(submit_button, button_title)
+                        afterSubmit(submit_button, button_title);
                     }
                 });
-            });
+            }
 
             function beforeSubmit(submit_button){
                 $('input').removeClass('red_border').prop('disabled', true);
@@ -420,6 +489,7 @@
                 $('select').prop('disabled', false);
                 $('a').removeClass('disabled');
                 submit_button.html(button_title);
+                $('input[name="ignore_pipedrive"]').val('');
             }
 
             $('.phone-number').usPhoneFormat({
@@ -440,6 +510,14 @@
                     phone_number.removeClass('phone-number').off();
                 }
             });
+
+
+            function isSet(variable){
+                if(typeof variable !== "undefined" && variable !== null) {
+                    return true;
+                }
+                return false;
+            }
         });
     </script>
 @endsection

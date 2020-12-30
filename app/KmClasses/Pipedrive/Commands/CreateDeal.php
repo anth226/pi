@@ -31,14 +31,18 @@ class CreateDeal implements CommandInterface
 
 	function execute(Client $client)
 	{
-
-		$data = $client->getInstance()->getDeals()->addADeal([
+		$deal_data = [
 			"person_id" => $this->person_id,
-			"user_id" => $this->owner_id,
 			"value" => $this->value,
 			"status" => 'won',
 			"title" => $this->name  . ' deal'
-		]);
+		];
+
+		if($this->owner_id){
+			$deal_data['user_id'] = $this->owner_id;
+		}
+
+		$data = $client->getInstance()->getDeals()->addADeal($deal_data);
 
 		return $data;
 	}

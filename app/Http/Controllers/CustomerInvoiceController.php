@@ -111,6 +111,11 @@ class CustomerInvoiceController extends CustomersController
 					}
 					return $this->sendError($message);
 				}
+				else{
+					if($pipedrive_person['message']){
+						return $this->sendResponse($pipedrive_person['data'], $pipedrive_person['message']);
+					}
+				}
 			}
 
 
@@ -250,7 +255,8 @@ class CustomerInvoiceController extends CustomersController
 						if ( ! empty( $pipedrive_res['message'] ) ) {
 							$message = $pipedrive_res['message'];
 						}
-						return $this->sendResponse($invoice->id, $message);
+//						return $this->sendResponse($invoice->id, $message);
+						$request->session()->flash('error', $message);
 					}
 					else{
 						SentData::create([
