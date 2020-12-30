@@ -8,6 +8,7 @@ use App\Http\Controllers\API\BaseController;
 use App\Invoices;
 use App\KmClasses\Pipedrive;
 use App\SecondarySalesPeople;
+use App\SentData;
 use Exception;
 
 class TestController extends BaseController
@@ -45,6 +46,7 @@ class TestController extends BaseController
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\CreateDeal( 33, 11916517, 1200, 'Test Person', 'lll' ) );
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPerson( 'test1@test.com' ) );
 //		dd($searchPerson);
+		$this->markAllWonOnPipedrive();
 	}
 
 
@@ -90,6 +92,187 @@ class TestController extends BaseController
 		catch (Exception $ex){
 			$error = $ex->getMessage();
 			return $this->sendError($error);
+		}
+	}
+
+	public function markAllWonOnPipedrive(){
+		try {
+			ini_set('memory_limit', '8024M');
+			set_time_limit(72000);
+			$invoices = Invoices::select('invoices.*', 'customers.email')
+								->join('customers', function ( $join ) {
+									$join->on( 'customers.id', 'invoices.customer_id' );
+								})
+								->leftJoin('sent_data', function ( $join ) {
+									$join->on( 'sent_data.customer_id', 'invoices.customer_id' )
+									     ->where('sent_data.service_type', 5)
+									;
+								})
+								->whereNull('sent_data.customer_id')
+								->orderBy('invoices.id', 'asc')
+								->skip(0)
+								->take(1000)
+								->get()
+			;
+//			dd($invoices->toArray());
+
+			$emailsExisted = [];
+			$emailsNotFounded = [];
+			$moreThenOneDeal = [];
+			$errors = [];
+
+			$i = 0;
+			$invoices_total = count($invoices);
+			echo '<h1>Invoices Total: '.$invoices_total.'</h1>';
+			foreach($invoices as $invoice){
+
+				$i++;
+				if($i == 1){
+					echo '<h1>First Invoice id is: '.$invoice->id.'</h1>';
+				}
+				if($i >= $invoices_total){
+					echo '<h1>Last Invoice id is: '.$invoice->id.'</h1>';
+				}
+
+				$email = $invoice->email;
+				$customer_id = $invoice->customer_id;
+				$sales_price = $invoice->sales_price;
+
+					$emailsToProcess[$customer_id] = $email;
+					$key = config( 'pipedrive.api_key' );
+//					$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
+				    $searchPerson = Pipedrive::executeCommand( $key, new Pipedrive\Commands\SearchPerson( $email ) );
+					if (
+						!empty($searchPerson) &&
+						!empty($searchPerson->data) &&
+						!empty($searchPerson->data->items) &&
+						count($searchPerson->data->items)
+					)
+					{
+						foreach($searchPerson->data->items as $itm){
+							if(!empty($itm->item) && !empty($itm->item->emails) && count($itm->item->emails)){
+								foreach($itm->item->emails as $em){
+									if(trim(strtolower($email)) == trim(strtolower($em))){
+										$person =  $itm->item;
+										$person_id = $person->id;
+										$emailsExisted[$customer_id] = [
+											'email' => $email,
+											'person_id' => $person_id,
+											'sales_price' => $sales_price,
+										];
+										$deals = Pipedrive::executeCommand( $key, new Pipedrive\Commands\SearchDeal( $person_id ) );
+
+										if (
+											!empty($deals) &&
+											!empty($deals->data) &&
+											count($deals->data)
+										)
+										{
+											$all_deals= [];
+											foreach($deals->data as $d){
+												if(
+													($d->status != 'won') ||
+													(($sales_price*1) !== (($d->value)*1))
+												){
+													$updated_deal = Pipedrive::executeCommand( $key, new Pipedrive\Commands\UpdateDeal( $d->id, $sales_price  ) );
+													if (
+														!empty($updated_deal) &&
+														!empty($updated_deal->data) &&
+														!empty($updated_deal->data->id)
+													) {
+														SentData::create([
+															'customer_id' => $customer_id,
+															'value' => $d->id,
+															'field' => 'deal_id',
+															'service_type' => 5 // pipedrive,
+														]);
+													}
+													else {
+														$errors[$customer_id] = "Pipedrive: Can't update deal";
+													}
+												}
+												else{
+													SentData::create([
+														'customer_id' => $customer_id,
+														'value' => $d->id,
+														'field' => 'deal_id',
+														'service_type' => 5 // pipedrive,
+													]);
+												}
+												$all_deals[] = [
+													'id' => $d->id,
+													'status' => $d->status,
+													'value' => $d->value,
+												];
+											}
+
+											$emailsExisted[$customer_id]['deals'] = $all_deals;
+											if(count($all_deals)>1){
+												$moreThenOneDeal[$customer_id]['deals'] = $all_deals;
+											}
+										}
+										else{
+											//no deals found
+											$owner_id = 0;
+											if(!empty($person->owner) && !empty($person->owner->id)){
+												$owner_id = $person->owner->id;
+											}
+											$deal = Pipedrive::executeCommand( $key, new Pipedrive\Commands\CreateDeal( $person->id, $owner_id, $sales_price, $person->name ) );
+											if (
+												!empty($deal) &&
+												!empty($deal->data) &&
+												!empty($deal->data->id)
+											){
+												SentData::create([
+													'customer_id' => $customer_id,
+													'value' => $deal->data->id,
+													'field' => 'deal_id',
+													'service_type' => 5 // pipedrive,
+												]);
+											}
+											else {
+												$errors[$customer_id] = "Can't create deal";
+											}
+										}
+									}
+								}
+							}
+						}
+
+					}
+					else{
+						$emailsNotFounded[$customer_id] = $email;
+					}
+
+
+
+			}
+
+			echo '<h1>Errors total: '.count($errors).'</h1>';
+			echo "<pre>";
+			var_export($errors);
+			echo "</pre>";
+
+			echo '<h1>Found '.count($emailsExisted).' people on Pipedrive</h1>';
+			echo "<pre>";
+			var_export($emailsExisted);
+			echo "</pre>";
+
+			echo '<h1 style="margin-top:1rem;">'.count($emailsNotFounded).' emails not found on Pipedrive</h1>';
+			echo "<pre>";
+			var_export($emailsNotFounded);
+			echo "</pre>";
+
+			echo '<h1 style="margin-top:1rem;">'.count($moreThenOneDeal).' people have more then one deals on Pipedrive</h1>';
+			echo "<pre>";
+			var_export($moreThenOneDeal);
+			echo "</pre>";
+
+
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			dd($error);
 		}
 	}
 
