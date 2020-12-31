@@ -8,7 +8,7 @@ class SentData extends Model
 {
 	protected $fillable = [
 		'customer_id',
-		'service_type', // 1 -stripe, 2 - firebase, 3 - klaviyo, 4 - sms_system
+		'service_type', // 1 -stripe, 2 - firebase, 3 - klaviyo, 4 - sms_system, 5 - pipedrive
 		'field',
 		'value'
 	];

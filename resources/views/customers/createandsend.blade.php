@@ -36,7 +36,15 @@
             line-height: 1.6;
             color: #495057;
         }
+        .red_border{
+            border: 1px solid red;
+        }
     </style>
+@endsection
+
+@section('popup')
+    @include('popups.pipedrive')
+    @include('popups.pipedrive2')
 @endsection
 
 @section('content')
@@ -53,7 +61,9 @@
                 </div>
             </div>
 
+            <div class="error_box">
 
+            </div>
             @if (count($errors) > 0)
                 <div class="alert alert-danger">
                     <strong>Whoops!</strong> There were some problems with your input.<br><br>
@@ -67,7 +77,7 @@
 
 
 
-            {!! Form::open(array('route' => 'customers-invoices.store','method'=>'POST')) !!}
+            {!! Form::open(array('route' => 'customers-invoices.store','method'=>'POST', 'id' => 'invoiceCreate')) !!}
 	        <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -186,10 +196,12 @@
                 <input type="hidden" name="test_mode" value="{{$test_mode}}">
             @endif
 
+            <input type="hidden" name="ignore_pipedrive" >
+
 
             <div class="row">
                 <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-                    <button type="submit" class="btn btn-primary">Generate Invoice</button>
+                    <button id="invoiceGenerate" type="submit" class="btn btn-primary">Generate Invoice</button>
                 </div>
             </div>
             {!! Form::close() !!}
@@ -341,17 +353,144 @@
                 input[0].setSelectionRange(caret_pos, caret_pos);
             }
 
-            var submit_button = $('button[type="submit"]');
-            submit_button.on('click', function(){
-                $('form').submit();
+
+            $(document).on('submit', '#invoiceCreate', function (event) {
+                makeAjaxCall();
+            });
+
+            $(document).on('click', '#save_and_ignore_pipedrive', function (event) {
+                $('input[name="ignore_pipedrive"]').val(1);
+                $('.modal').modal('hide');
+                makeAjaxCall();
+            });
+
+            $(document).on('click', '#save_and_ignore_pipedrive2', function (event) {
+                $('input[name="ignore_pipedrive"]').val(1);
+                $('.modal').modal('hide');
+                makeAjaxCall();
+            });
+
+            $(document).on('click', '.alternate_email', function (event) {
+                var em = $(this).data('email');
+                if(em){
+                    $('input[name="email"]').val(em);
+                    $('.modal').modal('hide');
+                    makeAjaxCall();
+                }
+            });
+
+            function makeAjaxCall(){
+                event.preventDefault();
+                var submit_button = $('button#invoiceGenerate');
+                var $form = $('#invoiceCreate');
+                var submitData = $form.serialize();
+
+                var button_title = beforeSubmit(submit_button);
+                var  message = "Unknown Error";
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/customers-invoices',
+                    type: "POST",
+                    dataType: "json",
+                    data: submitData,
+                    success: function (response) {
+                        if (response) {
+                            if (response.success) {
+                                if(response.message){
+                                    $('#'+response.message).modal('show');
+                                    afterSubmit(submit_button, button_title);
+                                    var pipedrivedata = '';
+                                    if(response.data && response.data.length){
+                                        $.each(response.data, function(key, value){
+                                            if(isSet(value) && isSet(value.item)) {
+                                                var person_name = '';
+                                                if(isSet(value.item.name)){
+                                                    person_name = value.item.name;
+                                                }
+                                                pipedrivedata += '<div class="row"><div class="col-12 text-center">' + person_name + '</div>';
+
+                                                if(isSet(value.item.emails) && value.item.emails.length){
+                                                    $.each(value.item.emails, function(i, em){
+                                                        if(isSet(em)){
+                                                            pipedrivedata += '<div class="col-12 text-center m-auto"><button class="btn btn-light mb-1 alternate_email" title="Continue using '+em+' " data-email="'+em+'">' + em + '</button></div>';
+                                                        }
+                                                    });
+                                                }
+
+                                                pipedrivedata += '</div><hr>';
+                                            }
+                                        });
+                                        if(pipedrivedata){
+                                            $('#'+response.message).find('.modal-body').html(pipedrivedata);
+                                        }
+                                    }
+                                }
+                                else {
+                                    window.location.href = "/invoices/" + response.data;
+                                }
+                            }
+                            else {
+                                if (response.message) {
+                                    message = response.message;
+                                }
+                                $('.error_box').html('<div class="alert alert-danger">' + message + '</div>');
+                                afterSubmit(submit_button, button_title);
+                            }
+                        }
+                        else {
+                            $('.error_box').html('<div class="alert alert-danger">'+message+'</div>');
+                            afterSubmit(submit_button, button_title);
+                        }
+                    },
+                    error: function (response) {
+                        if (response && response.responseJSON) {
+                            if (response.responseJSON.message) {
+                                message = response.responseJSON.message;
+                            }
+                            else{
+                                message = 'Error!';
+                            }
+                            $('.error_box').append('<div class="alert alert-danger">' + message + '</div>');
+
+
+                            if (response.responseJSON.errors){
+                                $.each(response.responseJSON.errors, function(key, value){
+                                    $('input[name="'+key+'"]').addClass('red_border').after('<div class="small error_form text-danger">'+value[0]+'</div>');
+                                    $('select[name="'+key+'"] ~ span:first').addClass('red_border').after('<div class="small error_form text-danger">'+value[0]+'</div>');
+                                });
+                            }
+                        }
+                        afterSubmit(submit_button, button_title);
+                    }
+                });
+            }
+
+            function beforeSubmit(submit_button){
+                $('input').removeClass('red_border').prop('disabled', true);
+                $('span').removeClass('red_border');
+                $('.error_form').remove();
+                $('.error_box').html("");
                 var ajax_img = '<img width="40" src="<?php echo e(url('/img/ajax_3.gif')); ?>" alt="ajax loader">';
                 $('button').prop('disabled', true);
-                $('input').prop('disabled', true);
                 $('select').prop('disabled', true);
                 $('a').addClass('disabled');
                 var button_title = submit_button.html();
                 submit_button.html(button_title + ' ' + ajax_img);
-            });
+                return button_title;
+            }
+
+            function afterSubmit(submit_button, button_title){
+                $('button').prop('disabled', false);
+                $('input').prop('disabled', false);
+                $('select').prop('disabled', false);
+                $('a').removeClass('disabled');
+                submit_button.html(button_title);
+                $('input[name="ignore_pipedrive"]').val('');
+            }
 
             $('.phone-number').usPhoneFormat({
                 format: '(xxx) xxx-xxxx',
@@ -371,6 +510,14 @@
                     phone_number.removeClass('phone-number').off();
                 }
             });
+
+
+            function isSet(variable){
+                if(typeof variable !== "undefined" && variable !== null) {
+                    return true;
+                }
+                return false;
+            }
         });
     </script>
 @endsection
