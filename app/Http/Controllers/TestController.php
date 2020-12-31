@@ -46,7 +46,7 @@ class TestController extends BaseController
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\CreateDeal( 33, 11916517, 1200, 'Test Person', 'lll' ) );
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPerson( 'test1@test.com' ) );
 //		dd($searchPerson);
-		$this->markAllWonOnPipedrive();
+//		$this->markAllWonOnPipedrive();
 	}
 
 
