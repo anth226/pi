@@ -77,6 +77,9 @@
                                                     case 4:
                                                         $service_name = 'SMS System';
                                                         break;
+                                                    case 5:
+                                                        $service_name = 'Pipedrive';
+                                                        break;
                                                     default:
                                                         $service_name = '';
                                                 }
@@ -90,6 +93,16 @@
                                             </div>
                                             @endif
                                     @endforeach
+                                @endif
+                                @if (count($errors) > 0)
+                                    <div class="alert alert-danger">
+                                        <strong>Whoops!</strong> There were some problems.<br><br>
+                                        <ul>
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
                                 @endif
                             </div>
                         </div>

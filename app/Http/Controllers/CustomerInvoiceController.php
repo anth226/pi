@@ -74,12 +74,11 @@ class CustomerInvoiceController extends CustomersController
 		]);
 
 		$test_mode = !empty($request->input('test_mode')) ? $request->input('test_mode') : 0;
+		$ignore_pipedrive = !empty($request->input('ignore_pipedrive')) ? $request->input('ignore_pipedrive') : 0;
 
 		$sales_price = !empty($request->input('sales_price')) ? Elements::moneyToDecimal($request->input('sales_price')) : 0;
 		if(!$sales_price){
-			return redirect()->route('customers-invoices.create')
-			                 ->withErrors(['Please enter correct price.'])
-			                 ->withInput();
+			return $this->sendError('Please enter correct price.');
 		}
 
 
@@ -98,9 +97,28 @@ class CustomerInvoiceController extends CustomersController
 			'zip' => $request->input('zip'),
 			'phone_number' => $request->input('phone_number'),
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
+			'sales_price' => $sales_price
 		];
 
 		if(!$test_mode) {
+			if(!$ignore_pipedrive) {
+				//////////// sending data to pipidrive
+				$pipedrive_person = $this->checkPipedrive( $dataToSend );
+				if ( ! $pipedrive_person['success'] ) {
+					$message = 'Error! Can\'t send data to Pipedrive';
+					if ( ! empty( $pipedrive_res['message'] ) ) {
+						$message = $pipedrive_res['message'];
+					}
+					return $this->sendError($message);
+				}
+				else{
+					if($pipedrive_person['message']){
+						return $this->sendResponse($pipedrive_person['data'], $pipedrive_person['message']);
+					}
+				}
+			}
+
+
 			//////////// sending data
 			$stripe_res = $this->sendDataToStripe($dataToSend);
 			if(!$stripe_res['success']){
@@ -108,8 +126,7 @@ class CustomerInvoiceController extends CustomersController
 				if(!empty($stripe_res['message'])){
 					$message = $stripe_res['message'];
 				}
-				return back()->withErrors([$message])
-				             ->withInput();
+				return $this->sendError($message);
 			}
 			else {
 				$dataToSend['customerId']     = $stripe_res['data']['customer'];
@@ -122,8 +139,7 @@ class CustomerInvoiceController extends CustomersController
 						$message = $firebase_res['message'];
 					}
 
-					return back()->withErrors( [ $message ] )
-					             ->withInput();
+					return $this->sendError($message);
 				}
 
 				$klaviyo_res = $this->sendDataToKlaviyo( $dataToSend );
@@ -133,8 +149,7 @@ class CustomerInvoiceController extends CustomersController
 						$message = $stripe_res['message'];
 					}
 
-					return back()->withErrors( [ $message ] )
-					             ->withInput();
+					return $this->sendError($message);
 				}
 			}
 
@@ -144,8 +159,7 @@ class CustomerInvoiceController extends CustomersController
 				if(!empty($smssystem_res['message'])){
 					$message = $smssystem_res['message'];
 				}
-				return back()->withErrors([$message])
-				             ->withInput();
+				return $this->sendError($message);
 			}
 
 		}
@@ -200,6 +214,7 @@ class CustomerInvoiceController extends CustomersController
 					'service_type' => 4 // sms_system
 				]);
 			}
+
 			////////////////////////////////////////////
 
 			$invoice = Invoices::create([
@@ -251,20 +266,38 @@ class CustomerInvoiceController extends CustomersController
 				}
 			}
 
+
+			if(!$test_mode) {
+				if ( ! $ignore_pipedrive ) {
+					//////////// sending data to pipidrive
+					$pipedrive_res = $this->updateOrAddPipedriveDeal( $pipedrive_person['data'], $sales_price );
+					if ( ! $pipedrive_res['success'] ) {
+						$message = 'Error! Can\'t send data to Pipedrive';
+						if ( ! empty( $pipedrive_res['message'] ) ) {
+							$message = $pipedrive_res['message'];
+						}
+//						return $this->sendResponse($invoice->id, $message);
+						$request->session()->flash('error', $message);
+					}
+					else{
+						SentData::create([
+							'customer_id' => $customer->id,
+							'value' => $pipedrive_res['data'],
+							'field' => 'deal_id',
+							'service_type' => 5 // pipedrive,
+						]);
+					}
+				}
+			}
+
 			$invoice_percentages = $invoice_instance->calcEarning(Invoices::find($invoice->id));
 			$invoice_instance->savePercentages($invoice_percentages, $invoice->id);
 
-			return redirect()->route('invoices.show', $invoice->id)
-			                 ->with('success','Invoice created successfully');
+			return $this->sendResponse($invoice->id);
 		}
 
 
-		return redirect()->route('customers-invoices.create')
-		                 ->withErrors(['Something went wrong.'])
-		                 ->withInput();
-
-
+		return $this->sendError('Something went wrong.');
 	}
-
 
 }

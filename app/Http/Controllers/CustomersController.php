@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Customers;
 use App\Errors;
+use App\Http\Controllers\API\BaseController;
 use App\Invoices;
+use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\SentData;
@@ -18,7 +20,7 @@ use Validator;
 use Exception;
 
 
-class CustomersController extends Controller
+class CustomersController extends BaseController
 {
 	protected $stripe, $firebase, $klaviyo, $klaviyo_listId, $smssystem;
 	function __construct()
@@ -218,7 +220,7 @@ class CustomersController extends Controller
 				if ( $res ) {
 					$result = json_decode( $res );
 					if ( $result && ! empty( $result->success ) && $result->success && ! empty( $result->data ) ) {
-						return $this->sendResponse( $result->data );
+						return $this->sendResponse( $result->data, '', false );
 					} else {
 						$error = "Wrong response from " . $url;
 						if ( $result && ! empty( $result->success ) && ! $result->success && ! empty( $result->message ) ) {
@@ -230,7 +232,7 @@ class CustomersController extends Controller
 							'function'   => 'sendLead'
 						] );
 
-						return $this->sendError( $error );
+						return $this->sendError( $error, [], 404, false );
 					}
 				} else {
 					$error = "No response from " . $url;
@@ -240,7 +242,7 @@ class CustomersController extends Controller
 						'function'   => 'sendLead'
 					] );
 
-					return $this->sendError( $error );
+					return $this->sendError( $error, [], 404, false );
 				}
 			}
 			$error = "No SMS System Url found";
@@ -249,7 +251,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'sendDataToStripe'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, [], 404, false);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -258,7 +260,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'sendLead'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, [], 404, false);
 		}
 	}
 
@@ -271,7 +273,7 @@ class CustomersController extends Controller
 				'email' => $input['email'],
 				'phone' => $input['phone'],
 			]);
-			return $this->sendResponse($customer->id);
+			return $this->sendResponse($customer->id, '', false);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -280,7 +282,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'createStripeCustomer'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, [], 404, false);
 		}
 	}
 	public function createStripeSubscription($customer_id){
@@ -299,7 +301,7 @@ class CustomersController extends Controller
 				$data['coupon'] = config('stripe.coupon');
 			}
 			$subscription = $this->stripe->subscriptions->create($data);
-			return $this->sendResponse($subscription);
+			return $this->sendResponse($subscription, '', false);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -308,7 +310,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'createStripeSubscription'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, [], 404, false);
 		}
 	}
 
@@ -328,7 +330,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'sendDataToStripe'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, [], 404, false);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -337,34 +339,8 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'sendDataToStripe'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, [], 404, false);
 		}
-	}
-
-	public function sendResponse($result, $json = false)
-	{
-		$response = [
-			'success' => true,
-			'data'    => $result,
-			'message' => ''
-		];
-		if($json){
-			return response()->json($response, 200);
-		}
-		return $response;
-	}
-
-	public function sendError($error, $json = false)
-	{
-		$response = [
-			'success' => false,
-			'data' => [],
-			'message' => $error,
-		];
-		if($json){
-			return response()->json($response, 404);
-		}
-		return $response;
 	}
 
 	public function sendDataToFirebase($user, $collection = 'users') {
@@ -404,7 +380,7 @@ class CustomersController extends Controller
 					] );
 				}
 
-				return $this->sendResponse( $createdUser );
+				return $this->sendResponse( $createdUser, '', false );
 			}
 			$error = "No Firebase API Key found";
 			Errors::create([
@@ -412,7 +388,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'sendDataToStripe'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, [], 404, false);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -421,7 +397,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'sendDataToFirebase'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, [], 404, false);
 		}
 
 	}
@@ -442,7 +418,7 @@ class CustomersController extends Controller
 				$profile      = new KlaviyoProfile( $klaviyo_data );
 				$res          = $this->klaviyo->lists->addMembersToList( $list_id, [ $profile ] );
 
-				return $this->sendResponse( $res );
+				return $this->sendResponse( $res, '', false );
 			}
 			$error = "No Klaviyo API Key found";
 			Errors::create([
@@ -450,7 +426,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'sendDataToStripe'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, [], 404, false);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -459,7 +435,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'sendDataToKlaviyo'
 			]);
-			return $this->sendError($error);
+			return $this->sendError($error, [], 404, false);
 		}
 	}
 
@@ -470,12 +446,12 @@ class CustomersController extends Controller
 				$auth = $this->firebase->createAuth();
 				switch($by){
 					case 'email':
-						return $this->sendResponse($auth->getUserByEmail($value), true);
+						return $this->sendResponse($auth->getUserByEmail($value));
 					case 'phone':
-						return $this->sendResponse($auth->getUserByPhoneNumber($value), true);
+						return $this->sendResponse($auth->getUserByPhoneNumber($value));
 					case 'uid':
 					default:
-						return $this->sendResponse($auth->getUser( $value ), true);
+						return $this->sendResponse($auth->getUser( $value ));
 				}
 
 			}
@@ -485,7 +461,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'getFirebaseUser'
 			]);
-			return $this->sendError($error, true);
+			return $this->sendError($error);
 		} catch (Exception $ex){
 			$error = $ex->getMessage();
 			Errors::create([
@@ -493,7 +469,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'getFirebaseUser'
 			]);
-			return $this->sendError($error, true);
+			return $this->sendError($error);
 		}
 
 	}
@@ -507,7 +483,7 @@ class CustomersController extends Controller
 				$collection        = $database->collection( $collection );
 				$documentReference = $collection->document( $id );
 				$snapshot = $documentReference->snapshot();
-				return $this->sendResponse($snapshot, true);
+				return $this->sendResponse($snapshot);
 			}
 			$error = "Wrong Firebase credentials or connection issue";
 			Errors::create([
@@ -515,7 +491,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'getFirebaseUser'
 			]);
-			return $this->sendError($error, true);
+			return $this->sendError($error);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -524,7 +500,7 @@ class CustomersController extends Controller
 				'controller' => 'CustomersController',
 				'function' => 'getFirebaseCollectionRecord'
 			]);
-			return $this->sendError($error, true);
+			return $this->sendError($error);
 		}
 	}
 
@@ -629,5 +605,124 @@ class CustomersController extends Controller
 		]);
 		$this->smssystem = '';
 		return false;
+	}
+
+	public function updatePipedriveDeal($deal_id, $sales_price){
+		try {
+			$deal = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\UpdateDeal( $deal_id, $sales_price  ) );
+			if (
+				!empty($deal) &&
+				!empty($deal->data) &&
+				!empty($deal->data->id)
+			) {
+				return $this->sendResponse( $deal->data->id, '', false );
+			}
+			else {
+				$error = "Pipedrive: Can't update deal";
+				Errors::create( ['error' => $error, 'controller' => 'CustomersController', 'function' => 'updatePipedriveDeal'] );
+				return $this->sendError($error, [], 404, false);
+			}
+
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create( ['error' => 'Pipedrive: '.$error, 'controller' => 'CustomersController', 'function' => 'updatePipedriveDeal'] );
+			return $this->sendError($error, [], 404, false);
+		}
+
+	}
+
+	public function checkPipedrive($input){
+		try {
+			$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPerson( $input['email'] ) );
+
+			if (
+				!empty($searchPerson) &&
+				!empty($searchPerson->data) &&
+				!empty($searchPerson->data->items) &&
+				count($searchPerson->data->items)
+			)
+			{
+				foreach($searchPerson->data->items as $itm){
+					if(!empty($itm->item) && !empty($itm->item->emails) && count($itm->item->emails)){
+						foreach($itm->item->emails as $em){
+							if(trim(strtolower($input['email'])) == trim(strtolower($em))){
+								return $this->sendResponse($itm->item, '', false);
+							}
+						}
+					}
+				}
+				return $this->sendResponse($searchPerson->data->items, 'pipedrive', false);
+			}
+			else{
+				$searchPersonByName = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPersonByName( $input['full_name'] ) );
+				if (
+					!empty($searchPersonByName) &&
+					!empty($searchPersonByName->data) &&
+					!empty($searchPersonByName->data->items) &&
+					count($searchPersonByName->data->items)
+				)
+				{
+					return $this->sendResponse($searchPersonByName->data->items, 'pipedrive', false);
+				}
+				else {
+					$error = "Pipedrive: No " . $input['email'] . " found on Pipedrive";
+					Errors::create( [ 'error'      => $error,
+					                  'controller' => 'CustomersController',
+					                  'function'   => 'checkPipedrive'
+					] );
+					return $this->sendResponse( '', 'pipedrive2', false );
+				}
+			}
+
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create( ['error' => 'Pipedrive: '.$error, 'controller' => 'CustomersController', 'function' => 'checkPipedrive'] );
+			return $this->sendError($error, [], 404, false);
+		}
+
+	}
+
+	public function updateOrAddPipedriveDeal($person, $sales_price){
+		try{
+			$deals = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchDeal( $person->id ) );
+			if (
+				!empty($deals) &&
+				!empty($deals->data) &&
+				!empty($deals->data[0]) &&
+				!empty($deals->data[0]->id)
+			)
+			{
+				return $this->updatePipedriveDeal( $deals->data[0]->id, $sales_price );
+			}
+			else {
+				$owner_id = 0;
+				if(!empty($person->owner) && !empty($person->owner->id)){
+					$owner_id = $person->owner->id;
+				}
+				$deal = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\CreateDeal( $person->id, $owner_id, $sales_price, $person->name ) );
+				if (
+					!empty($deal) &&
+					!empty($deal->data) &&
+					!empty($deal->data->id)
+				){
+					return $this->sendResponse($deal->data->id,'', false);
+				}
+				else {
+					$error = "Pipedrive: Can't create deal";
+					Errors::create( [ 'error'      => $error,
+					                  'controller' => 'CustomersController',
+					                  'function'   => 'updateOrAddPipedriveDeal'
+					] );
+					return $this->sendError( $error, [], 404, false );
+				}
+			}
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create( ['error' => 'Pipedrive: '.$error, 'controller' => 'CustomersController', 'function' => 'updateOrAddPipedriveDeal'] );
+			return $this->sendError($error, [], 404, false);
+		}
 	}
 }
