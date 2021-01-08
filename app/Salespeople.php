@@ -17,7 +17,8 @@ class Salespeople extends Model
 		'name_for_invoice',
 		'email',
 		'phone_number',
-		'formated_phone_number'
+		'formated_phone_number',
+		'pipedrive_user_id'
 	];
 
 	public static function getIdsAndFullNames(){

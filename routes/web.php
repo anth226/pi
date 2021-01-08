@@ -47,6 +47,7 @@ Route::get('/datatables.data', 'CustomerInvoiceController@anyData');
 Route::get('/invoicesdatatables.data', 'InvoicesController@anyData');
 
 Route::get('/spreportsdatatables.data', 'SalespeopleReportsController@anyData');
+Route::get('/spersondatatables.data', 'SalespeopleController@anyData');
 Route::get('/reports/salespeople', 'SalespeopleReportsController@index');
 
 //Route::get('/dashboard', 'CustomerInvoiceController@index');

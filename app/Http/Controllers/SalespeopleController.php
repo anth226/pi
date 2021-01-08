@@ -3,21 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Errors;
+use App\Invoices;
+use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\Salespeople;
 use App\SalespeopleLevels;
 use App\SalespeoplePecentageLog;
+use App\SecondarySalesPeople;
 use Illuminate\Http\Request;
 use Validator;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 
-class SalespeopleController extends Controller
+class SalespeopleController extends InvoicesController
 {
 	function __construct()
 	{
 		$this->middleware(['auth','verified']);
-		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete||salespeople-reports-view-own', ['only' => ['show']]);
+		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete|salespeople-reports-view-all|salespeople-reports-view-own', ['only' => ['show', 'anyData']]);
 		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete', ['only' => ['index']]);
 		$this->middleware('permission:salespeople-create', ['only' => ['create','store']]);
 		$this->middleware('permission:salespeople-edit', ['only' => ['edit','update']]);
@@ -37,13 +40,73 @@ class SalespeopleController extends Controller
 			->with('i', ($request->input('page', 1) - 1) * 100);
 	}
 
+	public function anyData(Request $request){
+		$user = Auth::user();
+		if( $user->hasRole('Salesperson')) {
+			$salesperson_id = Salespeople::where( 'email', $user->email )->value( 'id' );
+		}
+		else{
+			$salesperson_id = !empty($request['salesperson_id']) ? $request['salesperson_id'] : 0;
+		}
+
+
+		if($salesperson_id) {
+
+			$query =  Invoices::with('customer')
+			                  ->with('salespeople.salespersone')
+								->whereHas('salespeople', function ($query) use($salesperson_id){
+									$query->where('salespeople_id',$salesperson_id);
+								})
+			                  ->with('salespeople.level')
+			;
+			if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
+				$date      = $request['date_range'];
+				$dateArray = $this->parseDateRange( $date );
+				$dateFrom  = date( "Y-m-d", $dateArray[0] );
+				$dateTo    = date( "Y-m-d", $dateArray[1] );
+				$query->where( 'invoices.access_date', '>=', $dateFrom )
+				      ->where( 'invoices.access_date', '<=', $dateTo );
+			}
+			if( ! empty( $request['summary'] )){
+				$commission = 0;
+				$revenue = $query->sum('sales_price');
+				$invoices = $query->get();
+				if($invoices && $invoices->count()){
+					foreach($invoices  as $inv){
+						$sp = $inv->salespeople;
+						if($sp && $sp->count()){
+							foreach($sp as $s){
+								if($s->salespeople_id == $salesperson_id) {
+									$commission += $s->earnings;
+								}
+							}
+						}
+					}
+				}
+				$profit = $revenue - $commission;
+				$res = [
+					'revenue' => $revenue,
+					'count' => $query->count(),
+					'commission' => $commission,
+					'profit' => $profit
+				];
+				return $this->sendResponse($res,'');
+			}
+			else {
+				return datatables()->eloquent( $query )->toJson();
+			}
+		}
+		return $this->sendError('no salesperson id');
+
+	}
+
 
 	/**
 	 * Show the form for creating a new resource.
 	 *
 	 * @return \Illuminate\Http\Response
 	 */
-	public function create()
+	public function create(Request $request)
 	{
 		$levels = SalespeopleLevels::getIdsAndFullNames();
 		return view( 'salespeople.create', compact( 'levels' ) );
@@ -105,13 +168,25 @@ class SalespeopleController extends Controller
 	 */
 	public function show($id)
 	{
+		$firstDate = date("F j, Y");
+		$lastDate = date("F j, Y");
+		$lastReportDate =  SecondarySalesPeople::join( 'invoices', function ( $join ) use($id){
+													$join->on( 'invoices.id', 'secondary_sales_people.invoice_id' )
+													     ->where('secondary_sales_people.salespeople_id', $id)
+													     ->whereNull( 'invoices.deleted_at' );
+												} )->orderBy('invoices.access_date', 'desc')->value('invoices.access_date')
+		;
+		if($lastReportDate) {
+			$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
+		}
 		$user = Auth::user();
 		if( $user->hasRole('Salesperson')){
 			$salesperson_id = Salespeople::where('email', $user->email)->value('id');
 			if($salesperson_id && $id == $salesperson_id) {
 				$salespeople = Salespeople::with( 'level.level' )->find( $salesperson_id );
 				if ( $salespeople ) {
-					return view( 'salespeople.show', compact( 'salespeople' ) );
+
+					return view( 'salespeople.show', compact( 'salespeople', 'firstDate', 'lastDate' ) );
 				}
 			}
 			return abort(403);
@@ -119,7 +194,7 @@ class SalespeopleController extends Controller
 		else {
 			$salespeople = Salespeople::with( 'level.level' )->find( $id );
 			if ( $salespeople ) {
-				return view( 'salespeople.show', compact( 'salespeople' ) );
+				return view( 'salespeople.show', compact( 'salespeople', 'firstDate', 'lastDate' ) );
 			}
 			return abort( 404 );
 		}
@@ -206,5 +281,44 @@ class SalespeopleController extends Controller
 		Salespeople::where('id',$id)->delete();
 		return redirect()->route('salespeople.index')
 		                 ->with('success','Salesperson deleted successfully');
+	}
+
+
+	public function findOwnerOnPipedrive(){
+		try {
+			$salespeople = Salespeople::withTrashed()->get();
+			$allUsers    = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\getAllUsers() );
+			if (
+				! empty( $salespeople ) &&
+				$salespeople->count() &&
+				! empty( $allUsers ) &&
+				count( $allUsers )
+			) {
+				foreach ( $salespeople as $s ) {
+					if ( ! empty( $s->email ) ) {
+						foreach ( $allUsers as $u ) {
+							if (
+								!empty($u) &&
+								!empty($u->data) &&
+								!empty($u->data->id) &&
+								!empty($u->data->email) &&
+								trim( strtolower( $u->data->email ) ) == trim( strtolower( $s->email ) )
+							) {
+								Salespeople::where( 'id', $s->id )->update( [ 'pipedrive_user_id' => $u->data->id ] );
+							}
+						}
+					}
+				}
+				return true;
+			}
+		}
+		catch(Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'SalespeopleController',
+				'function' => 'findOwnerOnPipedrive'
+			]);
+			return false;
+		}
 	}
 }
