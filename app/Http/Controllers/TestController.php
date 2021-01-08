@@ -36,11 +36,11 @@ class TestController extends BaseController
 //		dd(phpinfo());
 //		$c = new CustomersController();
 //		$userProperties = [
-//			'email'         => 'Bevnjoe@comcast.net',
-//			'phone'         => '3606337426',
-//			'first_name' => 'Joe L',
-//			'last_name' => 'Mcdonald',
-//			'full_name' => 'Joe L Mcdonald',
+//			'email'         => '',
+//			'phone'         => '+16054803076',
+//			'first_name' => 'CRAIG',
+//			'last_name' => 'BLINDERT',
+//			'full_name' => 'CRAIG BLINDERT',
 //			'source' => 'portfolioinsider',
 //			'tags' => 'portfolioinsider,portfolio-insider-prime',
 //		];
@@ -54,15 +54,17 @@ class TestController extends BaseController
 //		$this->moveSP();
 //		dd(Invoices::with('customer')->with('salespeople.salespersone')->get()->toArray());
 
-//		$i = new InvoicesController();
+		$i = new InvoicesController();
 //		$invoice = Invoices::find(112);
 //		dd($i->calcEarning($invoice));
-//		dd($i->recalcAll());
+		dd($i->recalcAll());
 
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\CreateDeal( 33, 11916517, 1200, 'Test Person', 'lll' ) );
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPerson( 'test1@test.com' ) );
 //		dd($searchPerson);
 //		$this->markAllWonOnPipedrive();
+
+//		dd($this->findOwnerOnPipedrive());
 
 	}
 
@@ -312,6 +314,45 @@ class TestController extends BaseController
 		catch (Exception $ex){
 			$error = $ex->getMessage();
 			dd($error);
+		}
+	}
+
+	public function findOwnerOnPipedrive(){
+		try {
+			$key = config( 'pipedrive.api_key' );
+//			$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
+			$salespeople = Salespeople::withTrashed()->get();
+			$allUsers    = Pipedrive::executeCommand( $key, new Pipedrive\Commands\getAllUsers() );
+//			dd($allUsers);
+			if (
+				! empty( $salespeople ) &&
+				$salespeople->count() &&
+				! empty( $allUsers ) &&
+				! empty( $allUsers->data ) &&
+				! empty( count($allUsers->data) )
+			) {
+				foreach ( $salespeople as $s ) {
+					if ( ! empty( $s->email ) ) {
+						foreach ( $allUsers->data as $u ) {
+							if (
+								!empty($u) &&
+								!empty($u->id) &&
+								!empty($u->email) &&
+								trim( strtolower( $u->email ) ) == trim( strtolower( $s->email ) )
+							) {
+								Salespeople::where( 'id', $s->id )->update( [ 'pipedrive_user_id' => $u->id ] );
+								echo "<pre>";
+								var_export($u->id);
+								echo "</pre>";
+							}
+						}
+					}
+				}
+				return true;
+			}
+		}
+		catch(Exception $ex){
+			return $ex->getMessage();
 		}
 	}
 
