@@ -29,10 +29,22 @@ class CreateSalespeoplePecentageLogsTable extends Migration
 	    if($salespeople && $salespeople->count()){
 		    foreach ($salespeople  as $s){
 			    $data = [
-			    	'level_id' => 1,
+			    	'level_id' => 2,
 			    	'salespeople_id' => $s->id,
-				    'percentage' => 50
+				    'percentage' => 10
 			    ];
+			    if(
+			    	$s->id == 4 || //Dan Halimi
+			    	$s->id == 3 || //Sam simon
+			    	$s->id == 2 || //Deric ned
+			    	$s->id == 1    //Kyle sanna
+			    ){
+				    $data = [
+					    'level_id' => 1,
+					    'salespeople_id' => $s->id,
+					    'percentage' => 50
+				    ];
+			    }
 			    SalespeoplePecentageLog::create($data);
 		    }
 	    }
