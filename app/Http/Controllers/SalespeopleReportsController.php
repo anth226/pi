@@ -67,7 +67,7 @@ class SalespeopleReportsController extends InvoicesController
 					 salespeoples.first_name, 
 					 salespeoples.last_name
 				 ')
-				->groupBy('secondary_sales_people.salespeople_id')
+				->groupBy('secondary_sales_people.salespeople_id')->with('level2.level');
 			;
 			return datatables()->eloquent( $query )->toJson();
 		}

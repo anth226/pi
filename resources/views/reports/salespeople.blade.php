@@ -178,7 +178,7 @@
                 // ],
                 columns: [
                     { data: 'name_for_invoice', name: 'salespeoples.name_for_invoice', "searchable": true, "sortable": true, render: function(data, type, row){
-                        return '<a href="/salespeople/' +row.salespeople_id + '" target="_blank" title="' + row.first_name + ' ' + row.last_name + '">' + data + '</a>'
+                        return generateSalespersonName(row, data);
                         } },
                     { data: 'sum', name: 'sum', "searchable": false, "sortable": true,  render: function ( data, type, row ){
                             return moneyFormat(data);
@@ -222,6 +222,12 @@
                     return true;
                 }
                 return false;
+            }
+
+            function generateSalespersonName(row, data){
+                return '<a href="/salespeople/' +row.salespeople_id + '" target="_blank" title="' + row.first_name + ' ' + row.last_name + '">' +
+                    data + '</a>' +
+                    ' <small title="Current level">' + row.level2.level.title + ' | ' + row.level2.percentage + '%</small>';
             }
         });
     </script>
