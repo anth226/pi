@@ -24,4 +24,8 @@ class SecondarySalesPeople extends Model
 		return $this->hasOne('App\SalespeopleLevels', 'id','level_id')->latest();
 	}
 
+	public function level2(){
+		return $this->hasOne('App\SalespeoplePecentageLog', 'salespeople_id','salespeople_id')->latest();
+	}
+
 }

@@ -310,10 +310,18 @@
                                     @endif
                             @endif
                             if(value.sp_type) {
-                                ret_data += '<div>' +
-                                    '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' + value.salespersone.name_for_invoice + '</a>' +
-                                    additions +
-                                    '</div>';
+                                if(value.salespersone.id == {{$salespeople->id}}) {
+                                    ret_data += '<div title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' +
+                                        value.salespersone.name_for_invoice +
+                                        additions +
+                                        '</div>';
+                                }
+                                else {
+                                    ret_data += '<div>' +
+                                        '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' + value.salespersone.name_for_invoice + '</a>' +
+                                        additions +
+                                        '</div>';
+                                }
                             }
                         });
                         $.each(row.salespeople, function( index, value ) {
@@ -330,10 +338,18 @@
                                     @endif
                             @endif
                             if(!value.sp_type) {
-                                ret_data += '<div style="line-height: 1.1">' +
-                                    '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '"><small>' + value.salespersone.name_for_invoice + '</small></a>' +
-                                    additions +
-                                    '</div>';
+                                if(value.salespersone.id == {{$salespeople->id}}) {
+                                    ret_data += '<div style="line-height: 1.1" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' +
+                                        '<small>' + value.salespersone.name_for_invoice + '</small>' +
+                                        additions +
+                                        '</div>';
+                                }
+                                else {
+                                    ret_data += '<div style="line-height: 1.1">' +
+                                        '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '"><small>' + value.salespersone.name_for_invoice + '</small></a>' +
+                                        additions +
+                                        '</div>';
+                                }
                             }
                         });
                     }
