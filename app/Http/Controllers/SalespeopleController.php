@@ -174,10 +174,10 @@ class SalespeopleController extends InvoicesController
 													$join->on( 'invoices.id', 'secondary_sales_people.invoice_id' )
 													     ->where('secondary_sales_people.salespeople_id', $id)
 													     ->whereNull( 'invoices.deleted_at' );
-												} )->orderBy('invoices.access_date', 'desc')->value('invoices.access_date')
+												} )->orderBy('invoices.access_date', 'desc')->first()
 		;
-		if($lastReportDate) {
-			$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
+		if($lastReportDate && !empty($lastReportDate->access_date)) {
+			$lastDate = date( "F j, Y", strtotime( $lastReportDate->access_date ) );
 		}
 		$user = Auth::user();
 		if( $user->hasRole('Salesperson')){
