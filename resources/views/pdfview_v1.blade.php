@@ -109,7 +109,7 @@
             </td>
             <td style="vertical-align: top;">
                 <div style="text-align: center;margin-top: 10px;">
-                    {{$price_before_discount}}
+                    {{$formated_price}}
                 </div>
             </td>
             <td style="vertical-align: top;">
@@ -119,37 +119,21 @@
             </td>
             <td style="vertical-align: top;">
                 <div style="text-align: center;margin-top: 10px;">
-                    <strong>{{$total_before_discount}}</strong>
+                    <strong>{{$total}}</strong>
                 </div>
             </td>
         </tr>
-        @if($total_before_discount != $total)
         <tr>
             <td></td>
             <td></td>
             <td>
-                <div style="color:red;text-align: right;">
-                    <strong>DISCOUNT</strong>
-                </div>
-            </td>
-            <td>
-                <div style="color:red;text-align: left;">
-                    <strong>-{{$discount}}</strong>
-                </div>
-            </td>
-        </tr>
-        @endif
-        <tr>
-            <td></td>
-            <td></td>
-            <td>
-                <div style="color:green;text-align: right;">
+                <div style="color:green;text-align: center;">
                     <strong>GRAND TOTAL</strong>
                 </div>
             </td>
             <td>
-                <div style="color:green;text-align: left;">
-                    <strong>&nbsp;{{$total}}</strong>
+                <div style="color:green;text-align: center;">
+                    <strong>{{$total}}</strong>
                 </div>
             </td>
         </tr>

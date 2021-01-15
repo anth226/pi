@@ -273,7 +273,7 @@
             <a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a><br>
             <a  href="/pdfdownload/{{$invoice->id }}" title="Download a PDF file">Download</a><br>
             <div class="mt-2 d-none d-md-block" style="width:900px;height:1250px;">
-                <object style="width:100%;height:100%;" data="{{ $full_path.$invoice->id }}">{{$file_name}}" type="application/pdf">
+                <object style="width:100%;height:100%;" data="{{ $full_path.$invoice->id.'&v='.rand() }}">{{$file_name}}" type="application/pdf">
                     <iframe style="width:100%;height:100%;" src="https://docs.google.com/viewer?url={{ $full_path.$invoice->id }}&embedded=true"></iframe>
                 </object>
             </div>

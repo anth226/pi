@@ -344,13 +344,20 @@ class InvoicesController extends BaseController
 	}
 
 	public function generatePDF($id){
+		$item_price = 10000;
 		$invoice = Invoices::
 							with('customer')
 		                   ->with('salespersone')
 		                   ->with('product')
 		                   ->find($id);
 		if($invoice) {
+			if(($item_price - $invoice->sales_price) <=0 ) {
+				$item_price = $invoice->sales_price;
+			}
 			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->customer->id);
+			$price_before_discount = $this->moneyFormat( $item_price );
+			$total_before_discount = $this->moneyFormat( $item_price * $invoice->qty );
+			$discount = $this->moneyFormat( ($item_price - $invoice->sales_price) * $invoice->qty );
 			$total = $this->moneyFormat( $invoice->sales_price * $invoice->qty );
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
 			$access_date    = $this->createTimeString( $invoice->access_date );
@@ -359,7 +366,7 @@ class InvoicesController extends BaseController
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
 			PDF::setOptions(['dpi' => 400]);
-			$pdf = PDF::loadView('pdfviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total' ));
+			$pdf = PDF::loadView('pdfviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'price_before_discount', 'total_before_discount', 'discount' ));
 			$pdf->save($this->pdf_path.$file_name);
 			$invoice->save();
 			return true;
