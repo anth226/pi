@@ -12,7 +12,8 @@ class SecondarySalesPeople extends Model
 		'sp_type', // 0 -secondary, 1 - primary (for invoice)
 		'earnings',
 		'percentage',
-		'level_id'
+		'level_id',
+		'status' // 0 - commissions not paid, 1 - commissions paid
 	];
 
 	public function salespersone()
