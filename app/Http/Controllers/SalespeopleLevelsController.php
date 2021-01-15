@@ -57,7 +57,7 @@ class SalespeopleLevelsController extends Controller
 		try {
 			$this->validate( $request, [
 				'title'      => 'required|max:120',
-				'percentage' => 'required|numeric|min:1|max:100',
+				'percentage' => 'required|numeric|min:0|max:100',
 			] );
 
 			SalespeopleLevels::create( [

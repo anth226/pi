@@ -37,7 +37,7 @@ Route::post('/invoices/update/{id}', 'InvoicesController@update' ,  ['middleware
 
 Route::resource('/roles','RoleController');
 Route::resource('/users','UserController');
-//Route::resource('/levels','SalespeopleLevelsController', ['only' => ['store', 'create', 'update', 'edit', 'index']]);
+Route::resource('/levels','SalespeopleLevelsController', ['only' => ['store', 'create', 'update', 'edit', 'index']]);
 Route::resource('/customers','CustomersController', ['only' => ['show']]);
 Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['store', 'create']]);
 Route::resource('/salespeople','SalespeopleController');
