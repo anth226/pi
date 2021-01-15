@@ -14,15 +14,16 @@ class SearchPersonByName implements CommandInterface
     /**
      * @var
      */
-    private $name;
+    private $name, $search_by_email;
 
     /**
      * SearchPerson constructor.
      * @param $email
      */
-    public function __construct($name)
+    public function __construct($name, $search_by_email = 0)
     {
         $this->name = $name;
+        $this->search_by_email = $search_by_email;
     }
 
     /**
@@ -33,7 +34,7 @@ class SearchPersonByName implements CommandInterface
     {
         $data = $client->getInstance()->getPersons()->findPersonsByName([
           "term" => $this->name,
-          "search_by_email" => 0
+          "search_by_email" => $this->search_by_email
         ]);
 
         return $data;
