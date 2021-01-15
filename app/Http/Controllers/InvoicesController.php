@@ -344,7 +344,7 @@ class InvoicesController extends BaseController
 	}
 
 	public function generatePDF($id){
-		$item_price = 10000;
+		$item_price = 9995;
 		$invoice = Invoices::
 							with('customer')
 		                   ->with('salespersone')
