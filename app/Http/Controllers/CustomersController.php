@@ -634,7 +634,7 @@ class CustomersController extends BaseController
 
 	public function checkPipedrive($input){
 		try {
-			$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPerson( $input['email'] ) );
+			$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPersonByName( $input['email'], 1 ) );
 
 			if (
 				!empty($searchPerson) &&
