@@ -36,11 +36,11 @@ class TestController extends BaseController
 //		dd(phpinfo());
 //		$c = new CustomersController();
 //		$userProperties = [
-//			'email'         => '',
-//			'phone'         => '+16054803076',
-//			'first_name' => 'CRAIG',
-//			'last_name' => 'BLINDERT',
-//			'full_name' => 'CRAIG BLINDERT',
+//			'email'         => 'jeremyfouladian@gmail.com',
+//			'phone'         => '310-569-6133',
+//			'first_name' => 'Jeremy',
+//			'last_name' => 'F',
+//			'full_name' => 'Jeremy F',
 //			'source' => 'portfolioinsider',
 //			'tags' => 'portfolioinsider,portfolio-insider-prime',
 //		];
@@ -54,10 +54,10 @@ class TestController extends BaseController
 //		$this->moveSP();
 //		dd(Invoices::with('customer')->with('salespeople.salespersone')->get()->toArray());
 
-//		$i = new InvoicesController();
+		$i = new InvoicesController();
 //		$invoice = Invoices::find(112);
 //		dd($i->calcEarning($invoice));
-//		dd($i->recalcAll());
+		dd($i->recalcAll());
 
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\CreateDeal( 33, 11916517, 1200, 'Test Person', 'lll' ) );
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPerson( 'test1@test.com' ) );
