@@ -54,10 +54,10 @@ class TestController extends BaseController
 //		$this->moveSP();
 //		dd(Invoices::with('customer')->with('salespeople.salespersone')->get()->toArray());
 
-		$i = new InvoicesController();
+//		$i = new InvoicesController();
 //		$invoice = Invoices::find(112);
 //		dd($i->calcEarning($invoice));
-		dd($i->recalcAll());
+//		dd($i->recalcAll());
 
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\CreateDeal( 33, 11916517, 1200, 'Test Person', 'lll' ) );
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPerson( 'test1@test.com' ) );
