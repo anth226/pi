@@ -36,11 +36,11 @@ class TestController extends BaseController
 //		dd(phpinfo());
 //		$c = new CustomersController();
 //		$userProperties = [
-//			'email'         => 'jeremyfouladian@gmail.com',
-//			'phone'         => '310-569-6133',
-//			'first_name' => 'Jeremy',
-//			'last_name' => 'F',
-//			'full_name' => 'Jeremy F',
+//			'email'         => 'charlie.whitelaw11@gmail.com',
+//			'phone'         => '732-759-5344',
+//			'first_name' => 'Charlie',
+//			'last_name' => 'Whitelaw',
+//			'full_name' => 'Charlie Whitelaw',
 //			'source' => 'portfolioinsider',
 //			'tags' => 'portfolioinsider,portfolio-insider-prime',
 //		];
