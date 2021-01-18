@@ -222,7 +222,7 @@
                                         $profit = ($invoice->sales_price)*1 - (($commission)*1);
                                         $percent =  $commission * 100/$invoice->sales_price;
                                     @endphp
-                                    <span class="text-success">Profit: {{ $inv->moneyFormat($profit) }}</span> / Commission: {{$inv->moneyFormat($commission) }} | {{$percent}}% )
+                                    <span class="text-success">Net Revenue: {{ $inv->moneyFormat($profit) }}</span> / Commission: {{$inv->moneyFormat($commission) }} | {{$percent}}% )
                                 </small>
                             @endif
                         @endcan

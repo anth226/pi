@@ -51,7 +51,7 @@
                         <div class="card order-card bg-success">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="profit">0</span></h3>
-                                <h3 class="lead text-center">Profit</h3>
+                                <h3 class="lead text-center">Net Revenue</h3>
                             </div>
                         </div>
                     </div>
