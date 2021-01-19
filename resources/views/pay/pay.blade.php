@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('popup')
+    <div id="popup" class="position-absolute" style="z-index: 99999;"></div>
+@endsection
+
 @section('content')
     <div class="container">
         <div class="row">
@@ -50,9 +54,9 @@
                         <th>Total Sales</th>
                         <th>Commission</th>
                         <th>Payed</th>
-                        <th>Non payed</th>
-                        <th>Corrections</th>
-                    </tr>
+                        <th>Commission to pay</th>
+                        <th></th>
+                   </tr>
                     </thead>
                     <tbody>
 
@@ -187,20 +191,23 @@
                     { data: 'sum', name: 'sum', "searchable": false, "sortable": true,  render: function ( data, type, row ){
                             return moneyFormat(data);
                         }  },
-                    { data: 'sum', name: 'sum', "searchable": false, "sortable": true,  render: function ( data, type, row ){
+                    { data: 'paid_sum', name: 'paid_sum', "searchable": false, "sortable": true,  render: function ( data, type, row ){
                             return moneyFormat(data);
                         }  },
                     { data: 'sum', name: 'sum', "searchable": false, "sortable": true,  render: function ( data, type, row ){
-                            return moneyFormat(data);
+                            return moneyFormat(calcNonPaid(row));
                         }  },
-                    { data: 'sum', name: 'sum', "searchable": false, "sortable": true,  render: function ( data, type, row ){
-                            return moneyFormat(data);
-                        }  }
+                    { data: 'id', name: 'id', "searchable": false, "sortable": false, render: function ( data, type, row ){
+                                return '<button class="btn btn-primary pay_button" data-salespeople_id="'+data+'" data-default_amount="'+calcNonPaid(row)+'">Pay</button>';
+                        }}
 
                 ]
             });
 
             var moneyFormat = function(num){
+                if(!isSet(num)){
+                   num = 0;
+                }
                 var str = num.toString().replace("$", ""), parts = false, output = [], i = 1, formatted = null;
                 if(str.indexOf(".") > 0) {
                     parts = str.split(".");
@@ -238,10 +245,92 @@
             }
 
             function generateSalespersonName(row, data){
-                return '<a href="/salespeople/' +row.salespeople_id + '" target="_blank" title="' + row.first_name + ' ' + row.last_name + '">' +
+                return '<a href="/salespeople/' +row.id + '" target="_blank" title="' + row.first_name + ' ' + row.last_name + '">' +
                     data + '</a>' +
-                    ' <small title="Current level">' + row.level2.level.title + ' | ' + row.level2.percentage + '%</small>';
+                    ' <small title="Current level">' + row.level.level.title + ' | ' + row.level.percentage + '%</small>';
             }
+
+            function calcNonPaid(row){
+                var paid_sum = 0;
+                var sum = 0;
+                if(isSet(row.paid_sum)){
+                    paid_sum = row.paid_sum * 1;
+                }
+                if(isSet(row.sum)){
+                    sum = row.sum * 1;
+                }
+                return  sum - paid_sum;
+            }
+
+            $(document).on( 'click', '.pay_button', function (e) {
+                const this_el = $(this);
+                const salespeople_id = this_el.data('salespeople_id');
+                const amount = this_el.data('default_amount');
+                const popup = $('#popup');
+                let amount_to_pay = 0;
+                if(amount > 0){
+                    amount_to_pay = amount;
+                }
+                const input = '<label>Amount <input autofocus id="amount" class="w-100 mb-1" type="number" step="1" value="' + amount_to_pay + '" style="min-width:120px;"></label>';
+                const save = '<button data-salespeople_id="' + salespeople_id + '" id="pay_button" class="w-100 btn btn-success btn-sm on_enter mb-1">Pay</button>';
+                const cancel = '<button id="cancel_button" class="w-100 btn btn-primary btn-sm">Cancel</button>';
+                $('#popup').find('#amount').focus().click();
+                const offset2 = this_el.offset();
+                popup.css('top', offset2.top - 20);
+                popup.css('left', offset2.left - 60);
+                popup.html('<div class="position-absolute popup_spec p-2 border shadow bg-white rounded">' + input + save + cancel +'</div>');
+            });
+
+
+            let width = $(window).width();
+            $(window).on('resize', function(){
+                if($(window).width() !== width){
+                    width = $(window).width();
+                    $('#popup').html('');
+                }
+            });
+
+            $('#popup').on('keypress',function(e) {
+                if (e.which === 13) {
+                    $('.on_enter').click();
+                }
+            });
+
+            $(document).on( 'click', '#cancel_button', function (e) {
+                $('#popup').html('');
+            });
+
+            $(document).on( 'click', '#pay_button', function (e) {
+                e.preventDefault();
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/setpaid',
+                    type: "POST",
+                    data: {
+                        'salespeople_id': $('#pay_button').data('salespeople_id'),
+                        'amount': $('#amount').val()
+                    },
+                    success: function (response) {
+                        if(response.success ) {
+                            table.DataTable().ajax.reload(null, false);
+                            $('#popup').html('');
+                        }
+                        else {
+                            console.log('No response');
+                        }
+                    },
+                    error: function (response) {
+                        console.log(response);
+                    }
+                });
+
+            });
+
+
         });
     </script>
 @endsection

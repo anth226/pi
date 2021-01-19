@@ -51,6 +51,7 @@ Route::get('/spersondatatables.data', 'SalespeopleController@anyData');
 Route::get('/reports/salespeople', 'SalespeopleReportsController@index');
 Route::get('/payments', 'PayController@index');
 Route::get('/paydatatables.data', 'PayController@anyData');
+Route::post('/setpaid', 'PayController@setPaid');
 
 //Route::get('/dashboard', 'CustomerInvoiceController@index');
 Route::get('/dashboard', 'InvoicesController@index');
