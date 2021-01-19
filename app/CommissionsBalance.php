@@ -8,6 +8,7 @@ class CommissionsBalance extends Model
 {
 	protected $fillable = [
 		'salespeople_id',
-		'amount'
+		'paid_amount',
+		'unpaid_balance'
 	];
 }

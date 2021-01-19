@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\CommissionsBalance;
+use App\Errors;
 use App\Http\Controllers\API\BaseController;
+use App\Salespeople;
 use Illuminate\Http\Request;
 use App\Invoices;
 use App\SecondarySalesPeople;
+use DB;
+use Exception;
+use Validator;
 
 
 class PayController extends BaseController
@@ -29,14 +34,13 @@ class PayController extends BaseController
 	}
 
 	public function anyData(Request $request){
-		$query =  SecondarySalesPeople::join( 'invoices', function ( $join ) {
-											$join->on( 'invoices.id', 'secondary_sales_people.invoice_id' )->whereNull('invoices.deleted_at');
-										} )
-		                              ->join( 'salespeoples', function ( $join ) {
-			                              $join->on( 'salespeoples.id', 'secondary_sales_people.salespeople_id' )->whereNull('invoices.deleted_at');
-		                              } )
+		$query =  Salespeople::leftJoin( 'secondary_sales_people', function ( $join ) {
+	                              $join->on( 'salespeoples.id', 'secondary_sales_people.salespeople_id' );
+                              } )
+							->join( 'invoices', function ( $join ) {
+								$join->on( 'invoices.id', 'secondary_sales_people.invoice_id' )->whereNull('invoices.deleted_at');
+							} )
 		;
-
 
 //		if ( ! empty( $request['date_range'] ) ) {
 //			$date      = $request['date_range'];
@@ -46,7 +50,6 @@ class PayController extends BaseController
 //			$query->where( 'invoices.access_date', '>=', $dateFrom )
 //			      ->where( 'invoices.access_date', '<=', $dateTo );
 //		}
-//		dd($query->get()->toArray());
 		if( ! empty( $request['summary'] )){
 //			DB::enableQueryLog();
 //			$query->get();
@@ -60,19 +63,48 @@ class PayController extends BaseController
 		else {
 			$query->selectRaw( '
 					 sum(secondary_sales_people.earnings) as sum,
-					 sum(invoices.sales_price) as revenue,
 					 (SELECT sum(commissions_balances.paid_amount) FROM commissions_balances WHERE commissions_balances.salespeople_id = secondary_sales_people.salespeople_id) as paid_sum,
-					 secondary_sales_people.salespeople_id,
-					 count(invoices.id) as total_sales, 
-					 salespeoples.name_for_invoice, 
-					 salespeoples.first_name, 
+					 sum(invoices.sales_price) as revenue,					 
+					 count(invoices.id) as total_sales,
+					 salespeoples.id,
+					 salespeoples.name_for_invoice,
+					 salespeoples.first_name,
 					 salespeoples.last_name
 				 ')
-			      ->groupBy('secondary_sales_people.salespeople_id')->with('level2.level')
+			      ->groupBy('salespeoples.id')->with('level.level')
 			;
-
 			return datatables()->eloquent( $query )->toJson();
 		}
 
+	}
+
+	public function setPaid(Request $request ){
+		try {
+			$data = $request->all();
+			Validator::make( $data, [
+				'salespeople_id' => 'required',
+				'amount' => 'required'
+			] )->validate();
+
+			$earnings = SecondarySalesPeople::where('salespeople_id', $data['salespeople_id'] )->sum('earnings');
+			$paid_amount = CommissionsBalance::where('salespeople_id', $data['salespeople_id'] )->sum('paid_amount');
+			$earnings = !empty($earnings) ? $earnings : 0;
+			$paid_amount = !empty($paid_amount) ? $paid_amount : 0;
+			$data = [
+				'salespeople_id' => $data['salespeople_id'],
+				'paid_amount' => $data['amount'] * 1,
+				'unpaid_balance' => ($earnings -  $paid_amount) * 1
+			];
+			$res = CommissionsBalance::create($data);
+			return $this->sendResponse( $res, 'Success!' );
+		}
+		catch ( Exception $ex){
+			$err = $ex->getMessage();
+			Errors::create( [ 'error'      => $err,
+			                        'controller' => 'PayController',
+			                        'function'   => 'setPaid'
+			] );
+			return $this->sendError( 'Error!' );
+		}
 	}
 }
