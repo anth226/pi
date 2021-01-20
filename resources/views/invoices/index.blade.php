@@ -47,19 +47,21 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-3 px-1 mb-1 d-none profit">
-                        <div class="card order-card bg-success">
-                            <div class="text-center p-2 text-white">
-                                <h3 class="text-center"><span id="profit">0</span></h3>
-                                <h3 class="lead text-center">Net Revenue</h3>
-                            </div>
-                        </div>
-                    </div>
+
                     <div class="col-md-6 col-lg-3 px-1 mb-1 d-none commission">
                         <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="commissions">0</span></h3>
                                 <h3 class="lead text-center">Commissions</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-3 px-1 mb-1 d-none profit">
+                        <div class="card order-card bg-success">
+                            <div class="text-center p-2 text-white">
+                                <h3 class="text-center"><span id="profit">0</span></h3>
+                                <h3 class="lead text-center">Net Revenue</h3>
                             </div>
                         </div>
                     </div>
