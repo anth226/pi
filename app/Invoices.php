@@ -20,7 +20,10 @@ class Invoices extends Model
 		'access_date',
 		'invoice_number',
 		'cc',
-		'cc_number'
+		'cc_number',
+		'paid',
+		'own',
+		'paid_at'
 	];
 
 	public function customer()
