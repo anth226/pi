@@ -165,11 +165,25 @@
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
+                        <strong>Paid Today:</strong>
+                        {!! Form::text('paid', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Paid Today"')) !!}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <strong>To Pay:</strong>
+                        {!! Form::text('own', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="TO PAY"', 'disabled' => 'disabled')) !!}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
                         <strong>Access Date *:</strong>
                         {!! Form::text('access_date', null, array('id="access_date"', 'placeholder' => 'Access Date','class' => 'form-control datetimepicker-input', 'data-toggle="datetimepicker"', 'data-target="#access_date"', 'value="'.date("m-d-Y").'"')) !!}
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="form-group">
                         <strong>CC *:</strong>
                         {!! Form::number('cc', null, array('placeholder' => 'CC','class' => 'form-control', 'maxlength="4"', 'minlength="4"', 'required="required"')) !!}
@@ -245,6 +259,9 @@
                 },
                 blur: function() {
                     formatCurrency($(this), "blur");
+                    if($(this).attr('name') === 'sales_price' && !$('input[name="paid"]').val()){
+                        $('input[name="paid"]').val($(this).val());
+                    }
                 }
             });
 
@@ -283,6 +300,10 @@
             function formatNumber(n) {
                 // format number 1000000 to 1,234,567
                 return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            }
+
+            function currencyToNumber(currency){
+                return currency.replace(/$/g,'').replace(/,/g,'');
             }
 
 

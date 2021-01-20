@@ -8,24 +8,6 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12 m-auto">
-                <div class="row">
-                    <div class="col-lg-12 margin-tb">
-                        <div class="pull-left">
-                            @can('invoice-create')
-                                <a class="btn btn-success mb-4 mt-2" href="{{ route('customers-invoices.create') }}"> Create User & Email Invoice</a>
-                            @endcan
-                            <h2>Salespeople Report</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 col-lg-4">
-                        <label class="w-100">
-                            Date range
-                            <input class="form-control" type="text" id="reportRange">
-                        </label>
-                    </div>
-                </div>
 
                 <div style="padding-right: 11px;padding-left: 11px;">
                     <div class="row mb-4">
@@ -70,96 +52,6 @@
 @section('script')
     <script>
         $(document).ready(function() {
-
-            const dateRangeField = document.querySelector("#reportRange");
-
-            const dateRangeInput = flatpickr(dateRangeField, {
-                mode:"range",
-                {{--defaultDate:['{{$firstDate}}','{{sprintf("%s",date("F j, Y"))}}'],--}}
-                defaultDate:['{{$lastDate}}','{{$lastDate}}'],
-                dateFormat:"F j, Y",
-                allowInput:false,
-                onClose: function() {
-                    getReportData();
-                },
-                plugins: [
-                    ShortcutButtonsPlugin({
-                        button: [
-                            {
-                                label: "Today"
-                            },
-                            {
-                                label: "Yesterday"
-                            },
-                            // {
-                            //     label: "All dates"
-                            // }
-                        ],
-                        label: "",
-                        onClick: function(index, fp) {
-                            var date;
-                            switch (index) {
-                                case 0:
-                                    date = new Date();
-                                    break;
-                                case 1:
-                                    date = new Date(Date.now() - 24 * 60 * 60 * 1000);
-                                    break;
-                            {{--case 2:--}}
-                                    {{--date = ['{{$firstDate}}','{{sprintf("%s",date("F j, Y"))}}'];--}}
-                                    {{--break;--}}
-
-                            }
-                            fp.setDate(date);
-                            fp.close();
-                            // fp.set('defaultDate', date);
-                        }
-                    })
-                ]
-            });
-
-            getSummaryData();
-
-            function getReportData()
-            {
-                getSummaryData();
-                table_dt.draw();
-            }
-
-            function getSummaryData()
-            {
-                $.ajax({
-                    url: '/paydatatables.data?summary=1&date_range='+$("#reportRange").val(),
-                    type: "GET",
-                    dataType: "json",
-                    success: function (response) {
-                        if (response) {
-                            if (response.success) {
-                                var commission = response.data.commission;
-                                if(commission) {
-                                    $('.commission').removeClass('d-none');
-                                    $('#commissions').html(moneyFormat(commission));
-                                }
-                                else{
-                                    $('.commission').addClass('d-none');
-                                }
-                            }
-                            else {
-                                console.log("Error");
-                            }
-                        }
-                        else {
-                            console.log('No response');
-                        }
-                    },
-                    error: function (response) {
-                        console.log(response);
-                    }
-                });
-
-            }
-
-
             var table = $('table#salespeople_report_table');
             var table_dt = table.DataTable({
                 // stateSave: true,
@@ -208,6 +100,11 @@
                 if(!isSet(num)){
                    num = 0;
                 }
+                var add_to_res = '';
+                if(num < 0){
+                    num = num * (-1);
+                    add_to_res = '-';
+                }
                 var str = num.toString().replace("$", ""), parts = false, output = [], i = 1, formatted = null;
                 if(str.indexOf(".") > 0) {
                     parts = str.split(".");
@@ -224,7 +121,7 @@
                     }
                 }
                 formatted = output.reverse().join("");
-                return("$" + formatted + ((parts) ? "." + parts[1].substr(0, 2) : ""));
+                return( add_to_res + "$" + formatted + ((parts) ? "." + parts[1].substr(0, 2) : ""));
             };
 
             function formatDate(date){
