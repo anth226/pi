@@ -4,16 +4,16 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12 m-auto">
-                <div class="row">
-                    <div class="col-lg-12 margin-tb">
-                        <div class="pull-left">
-                            @can('invoice-create')
-                                <a class="btn btn-success mb-4 mt-2" href="{{ route('customers-invoices.create') }}"> Create User & Email Invoice</a>
-                            @endcan
-                            <h2>Salespeople Report</h2>
-                        </div>
-                    </div>
-                </div>
+                {{--<div class="row">--}}
+                    {{--<div class="col-lg-12 margin-tb">--}}
+                        {{--<div class="pull-left">--}}
+                            {{--@can('invoice-create')--}}
+                                {{--<a class="btn btn-success mb-4 mt-2" href="{{ route('customers-invoices.create') }}"> Create User & Email Invoice</a>--}}
+                            {{--@endcan--}}
+                            {{--<h2>Salespeople Report</h2>--}}
+                        {{--</div>--}}
+                    {{--</div>--}}
+                {{--</div>--}}
                 <div class="row">
                     <div class="col-md-6 col-lg-4">
                         <label class="w-100">
