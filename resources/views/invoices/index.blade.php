@@ -1,5 +1,13 @@
 @extends('layouts.app')
 
+@section('style')
+    <style>
+        .bg_to_pay{
+            background-color: rgba(255,0,0,.1) !important;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="container">
         <div class="row">
@@ -87,6 +95,7 @@
                     <th>Salesperson</th>
                     <th>Email</th>
                     <th>Phone</th>
+                    <th>To Pay</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -209,6 +218,12 @@
             var table = $('table#customers_table');
             var table_dt = table.DataTable({
                 // stateSave: true,
+                createdRow: function( row, data, dataIndex ) {
+                    console.log(data);
+                    if ( data.own > 0 ) {
+                        $(row).addClass('bg_to_pay');
+                    }
+                },
                 processing: true,
                 serverSide: true,
                 order: [
@@ -252,6 +267,14 @@
                         }  },
                     { data: 'customer.email', name: 'customer.email', "sortable": false },
                     { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap"},
+                    { data: 'own', name: 'own', "sortable": true, className:"text-nowrap", "searchable": false, render: function ( data, type, row ){
+                            if(data > 0) {
+                                return '<div class="text-danger">' + moneyFormat(data) + '</div>';
+                            }
+                            else{
+                                return '';
+                            }
+                        }  },
                     { data: 'id', name: 'id', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 return '<a title="Open invoice in a new tab" target="_blank" href="/invoices/' + data + '"><span class="badge badge-success">View</span></a>';
