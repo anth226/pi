@@ -144,7 +144,7 @@
                     @php
                         $salespeople = [];
                         $cc = '';
-                        $bcc = 'corporate@portfolioinsider.com, crystal@portfolioinsider.com';
+                        $bcc = 'corporate@portfolioinsider.com, michelle@portfolioinsider.com';
                         $inv = new \App\Http\Controllers\InvoicesController();
                         $commission = 0;
                     @endphp
