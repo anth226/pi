@@ -35,7 +35,7 @@
                         <th>Salesperson</th>
                         <th>Total Sales</th>
                         <th>Commission</th>
-                        <th>Payed</th>
+                        <th>Paid</th>
                         <th>Commission to pay</th>
                         <th></th>
                    </tr>

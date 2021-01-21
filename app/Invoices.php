@@ -23,7 +23,8 @@ class Invoices extends Model
 		'cc_number',
 		'paid',
 		'own',
-		'paid_at'
+		'paid_at',
+		'refunded_at'
 	];
 
 	public function customer()

@@ -172,7 +172,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <strong>To Pay:</strong>
-                        {!! Form::text('own', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="TO PAY"', 'disabled' => 'disabled')) !!}
+                        {!! Form::text('own', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="To Pay"', 'disabled' => 'disabled')) !!}
                     </div>
                 </div>
             </div>

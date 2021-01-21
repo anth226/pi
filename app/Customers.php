@@ -21,6 +21,7 @@ class Customers extends Model
 		'state',
 		'email',
 		'phone_number',
+		'formated_phone_number',
 		'stripe_customer_id',
 		'rep_payment_status' // 1 - 'Paid Sales Rep', 2 - 'Refund'
 	];
