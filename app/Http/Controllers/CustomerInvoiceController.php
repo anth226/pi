@@ -91,7 +91,7 @@ class CustomerInvoiceController extends CustomersController
 			'first_name' => $request->input('first_name'),
 			'last_name' => $request->input('last_name'),
 			'full_name' => $request->input('first_name').' '.$request->input('last_name'),
-			'email' => $request->input('email'),
+			'email' => strtolower($request->input('email')),
 			'phone' => $request->input('phone_number'),
 			'source' => 'portfolioinsider',
 			'tags' => 'portfolioinsider,portfolio-insider-prime',

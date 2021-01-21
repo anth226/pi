@@ -213,7 +213,7 @@
                         {{ $invoice->cc_number }}
                     </div>
 
-                    @if(($invoice->sales_price - $invoice->paid) > 0)
+                    @if((($invoice->sales_price - $invoice->paid) > 0) && !$invoice->refunded_at)
                         <div class="text-danger">
                             <strong>To Pay:</strong>
                             {{ $inv->moneyFormat($invoice->sales_price - $invoice->paid) }}
