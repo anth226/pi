@@ -12,6 +12,7 @@ use App\Salespeople;
 use App\SecondarySalesPeople;
 use App\SentData;
 use App\SentDataLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -81,6 +82,10 @@ class CustomerInvoiceController extends CustomersController
 			return $this->sendError('Please enter correct price.');
 		}
 
+		$paid = !empty($request->input('paid')) ? Elements::moneyToDecimal($request->input('paid')) : $sales_price;
+		if(($sales_price - $paid) < 0){
+			return $this->sendError('Paid amount must be less than Sales Price.');
+		}
 
 		$dataToSend = [
 			'first_name' => $request->input('first_name'),
@@ -97,7 +102,8 @@ class CustomerInvoiceController extends CustomersController
 			'zip' => $request->input('zip'),
 			'phone_number' => $request->input('phone_number'),
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
-			'sales_price' => $sales_price
+			'sales_price' => $sales_price,
+			'paid' => $paid
 		];
 
 		if(!$test_mode) {
@@ -224,7 +230,10 @@ class CustomerInvoiceController extends CustomersController
 				'sales_price' => $sales_price,
 				'qty' => $request->input('qty'),
 				'access_date' => Elements::createDateTime($request->input('access_date')),
-				'cc_number' => $request->input('cc')
+				'cc_number' => $request->input('cc'),
+				'paid' => $paid,
+				'own' => $sales_price - $paid,
+				'paid_at' => Carbon::now()
 			]);
 
 			$invoice_instance = new InvoicesController();
@@ -270,7 +279,7 @@ class CustomerInvoiceController extends CustomersController
 			if(!$test_mode) {
 				if ( ! $ignore_pipedrive ) {
 					//////////// sending data to pipidrive
-					$pipedrive_res = $this->updateOrAddPipedriveDeal( $pipedrive_person['data'], $sales_price );
+					$pipedrive_res = $this->updateOrAddPipedriveDeal( $pipedrive_person['data'], $paid );
 					if ( ! $pipedrive_res['success'] ) {
 						$message = 'Error! Can\'t send data to Pipedrive';
 						if ( ! empty( $pipedrive_res['message'] ) ) {

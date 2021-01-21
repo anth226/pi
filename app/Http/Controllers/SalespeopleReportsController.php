@@ -31,7 +31,7 @@ class SalespeopleReportsController extends InvoicesController
 											$join->on( 'invoices.id', 'secondary_sales_people.invoice_id' )->whereNull('invoices.deleted_at');
 										} )
 		                              ->join( 'salespeoples', function ( $join ) {
-											$join->on( 'salespeoples.id', 'secondary_sales_people.salespeople_id' )->whereNull('invoices.deleted_at');
+											$join->on( 'salespeoples.id', 'secondary_sales_people.salespeople_id' );
 										} )
 									  ;
 			;
@@ -59,7 +59,7 @@ class SalespeopleReportsController extends InvoicesController
 		else {
 			$query->selectRaw( '
 					 sum(secondary_sales_people.earnings) as sum,
-					 sum(invoices.sales_price) as revenue,
+					 sum(invoices.paid) as revenue,
 					 secondary_sales_people.salespeople_id,
 					 count(invoices.id) as total_sales, 
 					 salespeoples.name_for_invoice, 
