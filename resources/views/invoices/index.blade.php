@@ -5,6 +5,9 @@
         .bg_to_pay{
             background-color: rgba(255,0,0,.1) !important;
         }
+        .bg_refunded{
+            background-color: rgba(0,0,0,.3) !important;
+        }
     </style>
 @endsection
 
@@ -219,9 +222,11 @@
             var table_dt = table.DataTable({
                 // stateSave: true,
                 createdRow: function( row, data, dataIndex ) {
-                    console.log(data);
                     if ( data.own > 0 ) {
                         $(row).addClass('bg_to_pay');
+                    }
+                    if ( data.sales_price <= 0 ) {
+                        $(row).addClass('bg_refunded');
                     }
                 },
                 processing: true,
@@ -256,7 +261,12 @@
                         }},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
-                                return moneyFormat(data) + calculateEarnings(row);
+                                if(data > 0) {
+                                    return moneyFormat(data) + calculateEarnings(row);
+                                }
+                                else{
+                                    return '<div class="text-danger">' + moneyFormat(data) + '</div>';
+                                }
                             }
                             else{
                                 return '';
