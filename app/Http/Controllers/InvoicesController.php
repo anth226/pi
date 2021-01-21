@@ -16,6 +16,7 @@ use App\Salespeople;
 use App\SalespeoplePecentageLog;
 use App\SecondarySalesPeople;
 use App\SentData;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -87,7 +88,7 @@ class InvoicesController extends BaseController
 //			$query->get();
 //			dd(DB::getQueryLog());
 			$commission = 0;
-			$revenue = $query->sum('sales_price');
+			$revenue = $query->sum('paid');
 			$invoices = $query->get();
 			if($invoices && $invoices->count()){
 				foreach($invoices  as $inv){
@@ -242,12 +243,23 @@ class InvoicesController extends BaseController
 				'access_date' => 'required',
 				'cc_number' => 'required|digits:4'
 			]);
+			$sales_price = Elements::moneyToDecimal($request->input('sales_price'));
+			$paid = !empty($request->input('paid')) ? Elements::moneyToDecimal($request->input('paid')) : $sales_price;
+			if(($sales_price - $paid) < 0){
+				return $this->sendError('Paid amount must be less than Sales Price.');
+			}
+
+			$invoice_before = Invoices::with('customer')->find($id);
+
 			$dataToUpdate['sales_price'] = Elements::moneyToDecimal($request->input('sales_price'));
+			if($invoice_before->paid != $paid) {
+				$dataToUpdate['paid']    = $paid;
+				$dataToUpdate['own']     = $sales_price - $paid;
+				$dataToUpdate['paid_at'] = Carbon::now();
+			}
 			$dataToUpdate['access_date'] = Elements::createDateTime($request->input('access_date'));
 			$dataToUpdate['cc_number'] = $request->input('cc_number');
 			$dataToUpdate['salespeople_id'] = $request->input('salespeople_id');
-
-			$invoice_before = Invoices::with('customer')->find($id);
 
 			$invoice = Invoices::where('id', $id)->update($dataToUpdate);
 
@@ -274,7 +286,7 @@ class InvoicesController extends BaseController
 
 			$customersController = new CustomersController();
 
-			if($invoice_before && $invoice_before->sales_price && $invoice_before->customer->email && $invoice_before->sales_price != $dataToUpdate['sales_price']) {
+			if($invoice_before && $invoice_before->paid && $invoice_before->customer->id && $invoice_before->paid != $paid) {
 				$deal_id = SentData::where('service_type', 5)
 				                   ->where('customer_id', $invoice_before->customer->id)
 				                   ->where('field', 'deal_id')
@@ -282,7 +294,7 @@ class InvoicesController extends BaseController
 				                   ->value('value')
 				;
 				if($deal_id) {
-					$pipedrive_res = $customersController->updatePipedriveDeal( $deal_id, $dataToUpdate['sales_price'] );
+					$pipedrive_res = $customersController->updatePipedriveDeal( $deal_id, $paid );
 					if ( ! $pipedrive_res['success'] ) {
 						$message = 'Error! Can\'t send data to Pipedrive';
 						if ( ! empty( $pipedrive_res['message'] ) ) {
@@ -458,10 +470,9 @@ class InvoicesController extends BaseController
 	public function calcEarning(Invoices $invoice){
 		try{
 			$max_percentage = 50;
-			$sales_price = $invoice->sales_price;
+			$sales_price = $invoice->paid;
 			$max_earning  = $sales_price*$max_percentage/100;
 			$earnings = [];
-			$sales_price = $invoice->sales_price;
 			$percentages = $this->getInvoiceCurrentPercentage($invoice);
 			if($percentages && count($percentages)) {
 				$salespeople = $invoice->salespeople;

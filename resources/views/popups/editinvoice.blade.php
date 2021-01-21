@@ -15,6 +15,7 @@
                             <div class="form-group">
                                 <strong>Salesperson for invoice *:</strong>
                                 @php
+                                    $inv = new \App\Http\Controllers\InvoicesController();
                                     $pr_salespeople = 0;
                                     if(!empty($invoice->salespeople)){
                                         foreach($invoice->salespeople as $sp){
@@ -54,11 +55,25 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
+                                <strong>Paid:</strong>
+                                {!! Form::text('paid', $inv->moneyFormat($invoice->paid), array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Paid Today"')) !!}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <strong>To Pay:</strong>
+                                {!! Form::text('own', $inv->moneyFormat($invoice->sales_price - $invoice->paid), array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="TO PAY"', 'disabled' => 'disabled')) !!}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
                                 <strong>Access Date *:</strong>
                                 {!! Form::text('access_date', null, array('id="access_date"', 'placeholder' => 'Access Date','class' => 'form-control datetimepicker-input', 'data-toggle="datetimepicker"', 'data-target="#access_date"', 'value="'.date("m-d-Y").'"')) !!}
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <strong>CC *:</strong>
                                 {!! Form::number('cc_number', $invoice['cc_number'], array('placeholder' => 'CC','class' => 'form-control', 'maxlength="4"', 'minlength="4"', 'required="required"')) !!}

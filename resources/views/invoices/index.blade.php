@@ -239,7 +239,7 @@
                     { data: 'customer.first_name', name: 'customer.first_name',"sortable": false,  render: function ( data, type, row ){
                             return '<a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a>'
                         }},
-                    { data: 'sales_price', name: 'sales_price', "searchable": false, "sortable": false, render: function ( data, type, row ){
+                    { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 return moneyFormat(data) + calculateEarnings(row);
                             }
@@ -313,8 +313,8 @@
                         })
                     }
                     if(earnings){
-                        var percentage = earnings*100/row.sales_price;
-                        var profit = row.sales_price*1 - earnings;
+                        var percentage = earnings*100/row.paid;
+                        var profit = row.paid*1 - earnings;
                         return '<div class="small"><span class="text-success">'+moneyFormat(profit)+'</span></div><div class="small"><small class="text-muted">'+moneyFormat(earnings)+'('+percentage.toFixed(2)+'%)</small></div>';
                     }
                 @endcan

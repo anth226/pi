@@ -259,8 +259,30 @@
                 },
                 blur: function() {
                     formatCurrency($(this), "blur");
-                    if($(this).attr('name') === 'sales_price' && !$('input[name="paid"]').val()){
-                        $('input[name="paid"]').val($(this).val());
+                    const paid_el = $('input[name="paid"]');
+                    const sales_price_el = $('input[name="sales_price"]');
+                    const own_el = $('input[name="own"]');
+                    if($(this).attr('name') === 'sales_price' && !paid_el.val()){
+                        paid_el.val($(this).val());
+                    }
+                    if(($(this).attr('name') === 'paid' || $(this).attr('name') === 'sales_price') && sales_price_el.val()){
+                        if(paid_el.val() != '') {
+                            const sales_price = currencyToNumber(sales_price_el.val()) * 1;
+                            const paid = currencyToNumber(paid_el.val()) * 1;
+                            const own = sales_price - paid;
+                            if (own > 0) {
+                                own_el.val(own.toFixed(2));
+                            }
+                            else {
+                                own_el.val(0);
+                            }
+                            formatCurrency(own_el);
+                        }
+                        else{
+                            paid_el.val(sales_price_el.val());
+                            own_el.val(0);
+                            formatCurrency(own_el);
+                        }
                     }
                 }
             });
@@ -302,10 +324,10 @@
                 return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
             }
 
-            function currencyToNumber(currency){
-                return currency.replace(/$/g,'').replace(/,/g,'');
-            }
 
+            function currencyToNumber(currency){
+                return currency.replace(/\$/g,'').replace(/,/g,'') * 1;
+            }
 
             function formatCurrency(input, blur) {
                 // appends $ to value, validates decimal side
@@ -507,6 +529,7 @@
             function afterSubmit(submit_button, button_title){
                 $('button').prop('disabled', false);
                 $('input').prop('disabled', false);
+                $('input[name="own"]').prop('disabled', true);
                 $('select').prop('disabled', false);
                 $('a').removeClass('disabled');
                 submit_button.html(button_title);

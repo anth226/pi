@@ -212,21 +212,36 @@
                         <strong>CC last 4 digits:</strong>
                         {{ $invoice->cc_number }}
                     </div>
+
+                    @if(($invoice->sales_price - $invoice->paid) > 0)
+                        <div class="text-danger">
+                            <strong>To Pay:</strong>
+                            {{ $inv->moneyFormat($invoice->sales_price - $invoice->paid) }}
+                        </div>
+                    @endif
+
                     <div>
-                        <strong>Sales Price:</strong>
-                        {{ $formated_price }}
+                        <strong>Paid:</strong>
+                        {{ $inv->moneyFormat($invoice->paid) }}
                         @can('invoice-create')
                             @if($commission)
                                 <small> (
                                     @php
-                                        $profit = ($invoice->sales_price)*1 - (($commission)*1);
-                                        $percent =  $commission * 100/$invoice->sales_price;
+                                        $profit = ($invoice->paid)*1 - (($commission)*1);
+                                        $percent =  $commission * 100/$invoice->paid;
+                                        $percent =  number_format($percent, 2, '.', '');
                                     @endphp
                                     <span class="text-success">Net Revenue: {{ $inv->moneyFormat($profit) }}</span> / Commission: {{$inv->moneyFormat($commission) }} | {{$percent}}% )
                                 </small>
                             @endif
                         @endcan
                     </div>
+
+                    <div>
+                        <strong>Sales Price:</strong>
+                        {{ $formated_price }}
+                    </div>
+
                     <div>
                         <strong>Access Date:</strong>
                         {{ $access_date }}
@@ -407,6 +422,31 @@
                 },
                 blur: function() {
                     formatCurrency($(this), "blur");
+                    const paid_el = $('input[name="paid"]');
+                    const sales_price_el = $('input[name="sales_price"]');
+                    const own_el = $('input[name="own"]');
+                    if($(this).attr('name') === 'sales_price' && !paid_el.val()){
+                        paid_el.val($(this).val());
+                    }
+                    if(($(this).attr('name') === 'paid' || $(this).attr('name') === 'sales_price') && sales_price_el.val()){
+                        if(paid_el.val() != '') {
+                            const sales_price = currencyToNumber(sales_price_el.val()) * 1;
+                            const paid = currencyToNumber(paid_el.val()) * 1;
+                            const own = sales_price - paid;
+                            if (own > 0) {
+                                own_el.val(own.toFixed(2));
+                            }
+                            else {
+                                own_el.val(0);
+                            }
+                            formatCurrency(own_el);
+                        }
+                        else{
+                            paid_el.val(sales_price_el.val());
+                            own_el.val(0);
+                            formatCurrency(own_el);
+                        }
+                    }
                 }
             });
 
@@ -448,6 +488,9 @@
                 return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
             }
 
+            function currencyToNumber(currency){
+                return currency.replace(/\$/g,'').replace(/,/g,'') * 1;
+            }
 
             function formatCurrency(input, blur) {
                 // appends $ to value, validates decimal side

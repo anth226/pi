@@ -69,7 +69,7 @@ class SalespeopleController extends InvoicesController
 			}
 			if( ! empty( $request['summary'] )){
 				$commission = 0;
-				$revenue = $query->sum('sales_price');
+				$revenue = $query->sum('paid');
 				$invoices = $query->get();
 				if($invoices && $invoices->count()){
 					foreach($invoices  as $inv){

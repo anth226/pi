@@ -27,6 +27,7 @@
                </div>
                 <div>
                     @php
+                        $inv = new \App\Http\Controllers\InvoicesController();
                         $customer_state = '';
                         if($invoice->customer->state != 'N/A'){
                             $customer_state = $invoice->customer->state;
@@ -153,6 +154,38 @@
                 </div>
             </td>
         </tr>
+        @if(($invoice->sales_price - $invoice->paid) > 0)
+            <tr>
+                <td colspan="4"><hr style="border: none;height: 1px;color: #333;background-color: #333;"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td colspan="2">
+                    <div style="color:red;text-align: right;">
+                        <strong>TO PAY IN 30 DAYS</strong>
+                    </div>
+                </td>
+                <td>
+                    <div style="color:red;text-align: left;">
+                        <strong>-{{ $inv->moneyFormat($invoice->sales_price - $invoice->paid) }}</strong>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>
+                    <div style="color:green;text-align: right;">
+                        <strong>PAID TODAY</strong>
+                    </div>
+                </td>
+                <td>
+                    <div style="color:green;text-align: left;">
+                        <strong>&nbsp;{{$inv->moneyFormat($invoice->paid)}}</strong>
+                    </div>
+                </td>
+            </tr>
+        @endif
     </table>
     <div style="text-align: center;margin-top: 30px;width: 100%">
         <div>

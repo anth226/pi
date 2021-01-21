@@ -64,7 +64,7 @@ class PayController extends BaseController
 			$query->selectRaw( '
 					 sum(secondary_sales_people.earnings) as sum,
 					 (SELECT sum(commissions_balances.paid_amount) FROM commissions_balances WHERE commissions_balances.salespeople_id = secondary_sales_people.salespeople_id) as paid_sum,
-					 sum(invoices.sales_price) as revenue,					 
+					 sum(invoices.paid) as revenue,					 
 					 count(invoices.id) as total_sales,
 					 salespeoples.id,
 					 salespeoples.name_for_invoice,
