@@ -19,18 +19,12 @@ class PayController extends BaseController
 	function __construct()
 	{
 		$this->middleware(['auth','verified']);
-		$this->middleware('permission:salespeople-reports-view-all');
+		$this->middleware('permission:payments-manage');
 	}
 
-	public function index(Request $request)
-	{
-		$lastReportDate = Invoices::orderBy('access_date', 'desc')->value('access_date');
-		$firstDate = date("F j, Y");
-		$lastDate = date("F j, Y");
-		if($lastReportDate) {
-			$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
-		}
-		return view('pay.pay', compact('firstDate', 'lastDate'));
+	public function index(Request $request)	{
+
+		return view('pay.pay');
 	}
 
 	public function anyData(Request $request){

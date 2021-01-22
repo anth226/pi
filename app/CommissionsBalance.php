@@ -11,4 +11,9 @@ class CommissionsBalance extends Model
 		'paid_amount',
 		'unpaid_balance'
 	];
+
+	public function salespersone()
+	{
+		return $this->hasOne('App\Salespeople', 'id','salespeople_id')->withTrashed();
+	}
 }
