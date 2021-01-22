@@ -56,7 +56,7 @@
                         <h2>New Prime Sale</h2>
                     </div>
                     <div class="pull-right">
-                        <a class="btn btn-primary mb-4 mt-2" href="/dashboard"> Back</a>
+                        <a class="btn btn-primary mb-4 mt-2" href="/dashboard"> Dashboard</a>
                     </div>
                 </div>
             </div>

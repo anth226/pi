@@ -37,15 +37,15 @@
 
 
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                {{--@if( Gate::check('invoice-create') || Gate::check('invoice-edit') || Gate::check('invoice-delete') || Gate::check('invoice-list'))--}}
-                                    {{--<a class="dropdown-item" href="/invoices" >--}}
-                                        {{--{{ __('Invoices') }}--}}
-                                    {{--</a>--}}
-                                {{--@endif--}}
-
                                 @if( Gate::check('customer-create') || Gate::check('customer-edit') || Gate::check('customer-delete') || Gate::check('customer-list'))
                                     <a class="dropdown-item" href="/dashboard" >
                                         {{ __('Dashboard') }}
+                                    </a>
+                                @endif
+
+                                @if( Gate::check('invoice-create'))
+                                    <a class="dropdown-item" href="{{ route('customers-invoices.create') }}" >
+                                        {{ __('Create Invoice') }}
                                     </a>
                                 @endif
 
@@ -58,6 +58,18 @@
                                 @if( Gate::check('salespeople-reports-view-all'))
                                     <a class="dropdown-item" href="/reports/salespeople" >
                                         {{ __('Salespeople Report') }}
+                                    </a>
+                                @endif
+
+                                @if( Gate::check('payments-manage'))
+                                    <a class="dropdown-item" href="{{ route('payments') }}" >
+                                        {{ __('Payments') }}
+                                    </a>
+                                @endif
+
+                                @if( Gate::check('payments-manage'))
+                                    <a class="dropdown-item" href="{{ route('payments-log') }}" >
+                                        {{ __('Payments Log') }}
                                     </a>
                                 @endif
 

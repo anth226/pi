@@ -8,7 +8,18 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12 m-auto">
-
+                <div class="row">
+                    <div class="col-lg-12 margin-tb">
+                        <div class="pull-left">
+                            <h2>Payments</h2>
+                        </div>
+                        <div class="pull-right">
+                            @can('payments-manage')
+                                <a class="btn btn-primary mb-4 mt-2" href="{{ route('payments-log') }}"> Payments Log</a>
+                            @endcan
+                        </div>
+                    </div>
+                </div>
                 <div style="padding-right: 11px;padding-left: 11px;">
                     <div class="row mb-4">
                         <div class="col-md-6 col-lg-3 px-1 mb-1 d-none commission">
@@ -29,7 +40,7 @@
                 @endif
 
 
-                <table class="table table-striped table-bordered table-responsive-sm w-100" id="salespeople_report_table">
+                <table class="table table-striped table-bordered table-responsive-sm w-100" id="payments_table">
                     <thead>
                     <tr>
                         <th>Salesperson</th>
@@ -52,7 +63,7 @@
 @section('script')
     <script>
         $(document).ready(function() {
-            var table = $('table#salespeople_report_table');
+            var table = $('table#payments_table');
             var table_dt = table.DataTable({
                 // stateSave: true,
                 processing: true,
@@ -61,12 +72,7 @@
                     [ 1, "desc" ]
                 ],
                 ajax: {
-                    url: "/paydatatables.data",
-                    data: function ( d ) {
-                        return $.extend( {}, d, {
-                            date_range: $("#reportRange").val()
-                        } );
-                    }
+                    url: "/paydatatables.data"
                 },
                 pageLength: 100,
                 // searching: false,

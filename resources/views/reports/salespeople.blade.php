@@ -15,6 +15,13 @@
                     {{--</div>--}}
                 {{--</div>--}}
                 <div class="row">
+                    <div class="col-lg-12 margin-tb">
+                        <div class="pull-left">
+                            <h2>Salespeople Report</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-md-6 col-lg-4">
                         <label class="w-100">
                             Date range
