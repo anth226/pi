@@ -82,7 +82,12 @@
                     [ 0, "desc" ]
                 ],
                 ajax: {
-                    url: "/paylogdatatables.data"
+                    url: "/paylogdatatables.data",
+                    data: function ( d ) {
+                        return $.extend( {}, d, {
+                            date_range: $("#reportRange").val()
+                        } );
+                    }
                 },
                 pageLength: 100,
                 // searching: false,
