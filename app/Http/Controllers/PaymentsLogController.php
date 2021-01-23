@@ -41,10 +41,10 @@ class PaymentsLogController extends BaseController
 		if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
 			$date      = $request['date_range'];
 			$dateArray = $this->parseDateRange( $date );
-			$dateFrom  = date( "Y-m-d", $dateArray[0] );
-			$dateTo    = date( "Y-m-d", $dateArray[1] );
-			$query->where( 'access_date', '>=', $dateFrom )
-			      ->where( 'access_date', '<=', $dateTo );
+			$dateFrom  = date( "Y-m-d H:i:s", $dateArray[0] );
+			$dateTo    = date( "Y-m-d", $dateArray[1] ). ' 23:59:59';
+			$query->where( 'created_at', '>=', $dateFrom )
+			      ->where( 'created_at', '<=', $dateTo );
 		}
 		return datatables()->eloquent( $query )->toJson();
 	}
