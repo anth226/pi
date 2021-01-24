@@ -434,11 +434,14 @@ class InvoicesController extends BaseController
 	public function getInvoiceCurrentPercentage(Invoices $invoice){
 		try{
 			$report_date = $invoice->access_date;
+			$created_at = $invoice->created_at;
+			$created_at_array = explode(' ',$created_at);
+			$report_time = $created_at_array[1];
 			$salespeople = $invoice->salespeople;
 			$sp_percentages = [];
 			foreach($salespeople as $sp){
 				$salespeople_id = $sp->salespeople_id;
-				$res = $this->getCurrentPercentage($report_date, $salespeople_id);
+				$res = $this->getCurrentPercentage($report_date, $salespeople_id, $report_time);
 				if($res){
 					$sp_percentages[$salespeople_id] = $res;
 				}
@@ -596,10 +599,10 @@ class InvoicesController extends BaseController
 		}
 	}
 
-	public function getCurrentPercentage($report_date, $salespeople_id){
+	public function getCurrentPercentage($report_date, $salespeople_id, $report_time = '23:59:59'){
 		try{
 			$percentage = SalespeoplePecentageLog::where('salespeople_id', $salespeople_id)
-			                                     ->where('created_at', '<=', $report_date.' 23:59:59')
+			                                     ->where('created_at', '<=', $report_date.' '.$report_time)
 			                                     ->orderBy('created_at', 'desc')
 			                                     ->first()
 			;
