@@ -22,7 +22,8 @@ class SalespeopleController extends InvoicesController
 	function __construct()
 	{
 		$this->middleware(['auth','verified']);
-		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete|salespeople-reports-view-all|salespeople-reports-view-own', ['only' => ['show', 'anyData', 'anyPaymentData']]);
+		$this->middleware('permission:payments-manage', ['only' => ['destroy']]);
+		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete|salespeople-reports-view-all|salespeople-reports-view-own', ['only' => ['show', 'anyData']]);
 		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete', ['only' => ['index']]);
 		$this->middleware('permission:salespeople-create', ['only' => ['create','store']]);
 		$this->middleware('permission:salespeople-edit', ['only' => ['edit','update']]);
@@ -40,20 +41,6 @@ class SalespeopleController extends InvoicesController
 		$salespeoples = Salespeople::orderBy('id','DESC')->with('level.level')->paginate(100);
 		return view('salespeople.index',compact('salespeoples'))
 			->with('i', ($request->input('page', 1) - 1) * 100);
-	}
-
-	public function anyPaymentData(Request $request){
-		$salesperson_id = !empty($request['salesperson_id']) ? $request['salesperson_id'] : 0;
-		$query = CommissionsBalance::where('paid_amount', '!=', 0)->where('salespeople_id', $salesperson_id)->with('salespersone.level.level');
-		if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
-			$date      = $request['date_range'];
-			$dateArray = $this->parseDateRange( $date );
-			$dateFrom  = date( "Y-m-d H:i:s", $dateArray[0] );
-			$dateTo    = date( "Y-m-d", $dateArray[1] ). ' 23:59:59';
-			$query->where( 'created_at', '>=', $dateFrom )
-			      ->where( 'created_at', '<=', $dateTo );
-		}
-		return datatables()->eloquent( $query )->toJson();
 	}
 
 	public function anyData(Request $request){
@@ -84,6 +71,7 @@ class SalespeopleController extends InvoicesController
 			}
 			if( ! empty( $request['summary'] )){
 				$commission = 0;
+				$paid = 0;
 				$revenue = $query->sum('paid');
 				$invoices = $query->get();
 				if($invoices && $invoices->count()){
@@ -93,17 +81,19 @@ class SalespeopleController extends InvoicesController
 							foreach($sp as $s){
 								if($s->salespeople_id == $salesperson_id) {
 									$commission += $s->earnings;
+									if($s->paid_at){
+										$paid += $s->earnings;
+									}
 								}
 							}
 						}
 					}
 				}
-				$profit = $revenue - $commission;
 				$res = [
 					'revenue' => $revenue,
 					'count' => $query->count(),
 					'commission' => $commission,
-					'profit' => $profit
+					'paid' => $paid
 				];
 				return $this->sendResponse($res,'');
 			}
@@ -112,6 +102,10 @@ class SalespeopleController extends InvoicesController
 			}
 		}
 		return $this->sendError('no salesperson id');
+
+	}
+
+	public function setPaid(Request $request){
 
 	}
 
@@ -202,16 +196,16 @@ class SalespeopleController extends InvoicesController
 		$firstDate = date("F j, Y", $fDate->timestamp);
 		$lastDate = date("F j, Y");
 
-		$earnings = SecondarySalesPeople::where('salespeople_id', $id)->sum('earnings');
-		if(empty($earnings)){
-			$earnings = 0;
-		}
-		$payments = CommissionsBalance::where('salespeople_id', $id)->sum('paid_amount');
-		if(empty($payments)){
-			$payments = 0;
-		}
-
-		$to_pay = $this->moneyFormat($earnings - $payments);
+//		$earnings = SecondarySalesPeople::where('salespeople_id', $id)->sum('earnings');
+//		if(empty($earnings)){
+//			$earnings = 0;
+//		}
+//		$payments = CommissionsBalance::where('salespeople_id', $id)->sum('paid_amount');
+//		if(empty($payments)){
+//			$payments = 0;
+//		}
+//
+//		$to_pay = $this->moneyFormat($earnings - $payments);
 
 		$user = Auth::user();
 		if( $user->hasRole('Salesperson')){
@@ -220,7 +214,7 @@ class SalespeopleController extends InvoicesController
 				$salespeople = Salespeople::with( 'level.level' )->find( $salesperson_id );
 				if ( $salespeople ) {
 
-					return view( 'salespeople.show', compact( 'salespeople', 'firstDate', 'lastDate', 'to_pay' ) );
+					return view( 'salespeople.show', compact( 'salespeople', 'firstDate', 'lastDate' ) );
 				}
 			}
 			return abort(403);

@@ -8,6 +8,9 @@
         .bg_refunded{
             background-color: rgba(0,0,0,.3) !important;
         }
+        .bg-success{
+            background-color: rgba(0,255,0,.1) !important;
+        }
     </style>
 @endsection
 
@@ -81,46 +84,7 @@
                     @endcan
                 </div>
                 <div class="col-md-8">
-                    <div class="row">
-                        <div class="col-md-5 m-auto">
-                            <h4 class="mb-0"><strong>Payments</strong></h4>
-                            <div><small class="text-danger">Payable: <strong>{{$to_pay}}</strong></small></div>
-                        </div>
-                        <div class="col-md-7">
-                            <label class="w-100">
-                                Date range
-                                <input class="form-control" type="text" id="reportRange2">
-                            </label>
-                        </div>
-                    </div>
 
-
-                    <div class="row mb-1">
-                        <div class="col-md-5 mb-1"></div>
-                        <div class="col-md-7 mb-1">
-                            <div class="card order-card bg-info">
-                                <div class="text-center p-2 text-white">
-                                    <h3 class="text-center mb-0"><span id="paid">0</span></h3>
-                                    <div class="lead text-center mb-0"><small>Paid</small></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <table class="table table-striped table-bordered table-responsive-sm w-100" id="payments_log">
-                        <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Previous Balance</th>
-                            <th>Payments</th>
-                            <th>New Balance</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
                 </div>
             </div>
 
@@ -139,7 +103,7 @@
 
             <div style="padding-right: 11px;padding-left: 11px;">
                 <div class="row mb-1">
-                    <div class="col-md-6 col-lg-4 px-1 mb-1">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1">
                         <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="subscriptions">0</span></h3>
@@ -147,7 +111,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-4 px-1 mb-1">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1">
                         <div class="card order-card bg-primary">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="revenue">0</span></h3>
@@ -155,11 +119,19 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-4 px-1 mb-1 commission">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1">
                         <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="commissions">0</span></h3>
                                 <h3 class="lead text-center mb-0">Commissions</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 px-1 mb-1">
+                        <div class="card order-card bg-info">
+                            <div class="text-center p-2 text-white">
+                                <h3 class="text-center"><span id="paid">0</span></h3>
+                                <h3 class="lead text-center mb-0">Paid</h3>
                             </div>
                         </div>
                     </div>
@@ -173,10 +145,11 @@
                     <th>ID</th>
                     <th>Name</th>
                     <th>Amount</th>
+                    <th>To Pay</th>
                     <th>Salesperson</th>
                     <th>Email</th>
                     <th>Phone</th>
-                    <th>To Pay</th>
+                    <th></th>
                     <th></th>
                 </tr>
                 </thead>
@@ -194,8 +167,6 @@
         $(document).ready(function() {
 
             const dateRangeField = document.querySelector("#reportRange");
-            const dateRangeField2 = document.querySelector("#reportRange2");
-
             const dateRangeInput = flatpickr(dateRangeField, {
                 mode:"range",
                 {{--defaultDate:['{{$firstDate}}','{{sprintf("%s",date("F j, Y"))}}'],--}}
@@ -240,16 +211,6 @@
                     })
                 ]
             });
-            const dateRangeInput2 = flatpickr(dateRangeField2, {
-                mode:"range",
-                {{--defaultDate:['{{$firstDate}}','{{sprintf("%s",date("F j, Y"))}}'],--}}
-                defaultDate:['{{$firstDate}}','{{$lastDate}}'],
-                dateFormat:"F j, Y",
-                allowInput:false,
-                onClose: function() {
-                    getPaymentsReportData()
-                }
-            });
 
             getDashboardData();
 
@@ -257,11 +218,6 @@
             {
                 getDashboardData();
                 table_dt.draw();
-            }
-
-            function getPaymentsReportData()
-            {
-                table_pay_dt.draw();
             }
 
             function getDashboardData()
@@ -278,12 +234,11 @@
 
                                 var commission = response.data.commission;
                                 if(commission) {
-                                    $('.commission').removeClass('d-none');
-                                    var percent_commission = commission*100/response.data.revenue;
-                                    $('#commissions').html(moneyFormat(commission) + '<span class="small text-muted" style="font-size: 1rem;"> '+percent_commission.toFixed(2)+'%</span>');
+                                    $('#commissions').html(moneyFormat(commission));
                                 }
-                                else{
-                                    $('.commission').addClass('d-none');
+                                var paid = response.data.paid;
+                                if(paid) {
+                                    $('#paid').html(moneyFormat(paid));
                                 }
                             }
                             else {
@@ -301,8 +256,6 @@
 
             }
 
-
-
             var table = $('table#customers_table');
             var table_dt = table.DataTable({
                 // stateSave: true,
@@ -313,6 +266,11 @@
                     if ( data.sales_price <= 0 ) {
                         $(row).addClass('bg_refunded');
                     }
+                    $.each(data.salespeople, function( index, value ) {
+                        if(value.salespersone.id == {{$salespeople->id}} && value.paid_at) {
+                            $(row).children(':nth-child(7)').addClass('bg-success');
+                        }
+                    });
                 },
                 processing: true,
                 serverSide: true,
@@ -344,7 +302,7 @@
                     { data: 'id', name: 'id', "searchable": false,  "visible": false },
 
                     { data: 'customer.first_name', name: 'customer.first_name',"sortable": false,  render: function ( data, type, row ){
-                            return '<a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a>'
+                            return '<a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a><div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>'
                         }},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
@@ -354,11 +312,6 @@
                                 return '';
                             }
                         } },
-                    { data: 'salespersone', name: 'salespersone',"sortable": false,"searchable": false, className:"text-nowrap", render: function ( data, type, row ){
-                            return generateSalespeople(row);
-                        }  },
-                    { data: 'customer.email', name: 'customer.email', "sortable": false },
-                    { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap"},
                     { data: 'own', name: 'own', "sortable": true, className:"text-nowrap", "searchable": false, render: function ( data, type, row ){
                             if(data > 0) {
                                 return '<div class="text-danger">' + moneyFormat(data) + '</div>';
@@ -367,6 +320,11 @@
                                 return '';
                             }
                         }  },
+                    { data: 'salespersone', name: 'salespersone',"sortable": false,"searchable": false, className:"text-nowrap", render: function ( data, type, row ){
+                            return generateSalespeople(row);
+                        }  },
+                    { data: 'customer.email', name: 'customer.email', "sortable": false ,  "visible": false},
+                    { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap" ,  "visible": false},
                     { data: 'id', name: 'id', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 return '<a title="Open invoice in a new tab" target="_blank" href="/invoices/' + data + '"><span class="badge badge-success">View</span></a>';
@@ -375,71 +333,68 @@
                                 return '';
                             }
                         }},
+                    @if( Gate::check('payments-manage'))
+                    { data: 'id', name: 'id', "searchable": false, "sortable": false, render: function ( data, type, row ){
+                            return showPayButton(row);
+                        }},
+                    @endif
                     { data: 'customer.last_name', name: 'customer.last_name', "sortable": false,  "visible": false }
 
                 ]
             });
 
+            $(document).on('click', '.pay_button', function(){
+                $.ajax({
+                    url: '/setpaid',
+                    type: "POST",
+                    dataType: "json",
+                    success: function (response) {
+                        if (response) {
+                            if (response.success) {
+                                $('#subscriptions').html(response.data.count);
+                                $('#revenue').html(moneyFormat(response.data.revenue));
 
-            var table_pay = $('table#payments_log');
-            var table_pay_dt = table_pay.DataTable({
-                // stateSave: true,
-                processing: true,
-                serverSide: true,
-                order: [
-                    [ 0, "desc" ]
-                ],
-                ajax: {
-                    url: "/sppaylogdatatables.data",
-                    data: function ( d ) {
-                        return $.extend( {}, d, {
-                            date_range: $("#reportRange2").val(),
-                            salesperson_id: '{{$salespeople->id}}'
-                        } );
-                    }
-                },
-                pageLength: 10,
-                searching: false,
-                lengthChange: false,
-                drawCallback: function(settings)
-                {
-                    let paid_amount = 0;
-                    let new_balance = 0;
-                    let paid_data = settings.json.data;
-                    let v_id = 0;
-                    if(isSet(paid_data) && paid_data.length){
-                        $.each(paid_data, function(i, v){
-                            if(v.id > v_id){
-                                v_id = v.id;
-                                new_balance = v.unpaid_balance * 1 - v.paid_amount *1;
+                                var commission = response.data.commission;
+                                if(commission) {
+                                    $('#commissions').html(moneyFormat(commission));
+                                }
+
                             }
-                            paid_amount = paid_amount + v.paid_amount * 1;
-                        })
+                            else {
+                                console.log("Error");
+                            }
+                        }
+                        else {
+                            console.log('No response');
+                        }
+                    },
+                    error: function (response) {
+                        console.log(response);
                     }
-                    $('#paid').html(moneyFormat(paid_amount));
-                    // $('#balance').html(moneyFormat(new_balance));
-                },
-
-                // bStateSave: true,
-                // dom: 'Bflrtip',
-                // buttons: [
-                //     'copy', 'excel', 'pdf', 'print', 'colvis'
-                // ],
-                columns: [
-                    { data: 'created_at', name: 'created_at', "searchable": false, "sortable": true, render: function(data, type, row){
-                            return formatDate2(data);
-                        }  },
-                    { data: 'unpaid_balance', name: 'unpaid_balance', "searchable": false, "sortable": true,  render: function ( data, type, row ){
-                            return moneyFormat(data);
-                        }  },
-                    { data: 'paid_amount', name: 'paid_amount', "searchable": false, "sortable": true,  render: function ( data, type, row ){
-                            return moneyFormat(data * -1);
-                        }  },
-                    { data: 'paid_amount', name: 'paid_amount', "searchable": false, "sortable": false,  render: function ( data, type, row ){
-                            return moneyFormat(row.unpaid_balance - row.paid_amount);
-                        }  }
-                ]
+                });
             });
+
+            function showPayButton(row){
+                var html_str = '';
+                $.each(row.salespeople, function( index, value ) {
+                    if(value.salespersone.id == {{$salespeople->id}}) {
+                        if(!value.paid_at) {
+                            @if( Gate::check('payments-manage'))
+                                html_str = '<button class="btn btn-primary pay_button" data-invoice_id="' + row.id + '" >Pay</button>';
+                            @else
+                                html_str = '<div style="min-height: 50px;"></div>';
+                            @endif
+                        }
+                        else{
+                            html_str = '<div class="text-nowrap">Paid At:</div><div class="text-nowrap">' + formatDate2(value.paid_at) + '</div>';
+                            @if( Gate::check('payments-manage'))
+                                html_str += '<button class="btn btn-sm btn-outline-danger pay_cancel_button" data-invoice_id="' + row.id + '" >Cancel</button>'
+                            @endif
+                        }
+                    }
+                });
+                return html_str;
+            };
 
             function generateSalespeople(row){
                 var ret_data = '';
@@ -571,7 +526,7 @@
                 m += 1;  // JavaScript months are 0-11
                 var y = formattedDate.getFullYear();
                 const month = formattedDate.toLocaleString('default', { month: 'short' });
-                return month + " " + d + " " + y + " " + formattedDate.getHours() + ":" + formattedDate.getMinutes();
+                return month + " " + d + " " + y;
             }
 
             function isSet(variable){

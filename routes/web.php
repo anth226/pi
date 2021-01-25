@@ -46,17 +46,13 @@ Route::resource('/invoices','InvoicesController', ['only' => ['show', 'index']])
 Route::get('/datatables.data', 'CustomerInvoiceController@anyData');
 Route::get('/invoicesdatatables.data', 'InvoicesController@anyData');
 
-Route::get('/spreportsdatatables.data', 'SalespeopleReportsController@anyData');
 Route::get('/spersondatatables.data', 'SalespeopleController@anyData');
-Route::get('/reports/salespeople', 'SalespeopleReportsController@index');
-Route::get('/payments-log', 'PaymentsLogController@index')->name('payments-log');
-Route::get('/paylogdatatables.data', 'PaymentsLogController@anyData');
-Route::get('/sppaylogdatatables.data', 'SalespeopleController@anyPaymentData');
+Route::post('/spersonpayment', 'SalespeopleController@setPaid');
+
 Route::get('/payments', 'PayController@index')->name('payments');
 Route::get('/paydatatables.data', 'PayController@anyData');
 Route::post('/setpaid', 'PayController@setPaid');
 
-//Route::get('/dashboard', 'CustomerInvoiceController@index');
 Route::get('/dashboard', 'InvoicesController@index');
 
 
