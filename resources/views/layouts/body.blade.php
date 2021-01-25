@@ -59,19 +59,7 @@
                                     <a class="dropdown-item" href="/reports/salespeople" >
                                         {{ __('Salespeople Report') }}
                                     </a>
-                                @endif
-
-                                @if( Gate::check('payments-manage'))
-                                    <a class="dropdown-item" href="{{ route('payments') }}" >
-                                        {{ __('Payments') }}
-                                    </a>
-                                @endif
-
-                                @if( Gate::check('payments-manage'))
-                                    <a class="dropdown-item" href="{{ route('payments-log') }}" >
-                                        {{ __('Payments Log') }}
-                                    </a>
-                                @endif
+                                @endif                               
 
                                 @if( Gate::check('edit-email-templates') || Gate::check('create-email-templates') || Gate::check('view-email-templates'))
                                     <a class="dropdown-item" href="/email-templates/templates" >
