@@ -233,8 +233,9 @@
 
             function generateSalespersonName(row, data){
                 return '<a href="/salespeople/' +row.salespeople_id + '" target="_blank" title="' + row.first_name + ' ' + row.last_name + '">' +
-                    data + '</a>' +
-                    ' <small title="Current level">' + row.level2.level.title + ' | ' + row.level2.percentage + '%</small>';
+                    data + '</a>'
+                    // + ' <small title="Current level">' + row.level2.level.title + ' | ' + row.level2.percentage + '%</small>'
+                    ;
             }
         });
     </script>

@@ -262,7 +262,7 @@
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 if(data > 0) {
-                                    return moneyFormat(data) + calculateEarnings(row);
+                                    return moneyFormat(data) /*+ calculateEarnings(row)*/;
                                 }
                                 else{
                                     return '<div class="text-danger">' + moneyFormat(data) + '</div>';
@@ -303,11 +303,11 @@
                     if(row.salespeople.length){
                         $.each(row.salespeople, function( index, value ) {
                             var additions = '';
-                            @can('invoice-create')
-                                if(value.earnings) {
-                                    additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">('+value.level.title+' | '+value.percentage+'%)</span></small></span>';
-                                }
-                            @endcan
+                            {{--@can('invoice-create')--}}
+                                {{--if(value.earnings) {--}}
+                                    {{--additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">('+value.level.title+' | '+value.percentage+'%)</span></small></span>';--}}
+                                {{--}--}}
+                            {{--@endcan--}}
                             if(value.sp_type) {
                                 ret_data += '<div>' +
                                     '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' + value.salespersone.name_for_invoice + '</a>' +
@@ -317,11 +317,11 @@
                         });
                         $.each(row.salespeople, function( index, value ) {
                             var additions = '';
-                            @can('invoice-create')
-                                if(value.earnings) {
-                                    additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">('+value.level.title+' | '+value.percentage+'%)</span></small></span>';
-                                }
-                            @endcan
+                            {{--@can('invoice-create')--}}
+                                {{--if(value.earnings) {--}}
+                                    {{--additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">('+value.level.title+' | '+value.percentage+'%)</span></small></span>';--}}
+                                {{--}--}}
+                            {{--@endcan--}}
                             if(!value.sp_type) {
                                 ret_data += '<div style="line-height: 1.1">' +
                                     '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '"><small>' + value.salespersone.name_for_invoice + '</small></a>' +
