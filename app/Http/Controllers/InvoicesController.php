@@ -13,6 +13,7 @@ use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\Products;
 use App\Salespeople;
+use App\SalespeopleLevelsUpdates;
 use App\SalespeoplePecentageLog;
 use App\SecondarySalesPeople;
 use App\SentData;
@@ -627,6 +628,45 @@ class InvoicesController extends BaseController
 				'percentage' => $percentage->percentage,
 				'level_id' => $percentage->level_id,
 			];
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'InvoicesController',
+				'function' => 'getCurrentPercentage'
+			]);
+			return false;
+		}
+	}
+
+	public function getCurrentPercentages($report_date, $salespeople_id, $report_time = '23:59:59'){
+		try{
+			$res = [];
+			$update_id = SalespeopleLevelsUpdates::where('salespeople_id', $salespeople_id)
+			                                     ->where('created_at', '<=', $report_date.' '.$report_time)
+			                                     ->orderBy('created_at', 'desc')
+			                                     ->value('id')
+			;
+			if(!$update_id) { // first available
+				$update_id = SalespeopleLevelsUpdates::where( 'salespeople_id', $salespeople_id )
+				                                     ->orderBy( 'created_at', 'asc' )
+				                                     ->value('id')
+				;
+			}
+			if(!$update_id){
+				return false;
+			}
+
+			$percentage = SalespeoplePecentageLog::where('update_id', $update_id)
+			                                     ->where( 'salespeople_id', $salespeople_id )
+			                                     ->get()
+			;
+
+			return [
+				'percentage' => $percentage->percentage,
+				'level_id' => $percentage->level_id,
+			];
+			return $res;
 		}
 		catch (Exception $ex){
 			Errors::create([

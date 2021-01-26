@@ -48,13 +48,12 @@ Route::get('/invoicesdatatables.data', 'InvoicesController@anyData');
 
 Route::get('/spersondatatables.data', 'SalespeopleController@anyData');
 Route::post('/spersonpayment', 'SalespeopleController@setPaid');
-
-Route::get('/spreportsdatatables.data', 'SalespeopleReportsController@anyData');
-Route::get('/spersondatatables.data', 'SalespeopleController@anyData');
 Route::post('/setpaid', 'SalespeopleController@setPaid');
 
-Route::get('/dashboard', 'InvoicesController@index');
+Route::get('/reports/salespeople', 'SalespeopleReportsController@index');
+Route::get('/spreportsdatatables.data', 'SalespeopleReportsController@anyData');
 
+Route::get('/dashboard', 'InvoicesController@index');
 
 Route::get('/email-templates', 'TemplatesController@index');
 Route::get('/email-templates/templates/', 'TemplatesController@index')->name('templateList');
