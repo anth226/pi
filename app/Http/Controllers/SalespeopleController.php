@@ -136,7 +136,7 @@ class SalespeopleController extends InvoicesController
 			'name_for_invoice' => 'max:120',
 			'email' => 'required|unique:salespeoples,email,NULL,id,deleted_at,NULL|email|max:120',
 			'phone_number' => 'nullable|max:120|min:10',
-			'level_id' => 'required'
+			'level_id[]' => 'required'
 		]);
 
 		$last_name = !empty($request->input('last_name')) ? $request->input('last_name') : '';
@@ -276,16 +276,19 @@ class SalespeopleController extends InvoicesController
 			$salespeople->formated_phone_number = ! empty( $request->input( 'phone_number' ) ) ? FormatUsPhoneNumber::formatPhoneNumber( $request->input( 'phone_number' ) ) : '';
 			$salespeople->save();
 
-			if ( $salespeople->level->level_id != $request->input( 'level_id' ) ) {
-				$new_level = SalespeopleLevels::find($request->input( 'level_id' ));
-				SalespeoplePecentageLog::create([
-					'level_id' => $new_level->id,
-					'salespeople_id' => $salespeople->id,
-					'percentage' => $new_level->percentage
-				]);
+
+			foreach($request->input( 'level_id' ) as $level_id) {
+				if ( $salespeople->level->level_id != $level_id ) {
+					$new_level = SalespeopleLevels::find( $level_id );
+					SalespeoplePecentageLog::create( [
+						'level_id'       => $new_level->id,
+						'salespeople_id' => $salespeople->id,
+						'percentage'     => $new_level->percentage
+					] );
+				}
 			}
 
-			return redirect()->route( 'salespeople.index' )
+			return redirect()->back()
 			                 ->with( 'success', 'Salesperson updated successfully' );
 		}
 		catch(Exception $ex){

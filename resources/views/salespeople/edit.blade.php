@@ -76,7 +76,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <strong>level:</strong>
-                        {!! Form::select('level_id', $levels,[$salespeople->level->level_id], array('class' => 'form-control')) !!}
+                        {!! Form::select('level_id[]', $levels,[$salespeople->level->level_id], array('class' => 'form-control', 'multiple')) !!}
                     </div>
                 </div>
             </div>
