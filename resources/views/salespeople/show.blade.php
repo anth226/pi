@@ -77,10 +77,10 @@
                         @endphp
                     </div>
                     @can('salespeople-edit')
-                        <div>
-                            <strong>Level:</strong>
-                            {{ $salespeople->level->level->title }} | {{ $salespeople->level->percentage }}%
-                        </div>
+                        {{--<div>--}}
+                            {{--<strong>Level:</strong>--}}
+                            {{--{{ $salespeople->level->level->title }} | {{ $salespeople->level->percentage }}%--}}
+                        {{--</div>--}}
                     @endcan
                 </div>
                 <div class="col-md-8">
@@ -306,7 +306,7 @@
                         }},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
-                                return moneyFormat(data) + calculateEarnings(row);
+                                return moneyFormat(data) /*+ calculateEarnings(row)*/;
                             }
                             else{
                                 return '';
@@ -417,13 +417,13 @@
                                 if(value.salespersone.id == {{$salespeople->id}}) {
                                     ret_data += '<div title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' +
                                         value.salespersone.name_for_invoice +
-                                        additions +
+                                        // additions +
                                         '</div>';
                                 }
                                 else {
                                     ret_data += '<div>' +
                                         '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' + value.salespersone.name_for_invoice + '</a>' +
-                                        additions +
+                                        // additions +
                                         '</div>';
                                 }
                             }
@@ -445,13 +445,13 @@
                                 if(value.salespersone.id == {{$salespeople->id}}) {
                                     ret_data += '<div style="line-height: 1.1" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' +
                                         '<small>' + value.salespersone.name_for_invoice + '</small>' +
-                                        additions +
+                                        // additions +
                                         '</div>';
                                 }
                                 else {
                                     ret_data += '<div style="line-height: 1.1">' +
                                         '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '"><small>' + value.salespersone.name_for_invoice + '</small></a>' +
-                                        additions +
+                                        // additions +
                                         '</div>';
                                 }
                             }
