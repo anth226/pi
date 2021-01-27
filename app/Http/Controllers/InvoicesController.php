@@ -301,8 +301,10 @@ class InvoicesController extends BaseController
 			$dataToUpdate['access_date'] = Elements::createDateTime($request->input('access_date'));
 			$dataToUpdate['cc_number'] = $request->input('cc_number');
 
+			$salespeople_id = LevelsSalespeople::getSalespersonInfo($request->input('salespeople_id'));
+
 			if($need_update_salespeople) {
-				$dataToUpdate['salespeople_id'] = $request->input( 'salespeople_id' );
+				$dataToUpdate['salespeople_id'] = $salespeople_id->salespeople_id;
 			}
 
 			$invoice = Invoices::where('id', $id)->update($dataToUpdate);
@@ -312,16 +314,23 @@ class InvoicesController extends BaseController
 				SecondarySalesPeople::where( 'invoice_id', $id )->delete();
 
 				SecondarySalesPeople::create( [
-					'salespeople_id' => $request->input( 'salespeople_id' ),
+					'salespeople_id' => $dataToUpdate['salespeople_id'],
 					'invoice_id'     => $id,
-					'sp_type'        => 1
+					'sp_type' => 1,
+					'earnings'=> 0,
+					'percentage' => $salespeople_id->level->percentage,
+					'level_id' => $salespeople_id->level_id
 				] );
 
 				if ( ! empty( $request->input( 'second_salespeople_id' ) ) && count( $request->input( 'second_salespeople_id' ) ) ) {
 					foreach ( $request->input( 'second_salespeople_id' ) as $val ) {
+						$salespeople_id = LevelsSalespeople::getSalespersonInfo($val);
 						SecondarySalesPeople::create( [
-							'salespeople_id' => $val,
-							'invoice_id'     => $id
+							'salespeople_id' => $salespeople_id->salespeople_id,
+							'invoice_id'     => $id,
+							'earnings'=> 0,
+							'percentage' => $salespeople_id->level->percentage,
+							'level_id' => $salespeople_id->level_id
 						] );
 					}
 				}
@@ -528,15 +537,12 @@ class InvoicesController extends BaseController
 				if ($salespeople_count == 1 ) { // only one salesperson
 					foreach ($percentages as $salespeople_id => $p) {
 						$percentage = $percentages[ $salespeople_id ]['percentage'];
-						$level_id   = $percentages[ $salespeople_id ]['level_id'];
 						$earning    = $sales_price / 100 * $percentage;
 						if ( $earning > $max_earning ) {
 							$earning = $max_earning;
 						}
 						$earnings[ $salespeople_id ] = [
-							'earnings'   => $earning,
-							'percentage' => $percentage,
-							'level_id'   => $level_id
+							'earnings'   => $earning
 						];
 					}
 				} else {// multiple salespeople
@@ -565,12 +571,8 @@ class InvoicesController extends BaseController
 							$earning = $max_earning/$salespeople_count;
 						}
 						foreach ($percentages as $salespeople_id => $p){
-							$percentage = $p['percentage'];
-							$level_id   = $p['level_id'];
 							$earnings[ $salespeople_id ] = [
-								'earnings'   => $earning,
-								'percentage' => $percentage,
-								'level_id'   => $level_id
+								'earnings'   => $earning
 							];
 						}
 					}
@@ -578,28 +580,22 @@ class InvoicesController extends BaseController
 						$all_earnings = 0;
 						foreach ($percentages as $salespeople_id => $p){
 							$percentage = $p['percentage'];
-							$level_id   = $p['level_id'];
 							$earning = $earning = $sales_price/100*$percentage;
 							$all_earnings += $earning;
 							$earnings[ $salespeople_id ] = [
-								'earnings'   => $earning,
-								'percentage' => $percentage,
-								'level_id'   => $level_id
+								'earnings'   => $earning
 							];
 						}
 						if($all_earnings > $max_earning){
 							$all_earnings = 0;
 							$salespeople_with_maxPercentage = [];
 							foreach ($percentages as $salespeople_id => $p){
-								if($p['percentage'] < $maxPercentage) { //excluding salesperson with max percentage
+								if($p['percentage'] < $maxPercentage) { //excluding salespeople with max percentage
 									$percentage                  = $p['percentage'];
-									$level_id                    = $p['level_id'];
 									$earning                     = $earning = $sales_price / 100 * $percentage;
 									$all_earnings                += $earning;
 									$earnings[ $salespeople_id ] = [
-										'earnings'   => $earning,
-										'percentage' => $percentage,
-										'level_id'   => $level_id
+										'earnings'   => $earning
 									];
 								}
 								else{
@@ -617,25 +613,17 @@ class InvoicesController extends BaseController
 									$earning_for_each = $sp_maxPercentage_earning;
 								}
 								foreach($salespeople_with_maxPercentage as $sp_max) {
-									$percentage = $percentages[ $sp_max ]['percentage'];
-									$level_id   = $percentages[ $sp_max ]['level_id'];
 									// adding remaining earning to excluded salesperson
 									$earnings[ $sp_max ] = [
-										'earnings'   => $earning_for_each,
-										'percentage' => $percentage,
-										'level_id'   => $level_id
+										'earnings'   => $earning_for_each
 									];
 								}
 							}
 							else{ // earning will be same for all
 								$earning = $max_earning/$salespeople_count;
 								foreach ($percentages as $salespeople_id => $p){
-									$percentage = $p['percentage'];
-									$level_id   = $p['level_id'];
 									$earnings[ $salespeople_id ] = [
-										'earnings'   => $earning,
-										'percentage' => $percentage,
-										'level_id'   => $level_id
+										'earnings'   => $earning
 									];
 								}
 							}
@@ -722,24 +710,24 @@ class InvoicesController extends BaseController
 		}
 	}
 
-	public function recalcAll(){
-		try {
-			$invoices = Invoices::get();
-			foreach ($invoices as $invoice) {
-				$percentages =  $this->calcEarning($invoice);
-				$this->savePercentages($percentages, $invoice->id);
-			}
-			return true;
-		}
-		catch (Exception $ex){
-			Errors::create([
-				'error' => $ex->getMessage(),
-				'controller' => 'InvoicesController',
-				'function' => 'recalcAll'
-			]);
-			return false;
-		}
-	}
+//	public function recalcAll(){
+//		try {
+//			$invoices = Invoices::get();
+//			foreach ($invoices as $invoice) {
+//				$percentages =  $this->calcEarning($invoice);
+//				$this->savePercentages($percentages, $invoice->id);
+//			}
+//			return true;
+//		}
+//		catch (Exception $ex){
+//			Errors::create([
+//				'error' => $ex->getMessage(),
+//				'controller' => 'InvoicesController',
+//				'function' => 'recalcAll'
+//			]);
+//			return false;
+//		}
+//	}
 
 	public function savePercentages($percentages, $invoice_id){
 		try {

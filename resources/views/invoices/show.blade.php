@@ -404,16 +404,74 @@
             var pr_salesperson = $('select[name="salespeople_id"]');
             var second_salesperson = $('select[name="second_salespeople_id[]"]');
 
-            var pr_salesperson_val = pr_salesperson.val();
-            if(pr_salesperson_val){
-                second_salesperson.find($('option[value="' + pr_salesperson_val + '"]')).prop('disabled', true);
-            }
+            updateSelects(pr_salesperson, second_salesperson);
 
-            var second_salesperson_val = second_salesperson.val();
-            if(second_salesperson_val){
-                $.each(second_salesperson_val, function(i,v){
-                    pr_salesperson.find($('option[value="' + v + '"]')).prop('disabled', true);
-                });
+            pr_salesperson.on('change', function(){
+                updateSelects(pr_salesperson, second_salesperson);
+            });
+            second_salesperson.on('change', function(){
+                updateSelects(pr_salesperson, second_salesperson);
+            });
+
+            function updateSelects(pr_select, second_select){
+                const pr_select_val = pr_select.val();
+                const second_select_val = second_select.val();
+                const salespeople_to_disable = [];
+                if($.isArray(pr_select_val)) {
+                    $.each(pr_select_val, function (i, v) {
+                        salespeople_to_disable.push(pr_select.find('option[value="'+v+'"]').data('salesperson_id'));
+                    });
+                }
+                else{
+                    salespeople_to_disable.push(pr_select.find('option[value="'+pr_select_val+'"]').data('salesperson_id'));
+                }
+
+                if($.isArray(second_select_val)) {
+                    $.each(second_select_val, function (i, v) {
+                        salespeople_to_disable.push(second_select.find('option[value="' + v + '"]').data('salesperson_id'));
+                    });
+                }
+                else{
+                    salespeople_to_disable.push(second_select.find('option[value="' + second_select_val + '"]').data('salesperson_id'));
+                }
+
+                pr_select.prop('disabled', false);
+                second_select.prop('disabled', false);
+                pr_select.find($('option')).prop('disabled', false);
+                second_select.find($('option')).prop('disabled', false);
+                if(salespeople_to_disable) {
+                    $.each(salespeople_to_disable, function(i,salesperson){
+                        const second_select_el = second_select.find($('option[data-salesperson_id="' + salesperson + '"]'));
+                        $.each(second_select_el, function(k,v){
+                            const this_val = $(v).val();
+                            if($.isArray(second_select_val)){
+                                if($.inArray(this_val, second_select_val) === -1){
+                                    $(v).prop('disabled', true);
+                                }
+                            }
+                            else {
+                                if (this_val !== second_select_val) {
+                                    $(v).prop('disabled', true);
+                                }
+                            }
+                        });
+
+                        const pr_select_el = pr_select.find($('option[data-salesperson_id="' + salesperson + '"]'));
+                        $.each(pr_select_el, function(k,v){
+                            const this_val = $(v).val();
+                            if($.isArray(pr_select_val)){
+                                if($.inArray(this_val, pr_select_val) === -1){
+                                    $(v).prop('disabled', true);
+                                }
+                            }
+                            else {
+                                if (this_val !== pr_select_val) {
+                                    $(v).prop('disabled', true);
+                                }
+                            }
+                        });
+                    });
+                }
             }
 
             $("input[data-type='currency']").on({
@@ -456,77 +514,6 @@
                 value: '{{ $access_date }}'
             });
             $.datetimepicker.setLocale('en');
-
-            $('select[name="salespeople_id"]').on('change', function(){
-                const current_el = $(this);
-                const val = current_el.val();
-                const s_val = current_el.find('option[value="'+val+'"]').data('salesperson_id');
-                const second_sel = $('select[name="second_salespeople_id[]"]');
-                if(s_val) {
-                    second_sel.prop('disabled', false);
-                    second_sel.find($('option')).prop('disabled', false);
-                    second_sel.find($('option[data-salesperson_id="' + s_val + '"]')).prop('disabled', true);
-                    const sec_el_value = second_sel.val();
-                    if(sec_el_value) {
-                        const sec_sid = [];
-                        $.each(sec_el_value, function(i,v){
-                            sec_sid.push(second_sel.find('option[value="'+v+'"]').data('salesperson_id'));
-                        });
-                        $.each(sec_sid, function(i,v){
-                            const el = second_sel.find($('option[data-salesperson_id="' + v + '"]'));
-                            $.each(el, function(ii,vv){
-                                const this_val = $(vv).val();
-                                if(this_val != v){
-                                    $(vv).prop('disabled', true);
-                                }
-                            });
-                        });
-                    }
-                }
-                else{
-                    second_sel.val([]).trigger('change');
-                    second_sel.prop('disabled', true);
-                }
-            });
-            $('select[name="second_salespeople_id[]"]').on('change', function(){
-                const current_el = $(this);
-                const val = current_el.val();
-                const s_val = [];
-                $.each(val, function(i,v){
-                    s_val.push(current_el.find('option[value="'+v+'"]').data('salesperson_id'));
-                });
-                const second_sel = $('select[name="salespeople_id"]');
-                second_sel.prop('disabled', false);
-                second_sel.find($('option')).prop('disabled', false);
-                current_el.find($('option')).prop('disabled', false);
-                if(s_val) {
-                    $.each(s_val, function(i,v){
-                        const second_sel_el = second_sel.find($('option[data-salesperson_id="' + v + '"]'));
-                        $.each(second_sel_el, function(ii,vv){
-                            $(vv).prop('disabled', true);
-                        });
-
-                        const el = current_el.find($('option[data-salesperson_id="' + v + '"]'));
-                        $.each(el, function(ii,vv){
-                            const this_val = $(vv).val();
-                            if(this_val != val){
-                                $(vv).prop('disabled', true);
-                            }
-                        });
-                    });
-                    const sec_el_value = second_sel.val();
-                    if(sec_el_value) {
-                        const el = current_el.find($('option[data-salesperson_id="' + sec_el_value + '"]'));
-                        $.each(el, function(ii,vv){
-                            const this_val = $(vv).val();
-                            if(this_val != val){
-                                $(vv).prop('disabled', true);
-                            }
-                        });
-                    }
-                }
-            });
-
 
             function formatNumber(n) {
                 // format number 1000000 to 1,234,567
