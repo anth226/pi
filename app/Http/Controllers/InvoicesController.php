@@ -11,6 +11,7 @@ use App\Invoices;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
+use App\LevelsSalespeople;
 use App\Products;
 use App\Salespeople;
 use App\SalespeopleLevelsUpdates;
@@ -198,8 +199,37 @@ class InvoicesController extends BaseController
 			$logs = EmailLogs::where('invoice_id', $id)->get();
 
 			$states = UsStates::statesUS();
-			$salespeople = Salespeople::getIdsAndFullNames();
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople') );
+
+			$show_selects = true;
+			$pr_salespeople = [];
+			$sec_salespeople = [];
+			if(!empty($invoice->salespeople)){
+				foreach($invoice->salespeople as $sp){
+					if(!empty($sp->salespeople_id)){
+						$levelSalespeopleId =  LevelsSalespeople::where('salespeople_id', $sp->salespeople_id)->where('level_id', $sp->level_id)->value('id');
+						if($levelSalespeopleId) {
+							if ( $sp->sp_type ) {
+								$pr_salespeople[] = $levelSalespeopleId;
+							} else {
+								$sec_salespeople[] = $levelSalespeopleId;
+							}
+						}
+						else{
+							$show_selects = false;
+						}
+					}
+				}
+			}
+
+			if($show_selects) {
+				$salespeople_multiple = Elements::salespeopleSelect( 'second_salespeople_id[]', [ 'class' => 'form-control', 'multiple' => 'multiple'	], $sec_salespeople );
+				$salespeople          = Elements::salespeopleSelect( 'salespeople_id', [ 'class' => 'form-control' ], $pr_salespeople );
+			}
+			else{
+				$salespeople_multiple = false;
+				$salespeople = false;
+			}
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple') );
 		}
 		return abort(404);
 	}
@@ -239,11 +269,21 @@ class InvoicesController extends BaseController
 		try{
 			$dataToUpdate = [];
 			$this->validate($request, [
-				'salespeople_id' => 'required|numeric|min:1',
+//				'salespeople_id' => 'required|numeric|min:1',
 				'sales_price' => 'required',
 				'access_date' => 'required',
 				'cc_number' => 'required|digits:4'
 			]);
+
+			$need_update_salespeople = true;
+			if(!$request->input('salespeople_id')){
+				if($request->input('no_salespeople')) {
+					return $this->sendError( 'Please select Salesperson.' );
+				}
+				else{
+					$need_update_salespeople = false;
+				}
+			}
 			$sales_price = Elements::moneyToDecimal($request->input('sales_price'));
 			$paid = !empty($request->input('paid')) ? Elements::moneyToDecimal($request->input('paid')) : $sales_price;
 			if(($sales_price - $paid) < 0){
@@ -260,24 +300,30 @@ class InvoicesController extends BaseController
 			}
 			$dataToUpdate['access_date'] = Elements::createDateTime($request->input('access_date'));
 			$dataToUpdate['cc_number'] = $request->input('cc_number');
-			$dataToUpdate['salespeople_id'] = $request->input('salespeople_id');
+
+			if($need_update_salespeople) {
+				$dataToUpdate['salespeople_id'] = $request->input( 'salespeople_id' );
+			}
 
 			$invoice = Invoices::where('id', $id)->update($dataToUpdate);
 
-			SecondarySalesPeople::where('invoice_id', $id)->delete();
+			if($need_update_salespeople) {
 
-			SecondarySalesPeople::create( [
-				'salespeople_id' => $request->input('salespeople_id'),
-				'invoice_id'     => $id,
-				'sp_type' => 1
-			] );
+				SecondarySalesPeople::where( 'invoice_id', $id )->delete();
 
-			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
-				foreach ($request->input('second_salespeople_id') as $val){
-					SecondarySalesPeople::create( [
-						'salespeople_id' => $val,
-						'invoice_id'     => $id
-					] );
+				SecondarySalesPeople::create( [
+					'salespeople_id' => $request->input( 'salespeople_id' ),
+					'invoice_id'     => $id,
+					'sp_type'        => 1
+				] );
+
+				if ( ! empty( $request->input( 'second_salespeople_id' ) ) && count( $request->input( 'second_salespeople_id' ) ) ) {
+					foreach ( $request->input( 'second_salespeople_id' ) as $val ) {
+						SecondarySalesPeople::create( [
+							'salespeople_id' => $val,
+							'invoice_id'     => $id
+						] );
+					}
 				}
 			}
 
@@ -446,18 +492,16 @@ class InvoicesController extends BaseController
 
 	public function getInvoiceCurrentPercentage(Invoices $invoice){
 		try{
-			$report_date = $invoice->access_date;
-			$created_at = $invoice->created_at;
-			$created_at_array = explode(' ',$created_at);
-			$report_time = $created_at_array[1];
 			$salespeople = $invoice->salespeople;
 			$sp_percentages = [];
 			foreach($salespeople as $sp){
 				$salespeople_id = $sp->salespeople_id;
-				$res = $this->getCurrentPercentage($report_date, $salespeople_id, $report_time);
-				if($res){
-					$sp_percentages[$salespeople_id] = $res;
-				}
+				$res = [
+					'percentage' => $sp->percentage,
+					'level_id' => $sp->level_id,
+				];
+				$sp_percentages[$salespeople_id] = $res;
+
 			}
 			return $sp_percentages;
 		}

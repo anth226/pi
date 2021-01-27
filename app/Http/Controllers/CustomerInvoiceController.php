@@ -7,6 +7,7 @@ use App\Invoices;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
+use App\LevelsSalespeople;
 use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
@@ -42,10 +43,11 @@ class CustomerInvoiceController extends CustomersController
 	public function create(Request $request)
 	{
 		$states = UsStates::statesUS();
-		$salespeople = Salespeople::getIdsAndFullNames();
+		$salespeople_multiple = Elements::salespeopleSelect('second_salespeople_id[]', ['class' => 'form-control', 'disabled' => 'disabled', 'multiple' => 'multiple']);
+		$salespeople = Elements::salespeopleSelect('salespeople_id', ['class' => 'form-control']);
 		$products = Products::getIdsAndFullNames();
 		$test_mode = !empty($request->input('test_mode')) ? $request->input('test_mode') : 0;
-		return view('customers.createandsend', compact('states', 'salespeople','products', 'test_mode'));
+		return view('customers.createandsend', compact('states', 'salespeople', 'salespeople_multiple', 'products', 'test_mode'));
 	}
 
 
@@ -223,9 +225,11 @@ class CustomerInvoiceController extends CustomersController
 
 			////////////////////////////////////////////
 
+			$salespeople_id = LevelsSalespeople::getSalespersonInfo($request->input('salespeople_id'));
+
 			$invoice = Invoices::create([
 				'customer_id' => $customer->id,
-				'salespeople_id' => $request->input('salespeople_id'),
+				'salespeople_id' => $salespeople_id->salespeople_id,
 				'product_id' => $request->input('product_id'),
 				'sales_price' => $sales_price,
 				'qty' => $request->input('qty'),
@@ -239,38 +243,26 @@ class CustomerInvoiceController extends CustomersController
 			$invoice_instance = new InvoicesController();
 			$invoice_instance->generatePDF($invoice->id);
 
-			$current_percentages = $invoice_instance->getCurrentPercentage($invoice->access_date, $invoice->salespeople_id);
-			$percentage = 0;
-			$level_id  = 0;
-			if($current_percentages ){
-				$percentage = $current_percentages['percentage'];
-				$level_id  = $current_percentages['level_id'];
-			}
-
 			SecondarySalesPeople::create( [
-				'salespeople_id' => $request->input('salespeople_id'),
+				'salespeople_id' => $salespeople_id->salespeople_id,
 				'invoice_id'     => $invoice->id,
 				'sp_type' => 1,
 				'earnings'=> 0,
-				'percentage' => $percentage,
-				'level_id' => $level_id
+				'percentage' => $salespeople_id->level->percentage,
+				'level_id' => $salespeople_id->level_id
 			] );
 
 			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
 				foreach ($request->input('second_salespeople_id') as $val){
-					$current_percentages = $invoice_instance->getCurrentPercentage($invoice->access_date, $invoice->salespeople_id);
-					$percentage = 0;
-					$level_id  = 0;
-					if($current_percentages ){
-						$percentage = $current_percentages['percentage'];
-						$level_id  = $current_percentages['level_id'];
-					}
+
+					$salespeople_id = LevelsSalespeople::getSalespersonInfo($val);
+
 					SecondarySalesPeople::create( [
-						'salespeople_id' => $val,
+						'salespeople_id' => $salespeople_id->salespeople_id,
 						'invoice_id'     => $invoice->id,
 						'earnings'=> 0,
-						'percentage' => $percentage,
-						'level_id' => $level_id
+						'percentage' => $salespeople_id->level->percentage,
+						'level_id' => $salespeople_id->level_id
 					] );
 				}
 			}

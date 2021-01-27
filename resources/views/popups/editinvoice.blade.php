@@ -9,41 +9,30 @@
             </div>
             {!! Form::model($invoice, ['method'=>'POST', 'id' => 'invoiceEdit']) !!}
             <div class="modal-body">
+                @php
+                    $inv = new \App\Http\Controllers\InvoicesController();
+                @endphp
+
+
                 <div class="col-lg-12 m-auto">
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <strong>Salesperson for invoice *:</strong>
-                                @php
-                                    $inv = new \App\Http\Controllers\InvoicesController();
-                                    $pr_salespeople = 0;
-                                    if(!empty($invoice->salespeople)){
-                                        foreach($invoice->salespeople as $sp){
-                                            if($sp->sp_type && !empty($sp->salespeople_id)){
-                                                $pr_salespeople = $sp->salespeople_id;
-                                            }
-                                        }
-                                    }
-                                @endphp
-                                {!! Form::select('salespeople_id', [null=>'Please Select'] + $salespeople, $pr_salespeople, array('class' => 'form-control')) !!}
+                        @if($salespeople )
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <strong>Salesperson for invoice *:</strong>
+                                    {!! $salespeople !!}
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <strong>Salespeople:</strong>
-                                @php
-                                    $sec_salespeople = [];
-                                    if(!empty($invoice->salespeople)){
-                                        foreach($invoice->salespeople as $sp){
-                                            if(!empty(!$sp->sp_type && $sp->salespeople_id)){
-                                                $sec_salespeople[] = $sp->salespeople_id;
-                                            }
-                                        }
-                                    }
-                                @endphp
-                                {!! Form::select('second_salespeople_id[]', [null=>'Please Select'] + $salespeople, $sec_salespeople, array('class' => 'form-control', 'multiple')) !!}
+                            <input name="no_salespeople" type="hidden" value="1">
+                        @endif
+                        @if($salespeople_multiple )
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <strong>Salespeople:</strong>
+                                    {!! $salespeople_multiple !!}
+                                </div>
                             </div>
-                        </div>
+                        @endif
                     </div>
 
                     <div class="row">

@@ -14,4 +14,13 @@ class LevelsSalespeople extends Model
 	public function level(){
 		return $this->hasOne('App\SalespeopleLevels', 'id','level_id');
 	}
+
+	public function salespeople(){
+		return $this->hasOne('App\Salespeople', 'id','salespeople_id');
+	}
+
+	public static function getSalespersonInfo($id){
+		return self::with('level')->find($id);
+	}
+
 }

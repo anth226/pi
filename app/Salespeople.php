@@ -42,4 +42,8 @@ class Salespeople extends Model
 	public function level2(){
 		return $this->hasOne('App\SalespeoplePecentageLog', 'id','salespeople_id')->latest();
 	}
+
+	public function level3(){
+		return $this->hasMany('App\LevelsSalespeople', 'salespeople_id','id')->latest();
+	}
 }
