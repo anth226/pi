@@ -145,13 +145,13 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <strong>Salesperson for invoice *:</strong>
-                        {!! Form::select('salespeople_id', [null=>'Please Select'] + $salespeople,[], array('class' => 'form-control')) !!}
+                        {!! $salespeople !!}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
                         <strong>Salespeople:</strong>
-                        {!! Form::select('second_salespeople_id[]', [null=>'Please Select'] + $salespeople,[], array('class' => 'form-control', 'disabled' => 'disabled', 'multiple')) !!}
+                        {!! $salespeople_multiple !!}
                     </div>
                 </div>
             </div>
@@ -294,12 +294,30 @@
             $.datetimepicker.setLocale('en');
 
             $('select[name="salespeople_id"]').on('change', function(){
-                const s_val = $(this).val();
+                const current_el = $(this);
+                const val = current_el.val();
+                const s_val = current_el.find('option[value="'+val+'"]').data('salesperson_id');
                 const second_sel = $('select[name="second_salespeople_id[]"]');
                 if(s_val) {
                     second_sel.prop('disabled', false);
                     second_sel.find($('option')).prop('disabled', false);
-                    second_sel.find($('option[value="' + s_val + '"]')).prop('disabled', true);
+                    second_sel.find($('option[data-salesperson_id="' + s_val + '"]')).prop('disabled', true);
+                    const sec_el_value = second_sel.val();
+                    if(sec_el_value) {
+                        const sec_sid = [];
+                        $.each(sec_el_value, function(i,v){
+                            sec_sid.push(second_sel.find('option[value="'+v+'"]').data('salesperson_id'));
+                        });
+                        $.each(sec_sid, function(i,v){
+                            const el = second_sel.find($('option[data-salesperson_id="' + v + '"]'));
+                            $.each(el, function(ii,vv){
+                                const this_val = $(vv).val();
+                                if(this_val != v){
+                                    $(vv).prop('disabled', true);
+                                }
+                            });
+                        });
+                    }
                 }
                 else{
                     second_sel.val([]).trigger('change');
@@ -307,14 +325,41 @@
                 }
             });
             $('select[name="second_salespeople_id[]"]').on('change', function(){
-                const s_val = $(this).val();
+                const current_el = $(this);
+                const val = current_el.val();
+                const s_val = [];
+                $.each(val, function(i,v){
+                    s_val.push(current_el.find('option[value="'+v+'"]').data('salesperson_id'));
+                });
                 const second_sel = $('select[name="salespeople_id"]');
                 second_sel.prop('disabled', false);
                 second_sel.find($('option')).prop('disabled', false);
+                current_el.find($('option')).prop('disabled', false);
                 if(s_val) {
                     $.each(s_val, function(i,v){
-                        second_sel.find($('option[value="' + v + '"]')).prop('disabled', true);
+                        const second_sel_el = second_sel.find($('option[data-salesperson_id="' + v + '"]'));
+                        $.each(second_sel_el, function(ii,vv){
+                            $(vv).prop('disabled', true);
+                        });
+
+                        const el = current_el.find($('option[data-salesperson_id="' + v + '"]'));
+                        $.each(el, function(ii,vv){
+                           const this_val = $(vv).val();
+                           if(this_val != val){
+                               $(vv).prop('disabled', true);
+                           }
+                        });
                     });
+                    const sec_el_value = second_sel.val();
+                    if(sec_el_value) {
+                        const el = current_el.find($('option[data-salesperson_id="' + sec_el_value + '"]'));
+                        $.each(el, function(ii,vv){
+                            const this_val = $(vv).val();
+                            if(this_val != val){
+                                $(vv).prop('disabled', true);
+                            }
+                        });
+                    }
                 }
             });
 

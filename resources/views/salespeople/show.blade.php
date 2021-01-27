@@ -77,10 +77,14 @@
                         @endphp
                     </div>
                     @can('salespeople-edit')
-                        {{--<div>--}}
-                            {{--<strong>Level:</strong>--}}
-                            {{--{{ $salespeople->level->level->title }} | {{ $salespeople->level->percentage }}%--}}
-                        {{--</div>--}}
+                        <div>
+                            <strong>Level:</strong>
+                            @if(!empty($salespeople->level3))
+                                @foreach($salespeople->level3 as $l)
+                                    <div class="ml-2">{{ $l->level->title }} | {{ $l->level->percentage }}%</div>
+                                @endforeach
+                            @endif
+                        </div>
                     @endcan
                 </div>
                 <div class="col-md-8">

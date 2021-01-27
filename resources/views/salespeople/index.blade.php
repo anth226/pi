@@ -45,8 +45,12 @@
                                 <div>@php echo FormatUsPhoneNumber::nicePhoneNumberFormat($user->phone_number, $user->formated_phone_number); @endphp</div>
                             </small>
                         </td>
-                        @if(!empty($user->level))
-                            <td>{{ $user->level->level->title }} | {{ $user->level->level->percentage }}%</td>
+                        @if(!empty($user->level3))
+                            <td>
+                                @foreach($user->level3 as $l)
+                                    <div>{{ $l->level->title }} | {{ $l->level->percentage }}%</div>
+                                @endforeach
+                            </td>
                         @else
                             <td></td>
                         @endif

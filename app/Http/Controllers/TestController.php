@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Customers;
 use App\Http\Controllers\API\BaseController;
 use App\Invoices;
+use App\LevelsSalespeople;
 use App\Salespeople;
 use App\SalespeoplePecentageLog;
 
@@ -65,7 +66,7 @@ class TestController extends BaseController
 //		$this->markAllWonOnPipedrive();
 
 //		dd($this->findOwnerOnPipedrive());
-
+		dd(LevelsSalespeople::getSalespersonInfo(5));
 	}
 
 
