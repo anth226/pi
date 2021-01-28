@@ -302,10 +302,12 @@ class InvoicesController extends BaseController
 			$invoice_before = Invoices::with('customer')->find($id);
 
 			$dataToUpdate['sales_price'] = Elements::moneyToDecimal($request->input('sales_price'));
-			if($invoice_before->paid != $paid) {
-				$dataToUpdate['paid']    = $paid;
-				$dataToUpdate['own']     = $sales_price - $paid;
-				$dataToUpdate['paid_at'] = Carbon::now();
+			if($invoice_before->paid != $paid || $invoice_before->sales_price != $sales_price) {
+				if($invoice_before->paid != $paid) {
+					$dataToUpdate['paid']    = $paid;
+					$dataToUpdate['paid_at'] = Carbon::now();
+				}
+				$dataToUpdate['own'] = $sales_price - $paid;
 			}
 			$dataToUpdate['access_date'] = Elements::createDateTime($request->input('access_date'));
 			$dataToUpdate['cc_number'] = $request->input('cc_number');
