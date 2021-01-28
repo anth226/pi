@@ -221,6 +221,15 @@ class InvoicesController extends BaseController
 				}
 			}
 
+			if($show_selects){
+				$all_salespeople = SecondarySalesPeople::where( 'invoice_id', $id )->get();
+				foreach($all_salespeople as $salesperson){
+					if($salesperson->paid_at){
+						$show_selects = false;
+					}
+				}
+			}
+
 			if($show_selects) {
 				$salespeople_multiple = Elements::salespeopleSelect( 'second_salespeople_id[]', [ 'class' => 'form-control', 'multiple' => 'multiple'	], $sec_salespeople );
 				$salespeople          = Elements::salespeopleSelect( 'salespeople_id', [ 'class' => 'form-control' ], $pr_salespeople );
@@ -305,6 +314,24 @@ class InvoicesController extends BaseController
 
 			if($need_update_salespeople) {
 				$dataToUpdate['salespeople_id'] = $salespeople_id->salespeople_id;
+
+				if(!empty($invoice_before->salespeople)){
+					foreach($invoice_before->salespeople as $sp){
+						if(!empty($sp->salespeople_id)){
+							$levelSalespeopleId =  LevelsSalespeople::where('salespeople_id', $sp->salespeople_id)->where('level_id', $sp->level_id)->value('id');
+							if(!$levelSalespeopleId) {
+								return $this->sendError( "Data were changed. Please refresh the page.");
+							}
+						}
+					}
+				}
+
+				$all_salespeople = SecondarySalesPeople::where( 'invoice_id', $id )->get();
+				foreach($all_salespeople as $salesperson){
+					if($salesperson->paid_at){
+						return $this->sendError( "Data were changed. Please refresh the page.");
+					}
+				}
 			}
 
 			$invoice = Invoices::where('id', $id)->update($dataToUpdate);
@@ -338,6 +365,14 @@ class InvoicesController extends BaseController
 
 			$this->generatePDF($id);
 			$invoice_percentages = $this->calcEarning(Invoices::find($id));
+
+			$all_salespeople = SecondarySalesPeople::where( 'invoice_id', $id )->get();
+			foreach($all_salespeople as $salesperson){
+				if($salesperson->paid_at){
+//					$invoice_percentages[$salesperson->id]['discrepancy'] = $invoice_percentages[$salespeople_id]['earnings'] * 1 - $salesperson->paid_amount * 1;
+				}
+			}
+
 			$this->savePercentages($invoice_percentages, $id);
 
 			$customersController = new CustomersController();

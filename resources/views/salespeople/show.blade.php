@@ -173,7 +173,7 @@
 @section('script')
     <script>
         $(document).ready(function() {
-            var show_sansitive_info = false;
+            var show_sansitive_info = true;
 
             const dateRangeField = document.querySelector("#reportRange");
             const dateRangeInput = flatpickr(dateRangeField, {
@@ -246,7 +246,7 @@
                                     $('#commissions').html(moneyFormat(commission));
                                 }
                                 var paid = response.data.paid;
-                                if(paid) {
+                                if(isSet(paid)) {
                                     $('#paid').html(moneyFormat(paid));
                                 }
                             }
@@ -348,7 +348,7 @@
                             }
                         }},
                     @if( Gate::check('payments-manage'))
-                    { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": false, render: function ( data, type, row ){
+                    { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
                             return showPayButton(row);
                         }},
                     @endif
@@ -357,11 +357,24 @@
                 ]
             });
 
-            $(document).on('click', '.pay_button', function(){
-                var invoice_id = $(this).data('invoice_id');
+            $(document).on('click', 'button.pay', function(){
+                setPaidAjax($(this).data('invoice_id'), $(this).data('paid_amount'), 'pay');
+            });
+
+            $(document).on('click', 'button.cancel', function(){
+                setPaidAjax($(this).data('invoice_id'), $(this).data('paid_amount'), 'cancel');
+            });
+
+            function setPaidAjax(invoice_id, paid_amount, action){
+                var dataObj = {
+                    'invoice_id': invoice_id,
+                    'salespeople_id': {{$salespeople->id}},
+                    'paid_amount': paid_amount,
+                    'action': action
+                };
                 var err_box = $('#error_' + invoice_id);
                 err_box.html('');
-                var current_button = $(this);
+                var current_button = $('button.'+action+'[data-invoice_id="'+invoice_id+'"]');
                 var button_text = current_button.html();
                 var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
                 current_button.html(ajax_img);
@@ -375,11 +388,7 @@
                     url: '/setpaid',
                     type: "POST",
                     dataType: "json",
-                    data: {
-                        'invoice_id': invoice_id,
-                        'salespeople_id': {{$salespeople->id}},
-                        'paid_amount': $(this).data('paid_amount')
-                    },
+                    data: dataObj,
                     success: function (response) {
                         if (response) {
                             if (response.success) {
@@ -413,7 +422,7 @@
                         console.log(response);
                     }
                 });
-            });
+            }
 
             function showPayButton(row){
                 var html_str = '';
@@ -421,30 +430,30 @@
                     if(value.salespersone.id == {{$salespeople->id}}) {
                         if(!value.paid_at) {
                             @if( Gate::check('payments-manage'))
-                                var pay_button_str = 'Pay';
+                                var pay_button_str = 'Set "Paid"';
                                 if(show_sansitive_info){
-                                    pay_button_str += ' ' + moneyFormat(value.earnings);
+                                    pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
                                 }
-                                html_str = '<button class="btn btn-primary pay_button" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
+                                html_str = '<button class="btn btn-primary pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
                                 html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" style="line-height: 1.1;"></span></small></div>';
                             @else
                                 html_str = '<div style="min-height: 50px;"></div>';
                             @endif
                         }
                         else{
-                            html_str = '<div class="text-nowrap">Paid At:</div><div class="text-nowrap">' + formatDate2(value.paid_at) + '</div>';
+                            html_str = '<div class="mb-2" style="line-height: 1.2;"><div class="text-nowrap">Paid At:</div><div class="text-nowrap">' + formatDate2(value.paid_at) + '</div></div>';
                             @if( Gate::check('payments-manage'))
-                                var cancel_button_str = 'Cancel';
-                                if(show_sansitive_info){
-                                    cancel_button_str += ' ' + moneyFormat(value.paid_amount);
-                                }
-                                html_str += '<button class="btn btn-sm btn-outline-danger pay_cancel_button" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + cancel_button_str + '</button>';
+                                var cancel_button_str = 'Unset "Paid"';
+                                // if(show_sansitive_info){
+                                //     cancel_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
+                                // }
+                                html_str += '<button class="btn btn-sm btn-outline-danger cancel w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '"><span>' + cancel_button_str + '</small></button>';
                                 if(value.discrepancy *1  !== 0){
                                     var discrepancy_button_str = 'Pay';
                                     if(show_sansitive_info){
-                                        discrepancy_button_str += ' ' + moneyFormat(value.discrepancy);
+                                        discrepancy_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
                                     }
-                                    html_str += '<button class="btn btn-primary pay_button" data-invoice_id="' + row.id + '" data-paid_amount="' + value.discrepancy + '">' + discrepancy_button_str + '</button>';
+                                    html_str += '<button class="btn btn-primary pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.discrepancy + '">' + discrepancy_button_str + '</button>';
                                 }
                                 html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" ></span></small></div>';
                             @endif
@@ -452,7 +461,7 @@
                     }
                 });
                 return html_str;
-            };
+            }
 
             function generateSalespeople(row){
                 var ret_data = '';
