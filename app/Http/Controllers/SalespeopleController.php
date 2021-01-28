@@ -23,7 +23,7 @@ class SalespeopleController extends InvoicesController
 	function __construct()
 	{
 		$this->middleware(['auth','verified']);
-		$this->middleware('permission:payments-manage', ['only' => ['destroy']]);
+		$this->middleware('permission:payments-manage', ['only' => ['setPaid']]);
 		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete|salespeople-reports-view-all|salespeople-reports-view-own', ['only' => ['show', 'anyData']]);
 		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete', ['only' => ['index']]);
 		$this->middleware('permission:salespeople-create', ['only' => ['create','store']]);
@@ -107,7 +107,38 @@ class SalespeopleController extends InvoicesController
 	}
 
 	public function setPaid(Request $request){
+		try{
+			$this->validate($request, [
+				'invoice_id' => 'required|numeric|min:1',
+				'salespeople_id' => 'required|numeric|min:1',
+				'paid_amount' => 'required'
+			]);
+			$record = SecondarySalesPeople::where('salespeople_id', $request['salespeople_id'])->where('invoice_id', $request['invoice_id'])->first();
+			$paid_amount = $record->paid_amount * 1 +  $request['paid_amount'] * 1;
+			$earnings = $record->earnings * 1;
+			$discrepancy = $record->discrepancy * 1 + ($earnings - $paid_amount);
+			if($record->paid_at){
+				$discrepancy = $earnings - $paid_amount;
+			}
 
+			$dataToUpdate = [
+				'paid_amount' => $paid_amount,
+				'discrepancy' => $discrepancy,
+				'paid_at' => Carbon::now()
+			];
+			$res = SecondarySalesPeople::where('id', $record->id)->update($dataToUpdate);
+			return $this->sendResponse($res);
+
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'InvoicesController',
+				'function' => 'savePercentages'
+			]);
+			return $this->sendError($error);
+		}
 	}
 
 

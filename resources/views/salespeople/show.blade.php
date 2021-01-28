@@ -11,6 +11,10 @@
         .bg-success{
             background-color: rgba(0,255,0,.1) !important;
         }
+        .err_box{
+            line-height: 1.1;
+            margin-top: 0.5rem;
+        }
     </style>
 @endsection
 
@@ -169,6 +173,7 @@
 @section('script')
     <script>
         $(document).ready(function() {
+            var show_sansitive_info = true;
 
             const dateRangeField = document.querySelector("#reportRange");
             const dateRangeInput = flatpickr(dateRangeField, {
@@ -310,7 +315,12 @@
                         }},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
-                                return moneyFormat(data) /*+ calculateEarnings(row)*/;
+                                if(show_sansitive_info) {
+                                    return moneyFormat(data) + calculateEarnings(row);
+                                }
+                                else{
+                                    return moneyFormat(data);
+                                }
                             }
                             else{
                                 return '';
@@ -348,31 +358,58 @@
             });
 
             $(document).on('click', '.pay_button', function(){
+                var invoice_id = $(this).data('invoice_id');
+                var err_box = $('#error_' + invoice_id);
+                err_box.html('');
+                var current_button = $(this);
+                var button_text = current_button.html();
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                current_button.html(ajax_img);
+                $('.btn').prop('disabled', true);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
                 $.ajax({
                     url: '/setpaid',
                     type: "POST",
                     dataType: "json",
+                    data: {
+                        'invoice_id': invoice_id,
+                        'salespeople_id': {{$salespeople->id}},
+                        'paid_amount': $(this).data('paid_amount')
+                    },
                     success: function (response) {
                         if (response) {
                             if (response.success) {
-                                $('#subscriptions').html(response.data.count);
-                                $('#revenue').html(moneyFormat(response.data.revenue));
-
-                                var commission = response.data.commission;
-                                if(commission) {
-                                    $('#commissions').html(moneyFormat(commission));
-                                }
-
+                                getReportData();
                             }
                             else {
-                                console.log("Error");
+                                err_box.html('Error: ' + response.message);
+                                current_button.html(button_text);
+                                $('.btn').prop('disabled', false);
+                                console.log(response);
                             }
                         }
                         else {
-                            console.log('No response');
+                            err_box.html('Error!');
+                            current_button.html(button_text);
+                            $('.btn').prop('disabled', false);
+                            console.log(response);
                         }
                     },
                     error: function (response) {
+                        if (response && response.responseJSON) {
+                            if (response.responseJSON.message) {
+                                err_box.html(response.responseJSON.message);
+                            }
+                            else {
+                                err_box.html('Error!');
+                            }
+                        }
+                        current_button.html(button_text);
+                        $('.btn').prop('disabled', false);
                         console.log(response);
                     }
                 });
@@ -384,7 +421,12 @@
                     if(value.salespersone.id == {{$salespeople->id}}) {
                         if(!value.paid_at) {
                             @if( Gate::check('payments-manage'))
-                                html_str = '<button class="btn btn-primary pay_button" data-invoice_id="' + row.id + '" >Pay</button>';
+                                var pay_button_str = 'Pay';
+                                if(show_sansitive_info){
+                                    pay_button_str += ' ' + moneyFormat(value.earnings);
+                                }
+                                html_str = '<button class="btn btn-primary pay_button" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
+                                html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" style="line-height: 1.1;"></span></small></div>';
                             @else
                                 html_str = '<div style="min-height: 50px;"></div>';
                             @endif
@@ -392,7 +434,19 @@
                         else{
                             html_str = '<div class="text-nowrap">Paid At:</div><div class="text-nowrap">' + formatDate2(value.paid_at) + '</div>';
                             @if( Gate::check('payments-manage'))
-                                html_str += '<button class="btn btn-sm btn-outline-danger pay_cancel_button" data-invoice_id="' + row.id + '" >Cancel</button>'
+                                var cancel_button_str = 'Cancel';
+                                if(show_sansitive_info){
+                                    cancel_button_str += ' ' + moneyFormat(value.paid_amount);
+                                }
+                                html_str += '<button class="btn btn-sm btn-outline-danger pay_cancel_button" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + cancel_button_str + '</button>';
+                                if(value.discrepancy *1  !== 0){
+                                    var discrepancy_button_str = 'Pay';
+                                    if(show_sansitive_info){
+                                        discrepancy_button_str += ' ' + moneyFormat(value.discrepancy);
+                                    }
+                                    html_str += '<button class="btn btn-primary pay_button" data-invoice_id="' + row.id + '" data-paid_amount="' + value.discrepancy + '">' + discrepancy_button_str + '</button>';
+                                }
+                                html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" ></span></small></div>';
                             @endif
                         }
                     }
@@ -406,56 +460,60 @@
                     if(row.salespeople.length){
                         $.each(row.salespeople, function( index, value ) {
                             var additions = '';
-                            @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
-                                if(value.earnings) {
-                                    additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">('+value.level.title+' | '+value.percentage+'%)</span></small></span>';
-                                }
-                            @else
+                            if(show_sansitive_info) {
+                                @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                                    if (value.earnings) {
+                                        additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + value.level.title + ' | ' + value.percentage + '%)</span></small></span>';
+                                    }
+                                @else
                                     @if( Gate::check('salespeople-reports-view-own'))
-                                        if(value.earnings && value.salespersone.id == {{$salespeople->id}}) {
-                                            additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">('+value.level.title+' | '+value.percentage+'%)</span></small></span>';
+                                        if (value.earnings && value.salespersone.id == {{$salespeople->id}}) {
+                                            additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + value.level.title + ' | ' + value.percentage + '%)</span></small></span>';
                                         }
                                     @endif
-                            @endif
+                                @endif
+                            }
                             if(value.sp_type) {
                                 if(value.salespersone.id == {{$salespeople->id}}) {
-                                    ret_data += '<div title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' +
+                                    ret_data += '<div class="h4" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' +
                                         value.salespersone.name_for_invoice +
-                                        // additions +
+                                        additions +
                                         '</div>';
                                 }
                                 else {
                                     ret_data += '<div>' +
                                         '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' + value.salespersone.name_for_invoice + '</a>' +
-                                        // additions +
+                                        additions +
                                         '</div>';
                                 }
                             }
                         });
                         $.each(row.salespeople, function( index, value ) {
                             var additions = '';
-                            @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
-                                if(value.earnings) {
-                                    additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">('+value.level.title+' | '+value.percentage+'%)</span></small></span>';
-                                }
-                            @else
+                            if(show_sansitive_info) {
+                                @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                                    if (value.earnings) {
+                                        additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + value.level.title + ' | ' + value.percentage + '%)</span></small></span>';
+                                    }
+                                @else
                                     @if( Gate::check('salespeople-reports-view-own'))
-                                        if(value.earnings  && value.salespersone.id == {{$salespeople->id}}) {
-                                            additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">('+value.level.title+' | '+value.percentage+'%)</span></small></span>';
+                                        if (value.earnings && value.salespersone.id == {{$salespeople->id}}) {
+                                            additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + value.level.title + ' | ' + value.percentage + '%)</span></small></span>';
                                         }
                                     @endif
-                            @endif
+                                @endif
+                            }
                             if(!value.sp_type) {
                                 if(value.salespersone.id == {{$salespeople->id}}) {
-                                    ret_data += '<div style="line-height: 1.1" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' +
+                                    ret_data += '<div class="h4" style="line-height: 1.1" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' +
                                         '<small>' + value.salespersone.name_for_invoice + '</small>' +
-                                        // additions +
+                                        additions +
                                         '</div>';
                                 }
                                 else {
                                     ret_data += '<div style="line-height: 1.1">' +
                                         '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '"><small>' + value.salespersone.name_for_invoice + '</small></a>' +
-                                        // additions +
+                                        additions +
                                         '</div>';
                                 }
                             }

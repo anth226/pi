@@ -114,7 +114,7 @@
 @section('script')
     <script>
         $(document).ready(function() {
-            var show_safe_info = true;
+            var show_sansitive_info = true;
 
             const dateRangeField = document.querySelector("#reportRange");
 
@@ -263,7 +263,12 @@
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 if(data > 0) {
-                                    return moneyFormat(data) /*+ calculateEarnings(row)*/;
+                                    if(show_sansitive_info) {
+                                        return moneyFormat(data) + calculateEarnings(row);
+                                    }
+                                    else{
+                                        return moneyFormat(data);
+                                    }
                                 }
                                 else{
                                     return '<div class="text-danger">' + moneyFormat(data) + '</div>';
@@ -304,7 +309,7 @@
                     if(row.salespeople.length){
                         $.each(row.salespeople, function( index, value ) {
                             var additions = '';
-                            if(show_safe_info) {
+                            if(show_sansitive_info) {
                                 @can('invoice-create')
                                 if (value.earnings) {
                                     additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + value.level.title + ' | ' + value.percentage + '%)</span></small></span>';
@@ -320,7 +325,7 @@
                         });
                         $.each(row.salespeople, function( index, value ) {
                             var additions = '';
-                            if(show_safe_info) {
+                            if(show_sansitive_info) {
                                 @can('invoice-create')
                                 if (value.earnings) {
                                     additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + value.level.title + ' | ' + value.percentage + '%)</span></small></span>';
