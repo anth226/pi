@@ -114,7 +114,7 @@
 @section('script')
     <script>
         $(document).ready(function() {
-            var show_sansitive_info = true;
+            var show_sansitive_info = false;
 
             const dateRangeField = document.querySelector("#reportRange");
 
