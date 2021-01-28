@@ -16,6 +16,7 @@ class AddPaidAtFieldToSecondarySalesPeopleTable extends Migration
         Schema::table('secondary_sales_people', function (Blueprint $table) {
             $table->timestamp('paid_at')->nullable();
             $table->decimal('discrepancy')->default(0);
+            $table->decimal('paid_amount')->default(0);
         });
     }
 
@@ -28,6 +29,7 @@ class AddPaidAtFieldToSecondarySalesPeopleTable extends Migration
     {
         Schema::table('secondary_sales_people', function (Blueprint $table) {
             $table->dropColumn('paid_at');
+            $table->dropColumn('paid_amount');
             $table->dropColumn('discrepancy');
         });
     }
