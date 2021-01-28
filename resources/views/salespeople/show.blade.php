@@ -173,7 +173,7 @@
 @section('script')
     <script>
         $(document).ready(function() {
-            var show_sansitive_info = true;
+            var show_sansitive_info = false;
 
             const dateRangeField = document.querySelector("#reportRange");
             const dateRangeInput = flatpickr(dateRangeField, {
@@ -348,7 +348,7 @@
                             }
                         }},
                     @if( Gate::check('payments-manage'))
-                    { data: 'id', name: 'id', "searchable": false, "sortable": false, render: function ( data, type, row ){
+                    { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": false, render: function ( data, type, row ){
                             return showPayButton(row);
                         }},
                     @endif
