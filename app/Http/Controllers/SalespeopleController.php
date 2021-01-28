@@ -111,22 +111,41 @@ class SalespeopleController extends InvoicesController
 			$this->validate($request, [
 				'invoice_id' => 'required|numeric|min:1',
 				'salespeople_id' => 'required|numeric|min:1',
-				'paid_amount' => 'required'
+				'paid_amount' => 'required',
+				'action' => 'required'
 			]);
 			$record = SecondarySalesPeople::where('salespeople_id', $request['salespeople_id'])->where('invoice_id', $request['invoice_id'])->first();
-			$paid_amount = $record->paid_amount * 1 +  $request['paid_amount'] * 1;
+			$paid_amount = $record->paid_amount * 1;
 			$earnings = $record->earnings * 1;
-			$discrepancy = $record->discrepancy * 1 + ($earnings - $paid_amount);
-			if($record->paid_at){
-				$discrepancy = $earnings - $paid_amount;
+			$discrepancy = $record->discrepancy * 1;
+			$paid_at = $record->paid_at;
+			switch ($request['action']){
+				case 'pay':
+					$new_paid_amount =  $request['paid_amount'] * 1;
+					if(($earnings != $new_paid_amount) || $paid_at || $discrepancy) {
+						return $this->sendError("Data were changed. Please refresh the page.");
+					}
+					$paid_amount = $new_paid_amount;
+					$paid_at = Carbon::now();
+					break;
+				case 'cancel':
+					$new_paid_amount =  $request['paid_amount'] * 1;
+					if(($earnings != $new_paid_amount) != 0 || !$paid_at || $discrepancy) {
+						return $this->sendError("Data were changed. Please refresh the page.");
+					}
+					$paid_amount = 0;
+					$discrepancy = 0;
+					$paid_at = null;
+					break;
 			}
 
 			$dataToUpdate = [
 				'paid_amount' => $paid_amount,
 				'discrepancy' => $discrepancy,
-				'paid_at' => Carbon::now()
+				'paid_at' => $paid_at
 			];
 			$res = SecondarySalesPeople::where('id', $record->id)->update($dataToUpdate);
+
 			return $this->sendResponse($res);
 
 		}
