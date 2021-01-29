@@ -441,19 +441,29 @@
                             @endif
                         }
                         else{
-                            html_str = '<div class="mb-2" style="line-height: 1.2;"><div class="text-nowrap">Paid At:</div><div class="text-nowrap">' + formatDate2(value.paid_at) + '</div></div>';
+                            var add_info = '';
+                            if(show_sansitive_info){
+                                add_info = moneyFormat(value.paid_amount);
+                            }
+                            html_str = '<div class="mb-2" style="line-height: 1.2;">' +
+                                '<div class="text-nowrap">Paid At:</div>' +
+                                '<div class="text-nowrap">' + formatDate2(value.paid_at) + '</div>' +
+                                '<div class="text-nowrap"><strong>' + add_info + '</strong></div>' +
+                                '</div>';
                             @if( Gate::check('payments-manage'))
-                                var cancel_button_str = 'Unset "Paid"';
-                                // if(show_sansitive_info){
-                                //     cancel_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
-                                // }
-                                html_str += '<button class="btn btn-sm btn-outline-danger cancel w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '"><span>' + cancel_button_str + '</small></button>';
                                 if(value.discrepancy *1  !== 0){
-                                    var discrepancy_button_str = 'Pay';
+                                    var discrepancy_button_str = 'Set "Paid" Discrepancy';
                                     if(show_sansitive_info){
-                                        discrepancy_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
+                                        discrepancy_button_str += '<div class="small">' + moneyFormat(value.discrepancy) + '</div>';
                                     }
                                     html_str += '<button class="btn btn-primary pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.discrepancy + '">' + discrepancy_button_str + '</button>';
+                                }
+                                else{
+                                    var cancel_button_str = 'Unset "Paid"';
+                                    // if(show_sansitive_info){
+                                    //     cancel_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
+                                    // }
+                                    html_str += '<button class="btn btn-sm btn-outline-danger cancel w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '"><span>' + cancel_button_str + '</small></button>';
                                 }
                                 html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" ></span></small></div>';
                             @endif
