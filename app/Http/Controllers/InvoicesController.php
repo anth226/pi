@@ -371,10 +371,9 @@ class InvoicesController extends BaseController
 			$all_salespeople = SecondarySalesPeople::where( 'invoice_id', $id )->get();
 			foreach($all_salespeople as $salesperson){
 				if($salesperson->paid_at){
-//					$invoice_percentages[$salesperson->id]['discrepancy'] = $invoice_percentages[$salespeople_id]['earnings'] * 1 - $salesperson->paid_amount * 1;
+					$invoice_percentages[$salesperson->salespeople_id]['discrepancy'] = $invoice_percentages[$salesperson->salespeople_id]['earnings'] * 1 - $salesperson->paid_amount * 1;
 				}
 			}
-
 			$this->savePercentages($invoice_percentages, $id);
 
 			$customersController = new CustomersController();
