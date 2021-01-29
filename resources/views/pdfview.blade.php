@@ -162,7 +162,7 @@
                 <td></td>
                 <td colspan="2">
                     <div style="color:red;text-align: right;">
-                        <strong>TO PAY IN 30 DAYS</strong>
+                        <strong>PENDING</strong>
                     </div>
                 </td>
                 <td>
@@ -176,7 +176,7 @@
                 <td></td>
                 <td>
                     <div style="color:green;text-align: right;">
-                        <strong>PAID TODAY</strong>
+                        <strong>PAID</strong>
                     </div>
                 </td>
                 <td>
