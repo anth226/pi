@@ -283,6 +283,7 @@
                 },
                 processing: true,
                 serverSide: true,
+                paging: false,
                 order: [
                     [ 0, "desc" ],
                     [ 1, "desc" ]
@@ -296,7 +297,7 @@
                         } );
                     }
                 },
-                pageLength: 10,
+                pageLength: 100,
                 // searching: false,
                 lengthChange: false,
                 // bStateSave: true,
