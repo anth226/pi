@@ -166,7 +166,7 @@
                 processing: true,
                 serverSide: true,
                 order: [
-                    [ 0, "desc" ]
+                    [ 2, "desc" ]
                 ],
                 ajax: {
                     url: "/spreportsdatatables.data",
