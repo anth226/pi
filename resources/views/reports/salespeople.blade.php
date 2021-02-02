@@ -54,8 +54,8 @@
                     <thead>
                     <tr>
                         <th>Salesperson</th>
-                        <th>Commission</th>
                         <th>Total Sales</th>
+                        <th>Commission</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -187,10 +187,10 @@
                     { data: 'name_for_invoice', name: 'salespeoples.name_for_invoice', "searchable": true, "sortable": true, render: function(data, type, row){
                         return generateSalespersonName(row, data);
                         } },
+                    { data: 'total_sales', name: 'total_sales', "searchable": false, "sortable": true },
                     { data: 'sum', name: 'sum', "searchable": false, "sortable": true,  render: function ( data, type, row ){
                             return moneyFormat(data);
-                        }  },
-                    { data: 'total_sales', name: 'total_sales', "searchable": false, "sortable": true }
+                        }  }
                 ]
             });
 
