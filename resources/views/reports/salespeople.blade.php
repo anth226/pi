@@ -55,6 +55,7 @@
                     <tr>
                         <th>Salesperson</th>
                         <th>Total Sales</th>
+                        <th>Revenue</th>
                         <th>Commission</th>
                     </tr>
                     </thead>
@@ -188,6 +189,9 @@
                         return generateSalespersonName(row, data);
                         } },
                     { data: 'total_sales', name: 'total_sales', "searchable": false, "sortable": true },
+                    { data: 'revenue', name: 'revenue', "searchable": false, "sortable": true,  render: function ( data, type, row ){
+                            return moneyFormat(data);
+                        }  },
                     { data: 'sum', name: 'sum', "searchable": false, "sortable": true,  render: function ( data, type, row ){
                             return moneyFormat(data);
                         }  }
