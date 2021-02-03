@@ -21,14 +21,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6 col-lg-4">
-                        <label class="w-100">
-                            Date range
-                            <input class="form-control" type="text" id="reportRange">
-                        </label>
-                    </div>
-                </div>
 
                 <div style="padding-right: 11px;padding-left: 11px;">
                     <div class="row mb-4">
@@ -43,12 +35,14 @@
                     </div>
                 </div>
 
-                @if ($message = Session::get('success'))
-                    <div class="alert alert-success">
-                        <p>{{ $message }}</p>
+                <div class="row mb-4">
+                    <div class="col-md-6 col-lg-4">
+                        <label class="w-100">
+                            Date range
+                            <input class="form-control mt-1" type="text" id="reportRange">
+                        </label>
                     </div>
-                @endif
-
+                </div>
 
                 <table class="table table-striped table-bordered table-responsive-sm w-100" id="salespeople_report_table">
                     <thead>
