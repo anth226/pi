@@ -90,6 +90,9 @@
                             @endif
                         </div>
                     @endcan
+                     <div class="mt-4">
+                         <label><input id="sens_info" checked type="checkbox"><span class="ml-2 text-info">Show Sensitive Information</span></label>
+                     </div>
                 </div>
                 <div class="col-md-8">
 
@@ -107,6 +110,41 @@
                         <input class="form-control" type="text" id="reportRange">
                     </label>
                 </div>
+            </div>
+
+
+            <div class="discrepancy_box d-none">
+                <h4 class="mt-4"><strong>Discrepancies</strong></h4>
+                <div style="padding-right: 11px;padding-left: 11px;">
+                    <div class="row mb-1">
+                        <div class="col-md-6 col-lg-3 px-1 mb-1">
+                            <div class="card order-card bg-success">
+                                <div class="text-center p-2">
+                                    <h3 class="text-center"><span id="discrepancies">0</span></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-striped table-bordered table-responsive-sm w-100" id="discrepancy_table">
+                    <thead>
+                    <tr>
+                        <th>Access Date</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Amount</th>
+                        <th>To Pay</th>
+                        <th>Salesperson</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
             </div>
 
             <div style="padding-right: 11px;padding-left: 11px;">
@@ -165,15 +203,31 @@
 
                 </tbody>
             </table>
-
-
         </div>
     </div>
 @endsection
 @section('script')
     <script>
         $(document).ready(function() {
-            var show_sansitive_info = true;
+            var sens_info_box = $( "#sens_info" );
+
+            var show_sansitive_info = sens_info_box.prop( "checked");
+
+            sens_info_box.change(function() {
+                if(this.checked) {
+                    show_sansitive_info = true;
+                }
+                else{
+                    show_sansitive_info = false;
+                }
+                getReportData();
+            });
+
+            $(document).on('click', '.refresh_page', function(e){
+                e.preventDefault();
+                getReportData();
+            });
+
 
             const dateRangeField = document.querySelector("#reportRange");
             const dateRangeInput = flatpickr(dateRangeField, {
@@ -222,15 +276,17 @@
             });
 
             getDashboardData();
+            getDashboardDataDiscrepancy();
 
             function getReportData()
             {
                 getDashboardData();
+                getDashboardDataDiscrepancy();
                 table_dt.draw();
+                table_dt_table_discrepancy.draw();
             }
 
-            function getDashboardData()
-            {
+            function getDashboardData(){
                 $.ajax({
                     url: '/spersondatatables.data?summary=1&date_range='+$("#reportRange").val()+'&salesperson_id={{$salespeople->id}}',
                     type: "GET",
@@ -264,6 +320,139 @@
                 });
 
             }
+            function getDashboardDataDiscrepancy(){
+                $.ajax({
+                    url: '/spersondatatables.data?summary=1&discrepancy=1&date_range='+$("#reportRange").val()+'&salesperson_id={{$salespeople->id}}',
+                    type: "GET",
+                    dataType: "json",
+                    success: function (response) {
+                        if (response) {
+                            if (response.success) {
+                                var discrepancy = response.data.discrepancy * 1;
+                                var discrepancy_box = $('.discrepancy_box');
+                                if(discrepancy) {
+                                    $('#discrepancies').html(moneyFormat(response.data.discrepancy));
+                                    discrepancy_box.removeClass('d-none');
+                                    if(discrepancy < 0){
+                                        discrepancy_box.find('.card').removeClass('bg-success').addClass('text-white').addClass('bg-danger');
+                                    }
+                                    else{
+                                        discrepancy_box.find('.card').removeClass('text-white').addClass('bg-success');
+                                    }
+                                }
+                                else{
+                                    discrepancy_box.addClass('d-none');
+                                }
+
+                            }
+                            else {
+                                console.log("Error");
+                            }
+                        }
+                        else {
+                            console.log('No response');
+                        }
+                    },
+                    error: function (response) {
+                        console.log(response);
+                    }
+                });
+
+            }
+
+            var table_discrepancy = $('table#discrepancy_table');
+            var table_dt_table_discrepancy = table_discrepancy.DataTable({
+                // stateSave: true,
+                createdRow: function( row, data, dataIndex ) {
+                    if ( data.own > 0 ) {
+                        $(row).addClass('bg_to_pay');
+                    }
+                    if ( data.sales_price <= 0 ) {
+                        $(row).addClass('bg_refunded');
+                    }
+                    $.each(data.salespeople, function( index, value ) {
+                        if(value.salespersone.id == {{$salespeople->id}} && value.paid_at) {
+                            $(row).children(':nth-child(7)').addClass('bg-success');
+                        }
+                    });
+                },
+                processing: true,
+                serverSide: true,
+                paging: false,
+                order: [
+                    [ 0, "desc" ],
+                    [ 1, "desc" ]
+                ],
+                ajax: {
+                    url: "/spersondatatables.data",
+                    data: function ( d ) {
+                        return $.extend( {}, d, {
+                            date_range: $("#reportRange").val(),
+                            discrepancy: 1,
+                            salesperson_id: '{{$salespeople->id}}'
+                        } );
+                    }
+                },
+                pageLength: 100,
+                searching: false,
+                lengthChange: false,
+                // bStateSave: true,
+                // dom: 'Bflrtip',
+                // buttons: [
+                //     'copy', 'excel', 'pdf', 'print', 'colvis'
+                // ],
+                columns: [
+                    { data: 'access_date', name: 'access_date', "searchable": false, orderData: [ 0, 1 ],  render: function ( data, type, row ){
+                            return formatDate(data);
+                        } },
+                    { data: 'id', name: 'id', "searchable": false,  "visible": false },
+
+                    { data: 'customer.first_name', name: 'customer.first_name',"sortable": false,  render: function ( data, type, row ){
+                            return '<a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a><div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>'
+                        }},
+                    { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
+                            if(isSet(data)) {
+                                if(show_sansitive_info) {
+                                    return moneyFormat(data) + calculateEarnings(row);
+                                }
+                                else{
+                                    return moneyFormat(data);
+                                }
+                            }
+                            else{
+                                return '';
+                            }
+                        } },
+                    { data: 'own', name: 'own', "sortable": true, className:"text-nowrap", "searchable": false, render: function ( data, type, row ){
+                            if(data > 0) {
+                                return '<div class="text-danger">' + moneyFormat(data) + '</div>';
+                            }
+                            else{
+                                return '';
+                            }
+                        }  },
+                    { data: 'salespersone', name: 'salespersone',"sortable": false,"searchable": false, className:"text-nowrap", render: function ( data, type, row ){
+                            return generateSalespeople(row);
+                        }  },
+                    { data: 'customer.email', name: 'customer.email', "sortable": false ,  "visible": false},
+                    { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap" ,  "visible": false},
+                    { data: 'id', name: 'id', "searchable": false, "sortable": false, render: function ( data, type, row ){
+                            if(isSet(data)) {
+                                return '<a title="Open invoice in a new tab" target="_blank" href="/invoices/' + data + '"><span class="badge badge-success">View</span></a>';
+                            }
+                            else{
+                                return '';
+                            }
+                        }},
+                    @if( Gate::check('payments-manage'))
+                    { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
+                            return showPayButton(row);
+                        }},
+                    @endif
+                    { data: 'customer.last_name', name: 'customer.last_name', "sortable": false,  "visible": false }
+
+                ]
+            });
 
             var table = $('table#customers_table');
             var table_dt = table.DataTable({
@@ -348,18 +537,24 @@
                                 return '';
                             }
                         }},
-                    @if( Gate::check('payments-manage'))
+                        @if( Gate::check('payments-manage'))
                     { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
                             return showPayButton(row);
                         }},
-                    @endif
+                        @endif
                     { data: 'customer.last_name', name: 'customer.last_name', "sortable": false,  "visible": false }
 
                 ]
             });
 
+
+
             $(document).on('click', 'button.pay', function(){
                 setPaidAjax($(this).data('invoice_id'), $(this).data('paid_amount'), 'pay');
+            });
+
+            $(document).on('click', 'button.pay_disc', function(){
+                setPaidAjax($(this).data('invoice_id'), $(this).data('paid_amount'), 'pay_disc');
             });
 
             $(document).on('click', 'button.cancel', function(){
@@ -429,37 +624,44 @@
                 var html_str = '';
                 $.each(row.salespeople, function( index, value ) {
                     if(value.salespersone.id == {{$salespeople->id}}) {
-                        if(!value.paid_at) {
-                            @if( Gate::check('payments-manage'))
-                                var pay_button_str = 'Set "Paid"';
-                                if(show_sansitive_info){
-                                    pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
-                                }
-                                html_str = '<button class="btn btn-primary pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
-                                html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" style="line-height: 1.1;"></span></small></div>';
-                            @else
-                                html_str = '<div style="min-height: 50px;"></div>';
-                            @endif
+                        if(!(value.earnings*1) && !(value.discrepancy*1) && !(value.paid_amount*1)) {
                         }
-                        else{
-                            var add_info = '';
-                            if(show_sansitive_info){
-                                add_info = moneyFormat(value.paid_amount);
+                        else {
+                            if (!value.paid_at) {
+                                @if( Gate::check('payments-manage'))
+                                    var pay_button_str = 'Set "Paid"';
+                                    if (show_sansitive_info) {
+                                        pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
+                                    }
+                                    html_str = '<button class="btn btn-primary pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
+                                    html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" style="line-height: 1.1;"></span></small></div>';
+                                @else
+                                    html_str = '<div style="min-height: 50px;"></div>';
+                                @endif
                             }
-                            html_str = '<div class="mb-2" style="line-height: 1.2;">' +
-                                '<div class="text-nowrap">Paid At:</div>' +
-                                '<div class="text-nowrap">' + formatDate2(value.paid_at) + '</div>' +
-                                '<div class="text-nowrap"><strong>' + add_info + '</strong></div>' +
-                                '</div>';
-                            @if( Gate::check('payments-manage'))
-                                if(value.discrepancy *1  !== 0){
+                            else {
+                                var add_info = '';
+                                if (show_sansitive_info) {
+                                    add_info = moneyFormat(value.paid_amount);
+                                }
+                                html_str = '<div class="mb-2" style="line-height: 1.2;">' +
+                                    '<div class="text-nowrap">Paid At:</div>' +
+                                    '<div class="text-nowrap">' + formatDate2(value.paid_at) + '</div>' +
+                                    '<div class="text-nowrap"><strong>' + add_info + '</strong></div>' +
+                                    '</div>';
+                                @if( Gate::check('payments-manage'))
+                                if (value.discrepancy * 1 !== 0) {
                                     var discrepancy_button_str = 'Set "Paid" Discrepancy';
-                                    if(show_sansitive_info){
+                                    var colorClass = '';
+                                    if (value.discrepancy < 0) {
+                                        colorClass = ' bg-danger ';
+                                    }
+                                    if (show_sansitive_info) {
                                         discrepancy_button_str += '<div class="small">' + moneyFormat(value.discrepancy) + '</div>';
                                     }
-                                    html_str += '<button class="btn btn-primary pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.discrepancy + '">' + discrepancy_button_str + '</button>';
+                                    html_str += '<button class="btn btn-primary pay_disc w-100 ' + colorClass + '" data-invoice_id="' + row.id + '" data-paid_amount="' + value.discrepancy + '">' + discrepancy_button_str + '</button>';
                                 }
-                                else{
+                                else {
                                     var cancel_button_str = 'Unset "Paid"';
                                     // if(show_sansitive_info){
                                     //     cancel_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
@@ -467,7 +669,8 @@
                                     html_str += '<button class="btn btn-sm btn-outline-danger cancel w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '"><span>' + cancel_button_str + '</small></button>';
                                 }
                                 html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" ></span></small></div>';
-                            @endif
+                                @endif
+                            }
                         }
                     }
                 });

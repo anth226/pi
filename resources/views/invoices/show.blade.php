@@ -112,6 +112,9 @@
                         <a class="btn btn-primary mt-2" href="/dashboard"> Dashboard</a>
                         @can('invoice-edit')
                             <button class="btn btn-info mt-2" data-toggle="modal" data-target="#editinvoice">Edit Invoice</button>
+                            @if($invoice->sales_price > 0)
+                                <button class="btn btn-info mt-2" id="refunded">Set as Refunded</button>
+                            @endif
                         @endcan
                         {{--@can('invoice-delete')--}}
                             {{--{!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline;']) !!}--}}
@@ -590,6 +593,16 @@
                 caret_pos = updated_len - original_len + caret_pos;
                 input[0].setSelectionRange(caret_pos, caret_pos);
             }
+
+
+            $(document).on('click', '#refunded', function (event) {
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                $(this).append(ajax_img);
+                $('input[name="sales_price"]').val('$0.00');
+                $('input[name="paid"]').val('$0.00');
+                $('input[name="own"]').val('$0.00');
+                $('#invoiceEdit').submit();
+            });
 
             $(document).on('submit', '#invoiceEdit', function (event) {
                 event.preventDefault();
