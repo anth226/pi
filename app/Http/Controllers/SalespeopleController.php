@@ -55,51 +55,93 @@ class SalespeopleController extends InvoicesController
 
 		if($salesperson_id) {
 
-			$query =  Invoices::with('customer')
-			                  ->with('salespeople.salespersone')
-								->whereHas('salespeople', function ($query) use($salesperson_id){
-									$query->where('salespeople_id',$salesperson_id);
-								})
-			                  ->with('salespeople.level')
-			;
-			if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
-				$date      = $request['date_range'];
-				$dateArray = $this->parseDateRange( $date );
-				$dateFrom  = date( "Y-m-d", $dateArray[0] );
-				$dateTo    = date( "Y-m-d", $dateArray[1] );
-				$query->where( 'invoices.access_date', '>=', $dateFrom )
-				      ->where( 'invoices.access_date', '<=', $dateTo );
-			}
-			if( ! empty( $request['summary'] )){
-				$commission = 0;
-				$paid = 0;
-				$revenue = $query->sum('paid');
-				$invoices = $query->get();
-				if($invoices && $invoices->count()){
-					foreach($invoices  as $inv){
-						$sp = $inv->salespeople;
-						if($sp && $sp->count()){
-							foreach($sp as $s){
-								if($s->salespeople_id == $salesperson_id) {
-									$commission += $s->earnings;
-									if($s->paid_at){
-										$paid += $s->earnings;
+			if(! empty( $request['discrepancy'] )){
+				$query = Invoices::with( 'customer' )
+				                 ->with( 'salespeople.salespersone' )
+				                 ->whereHas( 'salespeople', function ( $query ) use ( $salesperson_id ) {
+					                 $query->where( 'salespeople_id', $salesperson_id )->where('discrepancy','<>', 0);
+				                 } )
+				                 ->with( 'salespeople.level' );
+				if ( ! empty( $request['date_range'] )) {
+					$date      = $request['date_range'];
+					$dateArray = $this->parseDateRange( $date );
+					$dateFrom  = date( "Y-m-d", $dateArray[0] );
+					$dateTo    = date( "Y-m-d", $dateArray[1] );
+					$query->where(function($q) use($dateFrom, $dateTo){
+						$q->where( 'invoices.access_date', '<', $dateFrom );
+						$q->orWhere( 'invoices.access_date', '>', $dateTo );
+					});
+				}
+				if ( ! empty( $request['summary'] ) ) {
+					$discrepancy    = 0;
+					$invoices   = $query->get();
+					if ( $invoices && $invoices->count() ) {
+						foreach ( $invoices as $inv ) {
+							$sp = $inv->salespeople;
+							if ( $sp && $sp->count() ) {
+								foreach ( $sp as $s ) {
+									if ( $s->salespeople_id == $salesperson_id ) {
+										$discrepancy += $s->discrepancy;
 									}
 								}
 							}
 						}
 					}
+					$res = [
+						'discrepancy'    => $discrepancy,
+					];
+					return $this->sendResponse( $res, '' );
+				} else {
+					return datatables()->eloquent( $query )->toJson();
 				}
-				$res = [
-					'revenue' => $revenue,
-					'count' => $query->count(),
-					'commission' => $commission,
-					'paid' => $paid
-				];
-				return $this->sendResponse($res,'');
 			}
 			else {
-				return datatables()->eloquent( $query )->toJson();
+				$query = Invoices::with( 'customer' )
+				                 ->with( 'salespeople.salespersone' )
+				                 ->whereHas( 'salespeople', function ( $query ) use ( $salesperson_id ) {
+					                 $query->where( 'salespeople_id', $salesperson_id );
+				                 } )
+				                 ->with( 'salespeople.level' );
+				if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
+					$date      = $request['date_range'];
+					$dateArray = $this->parseDateRange( $date );
+					$dateFrom  = date( "Y-m-d", $dateArray[0] );
+					$dateTo    = date( "Y-m-d", $dateArray[1] );
+					$query->where( 'invoices.access_date', '>=', $dateFrom )
+					      ->where( 'invoices.access_date', '<=', $dateTo );
+				}
+
+				if ( ! empty( $request['summary'] ) ) {
+					$commission = 0;
+					$paid       = 0;
+					$revenue    = $query->sum( 'paid' );
+					$invoices   = $query->get();
+					if ( $invoices && $invoices->count() ) {
+						foreach ( $invoices as $inv ) {
+							$sp = $inv->salespeople;
+							if ( $sp && $sp->count() ) {
+								foreach ( $sp as $s ) {
+									if ( $s->salespeople_id == $salesperson_id ) {
+										$commission += $s->earnings;
+//									if($s->paid_at){
+										$paid += $s->paid_amount;
+//									}
+									}
+								}
+							}
+						}
+					}
+					$res = [
+						'revenue'    => $revenue,
+						'count'      => $query->count(),
+						'commission' => $commission,
+						'paid'       => $paid
+					];
+
+					return $this->sendResponse( $res, '' );
+				} else {
+					return datatables()->eloquent( $query )->toJson();
+				}
 			}
 		}
 		return $this->sendError('no salesperson id');
@@ -119,19 +161,29 @@ class SalespeopleController extends InvoicesController
 			$earnings = $record->earnings * 1;
 			$discrepancy = $record->discrepancy * 1;
 			$paid_at = $record->paid_at;
+			$refresh_page_html = 'Data were changed. Please click <a class="h6 refresh_page" href="#">here</a> to refresh the page.';
 			switch ($request['action']){
 				case 'pay':
 					$new_paid_amount =  $request['paid_amount'] * 1;
 					if(($earnings != $new_paid_amount) || $paid_at || $discrepancy) {
-						return $this->sendError("Data were changed. Please refresh the page.");
+						return $this->sendError($refresh_page_html);
 					}
 					$paid_amount = $new_paid_amount;
+					$paid_at = Carbon::now();
+					break;
+				case 'pay_disc':
+					$new_paid_amount =  $request['paid_amount'] * 1;
+					if(($discrepancy != $new_paid_amount) || !$paid_at || !$discrepancy) {
+						return $this->sendError($refresh_page_html);
+					}
+					$paid_amount = $paid_amount*1 + $new_paid_amount*1;
+					$discrepancy = 0;
 					$paid_at = Carbon::now();
 					break;
 				case 'cancel':
 					$new_paid_amount =  $request['paid_amount'] * 1;
 					if(($earnings != $new_paid_amount) != 0 || !$paid_at || $discrepancy) {
-						return $this->sendError("Data were changed. Please refresh the page.");
+						return $this->sendError($refresh_page_html);
 					}
 					$paid_amount = 0;
 					$discrepancy = 0;
