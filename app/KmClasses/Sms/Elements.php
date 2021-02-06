@@ -33,16 +33,18 @@ class Elements {
 		$salespeople = LevelsSalespeople::with('salespeople')->with('level')->get();
 		if($salespeople && $salespeople->count()){
 			foreach($salespeople as $ss){
-				$option_title = $ss->salespeople->name_for_invoice . ' (' . $ss->level->title . ' | ' . $ss->level->percentage . '%)';
-				$selected = '';
-				if(count($values)){
-					foreach($values as $v){
-						if($v == $ss->id){
-							$selected = ' selected ';
+				if(!$ss->salespeople->deleted_at) {
+					$option_title = $ss->salespeople->name_for_invoice . ' (' . $ss->level->title . ' | ' . $ss->level->percentage . '%)';
+					$selected     = '';
+					if ( count( $values ) ) {
+						foreach ( $values as $v ) {
+							if ( $v == $ss->id ) {
+								$selected = ' selected ';
+							}
 						}
 					}
+					$res .= '<option value="' . $ss->id . '" ' . $selected . ' data-salesperson_id="' . $ss->salespeople_id . '" data-level_id="' . $ss->level_id . '" >' . $option_title . '</option>';
 				}
-				$res .= '<option value="'.$ss->id.'" '.$selected.' data-salesperson_id="'.$ss->salespeople_id.'" data-level_id="'.$ss->level_id.'" >'.$option_title.'</option>';
 			}
 			if($res) {
 				$added_params = '';

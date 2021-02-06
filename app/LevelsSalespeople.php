@@ -16,7 +16,7 @@ class LevelsSalespeople extends Model
 	}
 
 	public function salespeople(){
-		return $this->hasOne('App\Salespeople', 'id','salespeople_id');
+		return $this->hasOne('App\Salespeople', 'id','salespeople_id')->withTrashed();
 	}
 
 	public static function getSalespersonInfo($id){
