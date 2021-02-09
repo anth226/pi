@@ -49,6 +49,12 @@
                                     </a>
                                 @endif
 
+                                @if( Gate::check('invoice-create'))
+                                    <a class="dropdown-item" href="{{ route('invoice-generator') }}" >
+                                        {{ __('Invoice Generator') }}
+                                    </a>
+                                @endif
+
                                 @if( Gate::check('salespeople-create') || Gate::check('salespeople-edit') || Gate::check('salespeople-delete') || Gate::check('salespeople-list'))
                                     <a class="dropdown-item" href="/salespeople" >
                                         {{ __('Salespeople') }}

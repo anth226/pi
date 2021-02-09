@@ -43,6 +43,8 @@ Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['
 Route::resource('/salespeople','SalespeopleController');
 Route::resource('/invoices','InvoicesController', ['only' => ['show', 'index']]);
 
+Route::get('/invoice-generator', 'InvoiceGeneratorController@create')->name('invoice-generator');
+
 Route::get('/datatables.data', 'CustomerInvoiceController@anyData');
 Route::get('/invoicesdatatables.data', 'InvoicesController@anyData');
 
