@@ -32,6 +32,7 @@ Route::get('/test', 'TestController@index')->name('test');
 
 Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail', ['middleware' => 'csrf']);
 Route::post('/invoices/update/{id}', 'InvoicesController@update' ,  ['middleware' => 'csrf']);
+Route::post('/generate-invoice', 'InvoiceGeneratorController@store' ,  ['middleware' => 'csrf']);
 //
 
 

@@ -16,7 +16,14 @@ class CreateInvoiceGeneratorsTable extends Migration
         Schema::create('invoice_generators', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->timestamps();
-        });
+	        $table->string('first_name');
+	        $table->string('last_name');
+	        $table->string('email')->nullable()->index();
+	        $table->date('access_date')->nullable();
+	        $table->json('invoice_data')->nullable();
+	        $table->unsignedDecimal('own',8,2)->default(0);
+	        $table->string('invoice_number',20)->nullable();
+	    });
     }
 
     /**

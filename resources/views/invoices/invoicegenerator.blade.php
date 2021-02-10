@@ -53,11 +53,6 @@
                 </div>
             </div>
 
-            <div class="error_box">
-
-            </div>
-
-
             {!! Form::open(array('method'=>'POST', 'id' => 'invoiceCreate')) !!}
             <div class="row">
                 <div class="col-md-6">
@@ -146,27 +141,26 @@
                         {!! Form::text('sales_price', null, array('class' => 'form-control price_data','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Sales Price"', 'required="required"', 'value=9995')) !!}
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Paid:</strong>
-                        {!! Form::text('paid', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Paid"', 'disabled' => 'disabled', 'value=4995')) !!}
-                    </div>
-                </div>
             </div>
             <div id="all_discounts" class="mb-1">
-                <div class="one_discount p-1">
-                    <div class="row bg-light border pt-2">
+                <div class="one_discount bg-info border p-1" id="discount_1">
+                    <div class="row pt-2 pl-2 pr-2 pb-0">
                         <div class="col-md-6">
-                            <div class="form-group">
+                            <div class="form-group mb-1">
                                 <strong>Discount Title:</strong>
                                 {!! Form::text('discounttitle_1', null, array('placeholder' => 'Discount Title','class' => 'form-control', 'value=Discount')) !!}
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-group">
+                            <div class="form-group  mb-1">
                                 <strong>Discount Amount:</strong>
-                                {!! Form::text('discountamount_1', null, array('class' => 'form-control price_data','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Discount Amount"', 'value=5000')) !!}
+                                {!! Form::text('discountamount_1', null, array('class' => 'form-control discount_data price_data','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Discount Amount"', 'value=5000')) !!}
                             </div>
+                        </div>
+                    </div>
+                    <div class="row pt-0 pl-2 pr-2 pb-2">
+                        <div class="col-md-6">
+                            <button class="btn btn-sm btn-link text-danger remove_discount" data-discount_id="1" type="button">Remove Discount</button>
                         </div>
                     </div>
                 </div>
@@ -174,13 +168,35 @@
             <div class="row b">
                 <div class="col-md-2">
                     <div class="form-group">
-                        <button class="btn btn-sm btn-primary">Add Discount</button>
+                        <button class="btn btn-sm btn-primary" type="button" id="add_discount">Add Discount</button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <strong>Grand Total:</strong>
+                        {!! Form::text('grand_total', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Grand Total"','disabled' => 'disabled', 'value=4995')) !!}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <strong>Paid Now:</strong>
+                        {!! Form::text('paid', null, array('class' => 'form-control paid_price_data','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Paid"', 'value=4995')) !!}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <strong>Balance Due:</strong>
+                        {!! Form::text('own', null, array('class' => 'form-control','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="To Pay"', 'disabled' => 'disabled')) !!}
                     </div>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-xs-12 col-sm-12 col-md-12 text-center">
+            <div class="error_box"></div>
+
+            <div class="row mb-4">
+                <div class="col-xs-12 col-sm-12 col-md-12 text-center mb-4">
                     <button id="invoiceGenerate" type="submit" class="btn btn-primary">Generate Invoice</button>
                 </div>
             </div>
@@ -196,59 +212,129 @@
     <script>
         $(document).ready(function() {
 
+            var discountTotal = 1;
+
             $("select").select2({
                 width: '100%',
                 placeholder: 'Please select',
                 allowClear: true
             });
 
+            $('#add_discount').on('click',function(e){
+                e.preventDefault();
+                discountTotal++;
+                var discountHTML ='<div class="one_discount bg-info border p-1" id="discount_'+discountTotal+'">' +
+                    '                    <div class="row pt-2 pl-2 pr-2 pb-0">' +
+                    '                        <div class="col-md-6">' +
+                    '                            <div class="form-group mb-1">' +
+                    '                                <strong>Discount Title:</strong>' +
+                    '                                <input placeholder="Discount Title" class="form-control" name="discounttitle_'+discountTotal+'" type="text">' +
+                    '                            </div>' +
+                    '                        </div>' +
+                    '                        <div class="col-md-6">' +
+                    '                            <div class="form-group  mb-1">' +
+                    '                                <strong>Discount Amount:</strong>' +
+                    '                                <input class="form-control discount_data price_data" pattern="^\\$\\d{1,3}(,\\d{3})*(\\.\\d+)?$" data-type="currency" placeholder="Discount Amount" name="discountamount_'+discountTotal+'" type="text">' +
+                    '                            </div>' +
+                    '                        </div>' +
+                    '                    </div>' +
+                    '                    <div class="row pt-0 pl-2 pr-2 pb-2">' +
+                    '                        <div class="col-md-6">' +
+                    '                            <button class="btn btn-sm btn-link text-danger remove_discount" data-discount_id="'+discountTotal+'" type="button">Remove Discount</button>' +
+                    '                        </div>' +
+                    '                    </div>' +
+                    '                </div>';
+                $('#all_discounts').append(discountHTML);
+            });
+
+            $(document).on('click', '.remove_discount', function(e){
+                e.preventDefault();
+                var currentDiscBtn = $(this);
+                var discount_id = currentDiscBtn.data('discount_id');
+                $('#discount_'+ discount_id).remove();
+                calculateAll();
+            });
+
             $.each($("input[data-type='currency']"), function(k, v){
                 formatCurrency($(this));
             });
 
-            calculatePaid();
+            calculateAll();
 
-            $('document').on('change', '.price_data', function(){
-                calculatePaid();
+            $(document).on('change', '.paid_price_data', function(){
+                const grand_total = $('input[name="grand_total"]');
+                const paid_el = $('input[name="paid"]');
+                const own_el = $('input[name="own"]');
+                var paid_now_val = currencyToNumber(paid_el.val()) * 1;
+                var grand_total_val = currencyToNumber(grand_total.val()) * 1;
+                var own_val = grand_total_val - paid_now_val;
+                if(own_val > 0){
+                    own_el.val(own_val);
+                }
+                else{
+                    own_el.val(0);
+                }
+                formatCurrency(own_el);
             });
 
-            function calculatePaid(){
+            $(document).on('change', '.price_data', function(){
+                calculateAll();
+            });
 
-            }
+            function calculateAll(){
+                var discounts = 0;
+                $.each($('.discount_data'), function () {
+                    discounts = discounts*1 + currencyToNumber($(this).val())*1;
+                });
+                const grand_total = $('input[name="grand_total"]');
 
-            $("input[data-type='currency']").on({
-                keyup: function() {
-                    formatCurrency($(this));
-                },
-                blur: function() {
-                    formatCurrency($(this), "blur");
-                    const paid_el = $('input[name="paid"]');
-                    const sales_price_el = $('input[name="sales_price"]');
-                    const own_el = $('input[name="own"]');
-                    if($(this).attr('name') === 'sales_price' && !paid_el.val()){
-                        paid_el.val($(this).val());
-                    }
-                    if(($(this).attr('name') === 'paid' || $(this).attr('name') === 'sales_price') && sales_price_el.val()){
-                        if(paid_el.val() != '') {
-                            const sales_price = currencyToNumber(sales_price_el.val()) * 1;
-                            const paid = currencyToNumber(paid_el.val()) * 1;
-                            const own = sales_price - paid;
-                            if (own > 0) {
-                                own_el.val(own.toFixed(2));
-                            }
-                            else {
-                                own_el.val(0);
-                            }
-                            formatCurrency(own_el);
-                        }
-                        else{
-                            paid_el.val(sales_price_el.val());
+                const paid_el = $('input[name="paid"]');
+                const sales_price_el = $('input[name="sales_price"]');
+                const own_el = $('input[name="own"]');
+
+                var to_pay = currencyToNumber(sales_price_el.val())*1 - discounts;
+                if(to_pay <= 0){
+                    grand_total.val(0);
+                    // paid_el.val(0);
+                    own_el.val(0);
+                    formatCurrency(grand_total);
+                    // formatCurrency(paid_el);
+                    formatCurrency(own_el);
+                }
+                else {
+                    grand_total.val(to_pay);
+                    formatCurrency(grand_total);
+
+                    var paid_now_current_val = currencyToNumber(paid_el.val()) * 1;
+                    var own_current_val = currencyToNumber(own_el.val()) * 1;
+
+                    if (own_current_val) {
+                        if (paid_now_current_val > to_pay) {
+                            paid_el.val(to_pay);
+                            formatCurrency(paid_el);
                             own_el.val(0);
                             formatCurrency(own_el);
                         }
+                        else {
+                            own_el.val(to_pay - paid_now_current_val);
+                            formatCurrency(own_el);
+                        }
+                    }
+                    else {
+                        paid_el.val(to_pay);
+                        formatCurrency(paid_el);
+                        own_el.val(0);
+                        formatCurrency(own_el);
                     }
                 }
+
+            }
+
+
+            $(document).on('keyup', "input[data-type='currency']", function(){
+                formatCurrency($(this));
             });
+
 
             $('#access_date').datetimepicker({
                 timepicker:false,
@@ -352,7 +438,7 @@
                     }
                 });
                 $.ajax({
-                    url: '/customers-invoices',
+                    url: '/generate-invoice',
                     type: "POST",
                     dataType: "json",
                     data: submitData,
@@ -398,7 +484,7 @@
             }
 
             function beforeSubmit(submit_button){
-                $('input').removeClass('red_border').prop('disabled', true);
+                $('input').removeClass('red_border');
                 $('span').removeClass('red_border');
                 $('.error_form').remove();
                 $('.error_box').html("");
@@ -413,12 +499,9 @@
 
             function afterSubmit(submit_button, button_title){
                 $('button').prop('disabled', false);
-                $('input').prop('disabled', false);
-                $('input[name="own"]').prop('disabled', true);
                 $('select').prop('disabled', false);
                 $('a').removeClass('disabled');
                 submit_button.html(button_title);
-                $('input[name="ignore_pipedrive"]').val('');
             }
 
             $('.phone-number').usPhoneFormat({

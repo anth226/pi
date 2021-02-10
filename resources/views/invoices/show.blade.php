@@ -254,7 +254,7 @@
                         <input type="hidden" id="invoice_id" value="{{ $invoice->id }}">
                         <div class="form-group">
                             <strong>Email Template *:</strong>
-                            {!! Form::select('email_template_id', $template,[], array('class' => 'form-control', 'id' => 'email_template_id')) !!}
+                            {!! Form::select('email_template_id', $template,[3], array('class' => 'form-control', 'id' => 'email_template_id')) !!}
                         </div>
                         <div class="form-group">
                             <strong>Email *:</strong>
