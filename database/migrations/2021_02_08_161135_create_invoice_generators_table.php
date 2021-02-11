@@ -19,9 +19,21 @@ class CreateInvoiceGeneratorsTable extends Migration
 	        $table->string('first_name');
 	        $table->string('last_name');
 	        $table->string('email')->nullable()->index();
+	        $table->string('phone_number')->nullable();
+	        $table->string('formated_phone_number')->nullable();
+	        $table->string('address_1')->nullable();
+	        $table->string('address_2')->nullable();
+	        $table->string('zip')->nullable();
+	        $table->string('city')->nullable();
+	        $table->string('state')->nullable();
 	        $table->date('access_date')->nullable();
-	        $table->json('invoice_data')->nullable();
+	        $table->unsignedInteger('cc')->default(0);
+	        $table->unsignedDecimal('sales_price',8,2)->default(0);
+	        $table->unsignedDecimal('grand_total',8,2)->default(0);
+	        $table->unsignedDecimal('paid',8,2)->default(0);
 	        $table->unsignedDecimal('own',8,2)->default(0);
+	        $table->unsignedDecimal('discount_total',8,2)->default(0);
+	        $table->json('discounts')->nullable();
 	        $table->string('invoice_number',20)->nullable();
 	    });
     }
