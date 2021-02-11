@@ -50,7 +50,7 @@
                                 @endif
 
                                 @if( Gate::check('invoice-create'))
-                                    <a class="dropdown-item" href="{{ route('invoice-generator') }}" >
+                                    <a class="dropdown-item" href="{{ route('invoice-generator.create') }}" >
                                         {{ __('Invoice Generator') }}
                                     </a>
                                 @endif
