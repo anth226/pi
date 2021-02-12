@@ -104,7 +104,7 @@
                         {{ $invoice->cc }}
                     </div>
 
-                    @if((($invoice->discounts) > 0) )
+                    @if((($invoice->own) > 0) )
                         <div class="text-danger">
                             <strong>To Pay:</strong>
                             {{ $inv->moneyFormat($invoice->grand_total - $invoice->paid) }}
@@ -118,7 +118,7 @@
                     </div>
 
                     <div>
-                        <strong>Sales Price:</strong>
+                        <strong>Grand Total:</strong>
                         {{ $formated_price }}
                     </div>
 
@@ -148,6 +148,21 @@
                             <strong>BCC:</strong>
                             {!! Form::text('bcc_email', $bcc, array('placeholder' => 'Email','class' => 'form-control', 'id' => 'bcc_email_address')) !!}
                         </div>
+                        <div class="form-group">
+                            <strong>Attachments:</strong>
+                            @if(!empty($attachments) && count($attachments))
+                                @foreach($attachments as $a)
+                                    @if(!empty($a['title']))
+                                        <div>
+                                            <a target="_blank" href="/pdfdownloads/{{$a['title']}}" title="{{$a['title']}}">{{$a['title']}}</a>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            @endif
+                            <div>
+                                <a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a>
+                            </div>
+                        </div>
                         <button class="btn btn-primary" id="send_email">Send Invoice Email</button>
                         <div class="err_box"></div>
                     </div>
@@ -165,7 +180,7 @@
                     </div>
                 </div>
             </div>
-            <a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a><br>
+            {{--<a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a><br>--}}
             <a  href="/pdfdownloadforgeneratedinvoices/{{$invoice->id }}" title="Download a PDF file">Download</a><br>
             <div class="mt-2 d-none d-md-block" style="width:900px;height:1250px;">
                 <object style="width:100%;height:100%;" data="{{ $full_path.$invoice->id.'&v='.rand() }}">{{$file_name}}" type="application/pdf">

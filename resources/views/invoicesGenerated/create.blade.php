@@ -445,7 +445,7 @@
                     success: function (response) {
                         if (response) {
                             if (response.success) {
-                                 window.location.href = "/invoices/" + response.data;
+                                 window.location.href = "/invoice-generator/" + response.data;
                             }
                             else {
                                 if (response.message) {

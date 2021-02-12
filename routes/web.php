@@ -84,6 +84,7 @@ Route::get('/pdfview/{id}','InvoicesController@showPdf');
 Route::get('/pdfdownload/{id}','InvoicesController@downloadPdf');
 Route::get('/pdfviewforgeneratedinvoices/{id}','InvoiceGeneratorController@showPdf');
 Route::get('/pdfdownloadforgeneratedinvoices/{id}','InvoiceGeneratorController@downloadPdf');
+Route::get('/pdfdownloads/{title}','InvoiceGeneratorController@showFile');
 Route::get('/testview/{id}','InvoicesController@testview');
 
 
