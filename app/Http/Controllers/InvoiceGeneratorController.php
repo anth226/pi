@@ -16,12 +16,26 @@ use PDF;
 
 class InvoiceGeneratorController extends InvoicesController
 {
+	public $attachments;
 
 	function __construct()
 	{
 		parent::__construct();
 		$this->pdf_path = base_path().'/resources/views/invoicesGeneratedPdf/';
 		$this->full_path =  config('app.url').'/pdfviewforgeneratedinvoices/';
+
+		$title1 = '2020-Q1-Q2-stock-picks.pdf';
+		$mime1 = 'application/pdf';
+		if(config('app.env') == 'local'){
+			$title1 = 'qqq.pdf';
+		}
+		$this->attachments = [
+			[
+				'title' => $title1,
+				'filename' => $this->pdf_path.$title1,
+				'mime' => $mime1
+			]
+		];
 	}
 
 	public function index(Request $request)
@@ -190,7 +204,8 @@ class InvoiceGeneratorController extends InvoicesController
 			$template = EmailTemplates::getIdsAndFullNames();
 			$logs = EmailLogsGeneratedInvoices::where('invoice_id', $id)->get();
 			$states = UsStates::statesUS();
-			return view( 'invoicesGenerated.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple') );
+			$attachments = $this->attachments;
+			return view( 'invoicesGenerated.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'attachments') );
 		}
 		return abort(404);
 	}
@@ -277,6 +292,20 @@ class InvoiceGeneratorController extends InvoicesController
 		$invoice = InvoiceGenerator::find($id);
 		if($invoice) {
 			return response()->download($this->pdf_path.$this->generateFileNameForGeneratedInvoice($invoice));
+		}
+		return abort(404);
+	}
+
+	public function downloadFile($title){
+		if($title) {
+			return response()->download($this->pdf_path.$title);
+		}
+		return abort(404);
+	}
+
+	public function showFile($title){
+		if($title) {
+			return response()->file($this->pdf_path.$title);
 		}
 		return abort(404);
 	}

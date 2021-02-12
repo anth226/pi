@@ -245,20 +245,19 @@ class SendEmailController extends BaseController
 							$customer_first_name = $invoice->first_name;
 							$subject             = 'Your Portfolio Insider Invoice Is Attached';
 							$pdfFilename         = $invoiceController->generateFileNameForGeneratedInvoice( $invoice );
-							$second_filepath = $invoiceController->pdf_path . '2020-Q1-Q2-stock-picks.pdf';
-							if(config('app.env') == 'local'){
-								$second_filepath = $invoiceController->pdf_path . 'qqq.pdf';
-							}
 							$path_to_file        = [
 								[
 									'filename' => $invoiceController->pdf_path . $pdfFilename,
 									'mime' => 'application/pdf'
-								],
-								[
-									'filename' => $second_filepath,
-									'mime' => 'application/pdf'
 								]
 							];
+							if(!empty($invoiceController->attachments) && count($invoiceController->attachments)){
+								foreach($invoiceController->attachments as $a){
+									if(!empty($a['filename'])){
+										$path_to_file[] = $a;
+									}
+								}
+							}
 							$customer_email      = $invoice->email;
 							$res                 = $sender->sendEmail( $to, $bcc, $cc, $from_email, $template, $subject, $from_name, $customer_first_name, '', $path_to_file, $customer_email );
 							if ( $res && $res['success'] ) {
