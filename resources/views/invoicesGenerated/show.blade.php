@@ -122,7 +122,7 @@
 
                     <div>
                         <strong>Grand Total:</strong>
-                        {{ $formated_price }}
+                        {{ $inv->moneyFormat($invoice->grand_total) }}
                     </div>
 
                     <div>
