@@ -136,9 +136,7 @@
             @foreach($discounts as $d)
                 @if($d['amount'] > 0)
                     <tr>
-                        <td></td>
-                        <td></td>
-                        <td>
+                        <td colspan="3">
                             <div style="color:red;text-align: right;">
                                 <strong>{{strtoupper($d['title'])}}</strong>
                             </div>
