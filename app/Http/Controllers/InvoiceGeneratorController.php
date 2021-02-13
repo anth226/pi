@@ -40,49 +40,14 @@ class InvoiceGeneratorController extends InvoicesController
 
 	public function index(Request $request)
 	{
-		return view( 'invoice-generator.index');
+		return view( 'invoicesGenerated.index');
 
 	}
 
 	public function anyData(Request $request){
-		$query =  InvoiceGenerator::get();		;
-		if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
-			$date      = $request['date_range'];
-			$dateArray = $this->parseDateRange( $date );
-			$dateFrom  = date( "Y-m-d", $dateArray[0] );
-			$dateTo    = date( "Y-m-d", $dateArray[1] );
-			$query->where( 'access_date', '>=', $dateFrom )
-			      ->where( 'access_date', '<=', $dateTo );
-		}
-		if( ! empty( $request['summary'] )){
-//			DB::enableQueryLog();
-//			$query->get();
-//			dd(DB::getQueryLog());
-			$commission = 0;
-			$revenue = $query->sum('paid');
-			$invoices = $query->get();
-			if($invoices && $invoices->count()){
-				foreach($invoices  as $inv){
-					$sp = $inv->salespeople;
-					if($sp && $sp->count()){
-						foreach($sp as $s){
-							$commission += $s->earnings;
-						}
-					}
-				}
-			}
-			$profit = $revenue - $commission;
-			$res = [
-				'revenue' => $revenue,
-				'count' => $query->count(),
-				'commission' => $commission,
-				'profit' => $profit
-			];
-			return $this->sendResponse($res,'');
-		}
-		else {
-			return datatables()->eloquent( $query )->toJson();
-		}
+		$query =  InvoiceGenerator::selectRaw('*');
+		return datatables()->eloquent( $query )->toJson();
+
 	}
 
 

@@ -49,6 +49,7 @@ Route::resource('/invoice-generator', 'InvoiceGeneratorController');
 
 Route::get('/datatables.data', 'CustomerInvoiceController@anyData');
 Route::get('/invoicesdatatables.data', 'InvoicesController@anyData');
+Route::get('/invoicesgenerateddatatables.data', 'InvoiceGeneratorController@anyData');
 
 Route::get('/spersondatatables.data', 'SalespeopleController@anyData');
 Route::post('/spersonpayment', 'SalespeopleController@setPaid');
