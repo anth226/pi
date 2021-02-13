@@ -69,7 +69,10 @@
 
                     </div>
                     <div class="pull-right mb-4 ">
-                        <a class="btn btn-primary mt-2" href="{{ route('invoice-generator.create') }}"> Generate Invoice</a>                        
+                        @can('invoice-create')
+                        <a class="btn btn-success mb-4 mt-2" href="{{ route('invoice-generator.create') }}"> Generate Invoice</a>
+                        @endcan
+                        <a class="btn btn-success mb-4 mt-2" href="{{ route('invoice-generator.index') }}"> Generated Invoices List</a>
                     </div>
                 </div>
             </div>

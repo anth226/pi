@@ -48,6 +48,7 @@
             <div class="row mb-4">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
+                        <a class="btn btn-success mb-4 mt-2" href="{{ route('invoice-generator.index') }}"> Generated Invoices List</a>
                         <h2>Invoice Generator</h2>
                     </div>
                 </div>
