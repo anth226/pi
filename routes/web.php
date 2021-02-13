@@ -31,7 +31,9 @@ Route::get('/test', 'TestController@index')->name('test');
 //Ajax
 
 Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail', ['middleware' => 'csrf']);
+Route::post('/send-generatedinvoice-email', 'SendEmailController@sendGeneratedInvoiceEmail', ['middleware' => 'csrf']);
 Route::post('/invoices/update/{id}', 'InvoicesController@update' ,  ['middleware' => 'csrf']);
+Route::post('/generate-invoice', 'InvoiceGeneratorController@store' ,  ['middleware' => 'csrf']);
 //
 
 
@@ -43,8 +45,11 @@ Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['
 Route::resource('/salespeople','SalespeopleController');
 Route::resource('/invoices','InvoicesController', ['only' => ['show', 'index']]);
 
+Route::resource('/invoice-generator', 'InvoiceGeneratorController');
+
 Route::get('/datatables.data', 'CustomerInvoiceController@anyData');
 Route::get('/invoicesdatatables.data', 'InvoicesController@anyData');
+Route::get('/invoicesgenerateddatatables.data', 'InvoiceGeneratorController@anyData');
 
 Route::get('/spersondatatables.data', 'SalespeopleController@anyData');
 Route::post('/spersonpayment', 'SalespeopleController@setPaid');
@@ -78,6 +83,9 @@ Route::post('/email-templates/mailables/delete', 'MailablesController@delete')->
 
 Route::get('/pdfview/{id}','InvoicesController@showPdf');
 Route::get('/pdfdownload/{id}','InvoicesController@downloadPdf');
+Route::get('/pdfviewforgeneratedinvoices/{id}','InvoiceGeneratorController@showPdf');
+Route::get('/pdfdownloadforgeneratedinvoices/{id}','InvoiceGeneratorController@downloadPdf');
+Route::get('/pdfdownloads/{title}','InvoiceGeneratorController@showFile');
 Route::get('/testview/{id}','InvoicesController@testview');
 
 

@@ -54,7 +54,19 @@ class EmailSender {
 				}
 				$message->from( $from_email, $from_name );
 				if($pathToFile) {
-					$message->attach( $pathToFile, [ 'mime' => $mime ] );
+					if(is_array($pathToFile)){
+						if(count($pathToFile)){
+							foreach($pathToFile as $p){
+								$file_mime = !empty($p['mime']) ? $p['mime'] : $mime;
+								if(!empty($p['filename'])) {
+									$message->attach( $p['filename'], [ 'mime' => $file_mime ] );
+								}
+							}
+						}
+					}
+					else {
+						$message->attach( $pathToFile, [ 'mime' => $mime ] );
+					}
 				}
 			} );
 			return array('success' => true);

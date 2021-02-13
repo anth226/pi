@@ -39,17 +39,13 @@
     </style>
 @endsection
 
-@section('popup')
-    @include('popups.editinvoice')
-@endsection
-
 @section('content')
     <div class="container">
         <div class="col-lg-12 m-auto">
             <div class="row">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
-                        <h2> {{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }} [{{ $invoice->invoice_number }}]</h2>
+                        <h2> {{ $invoice->first_name }} {{ $invoice->last_name }} [{{ $invoice->invoice_number }}]</h2>
                         <div class="text-muted mb-4">
                             <div  class="details_bgcolor p-2">
                                 <div>
@@ -57,43 +53,7 @@
                                         <strong>Created at:</strong>
                                         {{ $invoice->created_at }}
                                     </small>
-                                </div>
-                                @if($sentLog && count($sentLog))
-                                    @foreach($sentLog as $d)
-                                            @php
-                                                $service_name = '';
-                                                switch ($d->service_type){
-                                                    case 1:
-                                                        if($d->field == "subscriber_id"){
-                                                            $service_name = 'Stripe';
-                                                        }
-                                                        break;
-                                                    case 2:
-                                                        $service_name = 'Firebase';
-                                                        break;
-                                                    case 3:
-                                                        $service_name = 'Klaviyo';
-                                                        break;
-                                                    case 4:
-                                                        $service_name = 'SMS System';
-                                                        break;
-                                                    case 5:
-                                                        $service_name = 'Pipedrive';
-                                                        break;
-                                                    default:
-                                                        $service_name = '';
-                                                }
-                                            @endphp
-                                            @if($service_name)
-                                            <div>
-                                                <small>
-                                                <strong>Sent to {{$service_name}} at: </strong>
-                                                {{ $d->created_at}}
-                                                </small>
-                                            </div>
-                                            @endif
-                                    @endforeach
-                                @endif
+                                </div>                               
                                 @if (count($errors) > 0)
                                     <div class="alert alert-danger">
                                         <strong>Whoops!</strong> There were some problems.<br><br>
@@ -109,18 +69,10 @@
 
                     </div>
                     <div class="pull-right mb-4 ">
-                        <a class="btn btn-primary mt-2" href="/dashboard"> Dashboard</a>
-                        @can('invoice-edit')
-                            <button class="btn btn-info mt-2" data-toggle="modal" data-target="#editinvoice">Edit Invoice</button>
-                            @if($invoice->sales_price > 0)
-                                <button class="btn btn-info mt-2" id="refunded">Set as Refunded</button>
-                            @endif
+                        @can('invoice-create')
+                        <a class="btn btn-success mb-4 mt-2" href="{{ route('invoice-generator.create') }}"> Generate Invoice</a>
                         @endcan
-                        {{--@can('invoice-delete')--}}
-                            {{--{!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline;']) !!}--}}
-                            {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}--}}
-                            {{--{!! Form::close() !!}--}}
-                        {{--@endcan--}}
+                        <a class="btn btn-success mb-4 mt-2" href="{{ route('invoice-generator.index') }}"> Generated Invoices List</a>
                     </div>
                 </div>
             </div>
@@ -133,115 +85,43 @@
                     </div>
                     <div>
                         <strong>Customer:</strong>
-                        <a target="_blank" href="{{ route('customers.show', $invoice->customer_id) }}" title="{{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}">
-                            {{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}
-                        </a>
+                        {{ $invoice->first_name }} {{ $invoice->last_name }}                       
                         <small>
-                            {{ $invoice->customer->email }}
+                            {{ $invoice->email }}
                         </small>
                     </div>
                     <div>
                         <strong>Address:</strong>
-                        {{ $invoice->customer->address_1 }} {{ $invoice->customer->address_2 }}, {{ $invoice->customer->city }}, {{ $invoice->customer->state }}, {{ $invoice->customer->zip }}
+                        {{ $invoice->address_1 }} {{ $invoice->address_2 }}, {{ $invoice->city }}, {{ $invoice->state }}, {{ $invoice->zip }}
                     </div>
                     @php
                         $salespeople = [];
                         $cc = '';
-                        $bcc = 'corporate@portfolioinsider.com, michelle@portfolioinsider.com';
-                        $inv = new \App\Http\Controllers\InvoicesController();
+                        $bcc = '';
+                        $inv = new \App\Http\Controllers\InvoiceGeneratorController();
                         $commission = 0;
                     @endphp
-                    @if(count($invoice->salespeople))
-                        @foreach($invoice->salespeople as  $sp)
-                            @php
-                                $commission += ($sp->earnings)*1;
-                            @endphp
-                            @if($sp->sp_type)
-                                @php
-                                    $salespeople[] = $sp->salespersone->email;
-                                @endphp
-                                <div>
-                                    <strong>Salesperson:</strong>
-                                    <a target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
-                                        {{ $sp->salespersone->name_for_invoice }}
-                                    </a>
-                                    @can('invoice-create')
-                                        @if($sp->earnings > 0)
-                                            <span>
-                                                <small>
-                                                 Earning: {{ $inv->moneyFormat($sp->earnings) }} ({{ $sp->level->title }} / {{ $sp->percentage }}%)
-                                                </small>
-                                            </span>
-                                        @endif
-                                    @endcan
-                                </div>
-                            @endif
-                        @endforeach
-                        @foreach($invoice->salespeople as  $sp)
-                            @if(!$sp->sp_type)
-                            @php
-                                $salespeople[] = $sp->salespersone->email;
-                            @endphp
-                            <div class="px-2 small">
-                                <strong>Salesperson:</strong>
-                                <a target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
-                                    {{ $sp->salespersone->name_for_invoice }}
-                                </a>
-                                @can('invoice-create')
-                                    @if($sp->earnings > 0)
-                                        <span>
-                                             Earning: {{ $inv->moneyFormat($sp->earnings) }} ({{ $sp->level->title }} / {{ $sp->percentage }}%)
-                                        </span>
-                                    @endif
-                                @endcan
-                            </div>
-                            @endif
-                        @endforeach
-                    @endif
-                    @php
-                        if(count($salespeople)){
-                            $cc = implode(', ', $salespeople);
-                        }
-                    @endphp
-                    <div>
-                        <strong>Product:</strong>
-                        {{ $invoice->product->title }}
-                    </div>
-                    <div>
-                        <strong>Quantity:</strong>
-                        {{ $invoice->qty }}
-                    </div>
+
                     <div>
                         <strong>CC last 4 digits:</strong>
-                        {{ $invoice->cc_number }}
+                        {{ $invoice->cc }}
                     </div>
 
-                    @if((($invoice->sales_price - $invoice->paid) > 0) && !$invoice->refunded_at)
+                    @if((($invoice->own) > 0) )
                         <div class="text-danger">
                             <strong>To Pay:</strong>
-                            {{ $inv->moneyFormat($invoice->sales_price - $invoice->paid) }}
+                            {{ $inv->moneyFormat($invoice->grand_total - $invoice->paid) }}
                         </div>
                     @endif
 
                     <div>
                         <strong>Paid:</strong>
                         {{ $inv->moneyFormat($invoice->paid) }}
-                        @can('invoice-create')
-                            @if($commission)
-                                <small> (
-                                    @php
-                                        $profit = ($invoice->paid)*1 - (($commission)*1);
-                                        $percent =  $commission * 100/$invoice->paid;
-                                        $percent =  number_format($percent, 2, '.', '');
-                                    @endphp
-                                    <span class="text-success">Net Revenue: {{ $inv->moneyFormat($profit) }}</span> / Commission: {{$inv->moneyFormat($commission) }} | {{$percent}}% )
-                                </small>
-                            @endif
-                        @endcan
+
                     </div>
 
                     <div>
-                        <strong>Sales Price:</strong>
+                        <strong>Grand Total:</strong>
                         {{ $formated_price }}
                     </div>
 
@@ -257,11 +137,11 @@
                         <input type="hidden" id="invoice_id" value="{{ $invoice->id }}">
                         <div class="form-group">
                             <strong>Email Template *:</strong>
-                            {!! Form::select('email_template_id', $template,[3], array('class' => 'form-control', 'id' => 'email_template_id')) !!}
+                            {!! Form::select('email_template_id', $template,[4], array('class' => 'form-control', 'id' => 'email_template_id')) !!}
                         </div>
                         <div class="form-group">
                             <strong>Email *:</strong>
-                            {!! Form::text('email', $invoice->customer->email, array('placeholder' => 'Email','class' => 'form-control', 'id' => 'email_address')) !!}
+                            {!! Form::text('email', $invoice->email, array('placeholder' => 'Email','class' => 'form-control', 'id' => 'email_address')) !!}
                         </div>
                         <div class="form-group">
                             <strong>CC:</strong>
@@ -270,6 +150,21 @@
                         <div class="form-group">
                             <strong>BCC:</strong>
                             {!! Form::text('bcc_email', $bcc, array('placeholder' => 'Email','class' => 'form-control', 'id' => 'bcc_email_address')) !!}
+                        </div>
+                        <div class="form-group">
+                            <strong>Attachments:</strong>
+                            @if(!empty($attachments) && count($attachments))
+                                @foreach($attachments as $a)
+                                    @if(!empty($a['title']))
+                                        <div>
+                                            <a target="_blank" href="/pdfdownloads/{{$a['title']}}" title="{{$a['title']}}">{{$a['title']}}</a>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            @endif
+                            <div>
+                                <a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a>
+                            </div>
                         </div>
                         <button class="btn btn-primary" id="send_email">Send Invoice Email</button>
                         <div class="err_box"></div>
@@ -288,8 +183,8 @@
                     </div>
                 </div>
             </div>
-            <a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a><br>
-            <a  href="/pdfdownload/{{$invoice->id }}" title="Download a PDF file">Download</a><br>
+            {{--<a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a><br>--}}
+            <a  href="/pdfdownloadforgeneratedinvoices/{{$invoice->id }}" title="Download a PDF file">Download</a><br>
             <div class="mt-2 d-none d-md-block" style="width:900px;height:1250px;">
                 <object style="width:100%;height:100%;" data="{{ $full_path.$invoice->id.'&v='.rand() }}">{{$file_name}}" type="application/pdf">
                     <iframe style="width:100%;height:100%;" src="https://docs.google.com/viewer?url={{ $full_path.$invoice->id }}&embedded=true"></iframe>
@@ -335,7 +230,7 @@
                         }
                     });
                     $.ajax({
-                        url: '/send-invoice-email',
+                        url: '/send-generatedinvoice-email',
                         type: "POST",
                         dataType: "json",
                         data: {
@@ -593,16 +488,6 @@
                 caret_pos = updated_len - original_len + caret_pos;
                 input[0].setSelectionRange(caret_pos, caret_pos);
             }
-
-
-            $(document).on('click', '#refunded', function (event) {
-                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
-                $(this).append(ajax_img);
-                $('input[name="sales_price"]').val('$0.00');
-                $('input[name="paid"]').val('$0.00');
-                $('input[name="own"]').val('$0.00');
-                $('#invoiceEdit').submit();
-            });
 
             $(document).on('submit', '#invoiceEdit', function (event) {
                 event.preventDefault();
