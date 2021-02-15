@@ -64,7 +64,15 @@
             <td></td>
         </tr>
     </table>
-    <table style="margin-top: 30px;width: 100%;">
+    <table style="width:100%;margin-top: 20px;">
+        <tr>
+            <td style="width:100%;vertical-align: top;">
+                <div style="line-height: 21px;font-size: 17px;margin-top: 0;color:red;"><strong>6 Month Money Back Guarantee.</strong></div>
+                <div style="line-height: 21px;font-size: 17px;margin-top: 0;color:red;"><strong>One Time Payment - Lifetime Access.</strong></div>
+            </td>
+        </tr>
+    </table>
+    <table style="margin-top: 5px;width: 100%;">
         <tr>
             <td>
                 <div style="text-align: center;color:white;background-color: #194CAF;font-size: 22px;padding: 7px 0;">
