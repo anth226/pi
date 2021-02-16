@@ -48,6 +48,16 @@ class TestController extends BaseController
 //		dd($this->sendDataToSMSSystem($userProperties));
 //		dd($this->sendDataToKlaviyo($userProperties));
 
+//		dd(
+//			$this->sendDataToSMSSystem(
+//				[
+//					'lead_id' => 377,
+//					'token' => 'PortInsQezInch111'
+//				],
+//				'https://test.magicstarsystem.com/api/ungrancellead'
+//			)
+//		);
+
 //		$customer = $c->sendDataToFirebase($userProperties);
 //		dd($c->getFirebaseUser('kevin@portfolioinsider.com', 'email'));
 //		dd($c->getFirebaseCollectionRecord('JAWGa9pT2OeqS6wQoj1bdw6f56r2')); //kevin@portfolioinsider.com
@@ -83,7 +93,7 @@ class TestController extends BaseController
 		}
 	}
 
-	public function sendDataToSMSSystem($input, $url = 'https://magicstarsystem.com/api/ulp'){
+	public function sendDataToSMSSystem($input, $url = 'https://magicstarsystem.com/api/ulpi'){
 		try {
 			$postvars = http_build_query( $input );
 			$ch       = curl_init();
