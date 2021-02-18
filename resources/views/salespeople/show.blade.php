@@ -8,12 +8,35 @@
         .bg_refunded{
             background-color: rgba(0,0,0,.3) !important;
         }
-        .bg-success{
+        .bg-success-light{
             background-color: rgba(0,255,0,.1) !important;
         }
         .err_box{
             line-height: 1.1;
             margin-top: 0.5rem;
+        }
+        div.sticky {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            z-index: 99999;
+            background-color: #f8fafc;
+            top: 0;
+        }
+        .stat_wrapper{
+            padding-right: 11px;
+            padding-left: 11px;
+            padding-top:3px;
+            padding-bottom:10px;
+            border-bottom: 1px solid deepskyblue;
+        }
+
+        @media (max-width: 1199px) {
+            div.sticky {
+                border-bottom: 1px solid deepskyblue;
+            }
+            .stat_wrapper{
+                border-bottom: none;
+            }
         }
     </style>
 @endsection
@@ -102,7 +125,7 @@
 
             <div class="row mt-4">
                 <div class="col-md-7 m-auto">
-                    <h4 class="mb-0"><strong>Prime Sales</strong></h4>
+                    {{--<h4 class="mb-0"><strong>Prime Sales</strong></h4>--}}
                 </div>
                 <div class="col-md-5">
                     <label class="w-100">
@@ -111,21 +134,75 @@
                     </label>
                 </div>
             </div>
+        </div>
+    </div>
 
 
-            <div class="discrepancy_box d-none">
-                <h4 class="mt-4"><strong>Discrepancies</strong></h4>
-                <div style="padding-right: 11px;padding-left: 11px;">
-                    <div class="row mb-1">
-                        <div class="col-md-6 col-lg-3 px-1 mb-1">
-                            <div class="card order-card bg-success">
-                                <div class="text-center p-2">
-                                    <h3 class="text-center"><span id="discrepancies">0</span></h3>
-                                </div>
+    <div class="sticky w-100">
+        <div class="container">
+            <div class="col-lg-12 m-auto">
+                <div class="stat_wrapper">
+                    <div class="row mt-2">
+                    <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        <div class="card order-card bg-info">
+                            <div class="text-center py-2 px-1 text-white">
+                                <h4 class="text-center"><span id="subscriptions">0</span></h4>
+                                <h4 class="lead text-center mb-0">Prime Sales</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        <div class="card order-card bg-primary">
+                            <div class="text-center py-2 px-1 text-white">
+                                <h4 class="text-center"><span id="revenue">0</span></h4>
+                                <h4 class="lead text-center mb-0">Revenue</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        <div class="card order-card bg-info">
+                            <div class="text-center py-2 px-1 text-white">
+                                <h4 class="text-center"><span id="commissions">0</span></h4>
+                                <h4 class="lead text-center mb-0">Commissions</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        <div class="card order-card discrepancies_stat">
+                            <div class="text-center py-2 px-1">
+                                <h4 class="text-center"><span id="discrepancies">0</span></h4>
+                                <h4 class="lead text-center mb-0">Discrepancies</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        <div class="card order-card paid_stat">
+                            <div class="text-center py-2 px-1">
+                                <h2 class="text-center"><span id="paid">0</span></h2>
+                                <h2 class="lead text-center mb-0">Paid</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        <div class="card order-card topay_stat">
+                            <div class="text-center py-2 px-1">
+                                <h2 class="text-center"><strong><span id="topay">0</span></strong></h2>
+                                <h2 class="lead text-center mb-0"><strong>To Pay</strong></h2>
                             </div>
                         </div>
                     </div>
                 </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container overflow-auto">
+        <div class="col-lg-12 m-auto">
+
+            <div class="discrepancy_box d-none">
+                <h4 class="mt-4"><strong>Discrepancies</strong></h4>
+
                 <table class="table table-striped table-bordered table-responsive-sm w-100" id="discrepancy_table">
                     <thead>
                     <tr>
@@ -147,43 +224,7 @@
                 </table>
             </div>
 
-            <div style="padding-right: 11px;padding-left: 11px;">
-                <div class="row mb-1">
-                    <div class="col-md-6 col-lg-3 px-1 mb-1">
-                        <div class="card order-card bg-info">
-                            <div class="text-center p-2 text-white">
-                                <h3 class="text-center"><span id="subscriptions">0</span></h3>
-                                <h3 class="lead text-center mb-0">Prime Sales</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-3 px-1 mb-1">
-                        <div class="card order-card bg-primary">
-                            <div class="text-center p-2 text-white">
-                                <h3 class="text-center"><span id="revenue">0</span></h3>
-                                <h3 class="lead text-center mb-0">Revenue</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-3 px-1 mb-1">
-                        <div class="card order-card bg-info">
-                            <div class="text-center p-2 text-white">
-                                <h3 class="text-center"><span id="commissions">0</span></h3>
-                                <h3 class="lead text-center mb-0">Commissions</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-3 px-1 mb-1">
-                        <div class="card order-card bg-info">
-                            <div class="text-center p-2 text-white">
-                                <h3 class="text-center"><span id="paid">0</span></h3>
-                                <h3 class="lead text-center mb-0">Paid</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            <h4 class="mt-4"><strong>Prime Sales</strong></h4>
             <table class="table table-striped table-bordered table-responsive-sm w-100" id="customers_table">
                 <thead>
                 <tr>
@@ -208,7 +249,21 @@
 @endsection
 @section('script')
     <script>
+
         $(document).ready(function() {
+
+            var payments = {
+                commission: 0,
+                discrepancies: 0,
+                paid: 0,
+                toPay: 0
+            };
+
+            var dispInvoices = {};
+            var dissmissedVal = {};
+            var paidVal = {};
+            // var dispInvoices = {401:401,407:407, 415:415, 383:383};
+
             var sens_info_box = $( "#sens_info" );
 
             var show_sansitive_info = sens_info_box.prop( "checked");
@@ -237,6 +292,9 @@
                 dateFormat:"F j, Y",
                 allowInput:false,
                 onClose: function() {
+                    dispInvoices = {};
+                    dissmissedVal = {};
+                    paidVal = {};
                     getReportData();
                 },
                 plugins: [
@@ -275,16 +333,21 @@
                 ]
             });
 
-            getDashboardData();
-            getDashboardDataDiscrepancy();
+            getDashboard();
 
             function getReportData()
             {
-                getDashboardData();
-                getDashboardDataDiscrepancy();
+                getDashboard();
                 table_dt.draw();
                 table_dt_table_discrepancy.draw();
             }
+
+            function getDashboard()
+            {
+                getDashboardData();
+                getDashboardDataDiscrepancy();
+            }
+
 
             function getDashboardData(){
                 $.ajax({
@@ -298,13 +361,22 @@
                                 $('#revenue').html(moneyFormat(response.data.revenue));
 
                                 var commission = response.data.commission;
-                                if(commission) {
+                                if(isSet(commission)) {
                                     $('#commissions').html(moneyFormat(commission));
+                                    payments.commission = commission;
                                 }
                                 var paid = response.data.paid;
                                 if(isSet(paid)) {
                                     $('#paid').html(moneyFormat(paid));
+                                    payments.paid = paid;
+                                    if(paid < 0){
+                                        $('.paid_stat').removeClass('bg-success-light').addClass('text-white').addClass('bg-danger');
+                                    }
+                                    else{
+                                        $('.paid_stat').removeClass('bg-danger').removeClass('text-white').addClass('bg-success-light');
+                                    }
                                 }
+                                calculateToPay();
                             }
                             else {
                                 console.log("Error");
@@ -328,21 +400,26 @@
                     success: function (response) {
                         if (response) {
                             if (response.success) {
-                                var discrepancy = response.data.discrepancy * 1;
+                                var discrepancy = response.data.discrepancy;
                                 var discrepancy_box = $('.discrepancy_box');
                                 if(discrepancy) {
-                                    $('#discrepancies').html(moneyFormat(response.data.discrepancy));
+                                    $('#discrepancies').html(moneyFormat(discrepancy));
+                                    payments.discrepancies = discrepancy;
                                     discrepancy_box.removeClass('d-none');
                                     if(discrepancy < 0){
-                                        discrepancy_box.find('.card').removeClass('bg-success').addClass('text-white').addClass('bg-danger');
+                                        $('.discrepancies_stat').removeClass('bg-success-light').addClass('text-white').addClass('bg-danger');
                                     }
                                     else{
-                                        discrepancy_box.find('.card').removeClass('text-white').addClass('bg-success');
+                                        $('.discrepancies_stat').removeClass('bg-danger').removeClass('text-white').addClass('bg-success-light');
                                     }
                                 }
                                 else{
                                     discrepancy_box.addClass('d-none');
+                                    $('#discrepancies').html(moneyFormat(0));
+                                    payments.discrepancies = 0;
+                                    $('.discrepancies_stat').removeClass('bg-success-light').removeClass('text-white').removeClass('bg-danger');
                                 }
+                                calculateToPay();
 
                             }
                             else {
@@ -359,11 +436,27 @@
                 });
 
             }
+            function calculateToPay(){
+                const toPay = payments.commission * 1 - ( payments.discrepancies * (-1) + payments.paid * 1);
+                if(isSet(toPay)) {
+                    $('#topay').html(moneyFormat(toPay));
+                    payments.toPay = toPay;
+                    if(toPay < 0){
+                        $('.topay_stat').removeClass('bg-success-light').addClass('text-white').addClass('bg-danger');
+                    }
+                    else{
+                        $('.topay_stat').removeClass('bg-danger').removeClass('text-white').addClass('bg-success-light');
+                    }
+                }
+            }
+
 
             var table_discrepancy = $('table#discrepancy_table');
             var table_dt_table_discrepancy = table_discrepancy.DataTable({
                 // stateSave: true,
                 createdRow: function( row, data, dataIndex ) {
+                    var invoice_id = data.id;
+                    dispInvoices[invoice_id] = invoice_id;
                     if ( data.own > 0 ) {
                         $(row).addClass('bg_to_pay');
                     }
@@ -372,7 +465,10 @@
                     }
                     $.each(data.salespeople, function( index, value ) {
                         if(value.salespersone.id == {{$salespeople->id}} && value.paid_at) {
-                            $(row).children(':nth-child(7)').addClass('bg-success');
+                            $(row).children(':nth-child(7)').addClass('bg-success-light');
+                        }
+                        if(value.salespersone.id == {{$salespeople->id}} && (value.discrepancy*1)) {
+                            dissmissedVal[invoice_id] = value.discrepancy;
                         }
                     });
                 },
@@ -389,7 +485,8 @@
                         return $.extend( {}, d, {
                             date_range: $("#reportRange").val(),
                             discrepancy: 1,
-                            salesperson_id: '{{$salespeople->id}}'
+                            salesperson_id: '{{$salespeople->id}}',
+                            dispInvoices: dispInvoices
                         } );
                     }
                 },
@@ -446,7 +543,7 @@
                         }},
                     @if( Gate::check('payments-manage'))
                     { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
-                            return showPayButton(row);
+                            return showPayButtonDisp(row);
                         }},
                     @endif
                     { data: 'customer.last_name', name: 'customer.last_name', "sortable": false,  "visible": false }
@@ -466,7 +563,7 @@
                     }
                     $.each(data.salespeople, function( index, value ) {
                         if(value.salespersone.id == {{$salespeople->id}} && value.paid_at) {
-                            $(row).children(':nth-child(7)').addClass('bg-success');
+                            $(row).children(':nth-child(7)').addClass('bg-success-light');
                         }
                     });
                 },
@@ -621,10 +718,26 @@
             }
 
             function showPayButton(row){
+                var commissionlog = '<div class="small">';
+                $.each(row.commission_payments, function(index, value){
+                    if(value.salespeople_id == {{$salespeople->id}}) {
+                        commissionlog += '<div class="text-nowrap">Paid ' + formatDate2(value.created_at) + ' ' + moneyFormat(value.paid_amount) + '</div>';
+                    }
+                });
+                commissionlog += '</div>';
                 var html_str = '';
                 $.each(row.salespeople, function( index, value ) {
                     if(value.salespersone.id == {{$salespeople->id}}) {
                         if(!(value.earnings*1) && !(value.discrepancy*1) && !(value.paid_amount*1)) {
+                            var add_info = '';
+                            var add_commission = '';
+                            if (show_sansitive_info) {
+                                add_info = 'Total ' + moneyFormat(value.paid_amount);
+                                add_commission = commissionlog;
+                            }
+                            html_str = '<div class="mb-2" style="line-height: 1.2;">' + add_commission +
+                                '<div class="text-nowrap"><strong>' + add_info + '</strong></div>' +
+                                '</div>';
                         }
                         else {
                             if (!value.paid_at) {
@@ -633,7 +746,7 @@
                                     if (show_sansitive_info) {
                                         pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
                                     }
-                                    html_str = '<button class="btn btn-primary pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
+                                    html_str = '<button class="btn btn-success pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
                                     html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" style="line-height: 1.1;"></span></small></div>';
                                 @else
                                     html_str = '<div style="min-height: 50px;"></div>';
@@ -641,18 +754,87 @@
                             }
                             else {
                                 var add_info = '';
+                                var add_commission = '';
                                 if (show_sansitive_info) {
-                                    add_info = moneyFormat(value.paid_amount);
+                                    add_info = 'Total ' + moneyFormat(value.paid_amount);
+                                    add_commission = commissionlog;
                                 }
-                                html_str = '<div class="mb-2" style="line-height: 1.2;">' +
-                                    '<div class="text-nowrap">Paid At:</div>' +
-                                    '<div class="text-nowrap">' + formatDate2(value.paid_at) + '</div>' +
+                                html_str = '<div class="mb-2" style="line-height: 1.2;">' + add_commission +
+                                    // '<div class="text-nowrap">Paid ' + formatDate2(value.paid_at) + '</div>' +
                                     '<div class="text-nowrap"><strong>' + add_info + '</strong></div>' +
                                     '</div>';
                                 @if( Gate::check('payments-manage'))
                                 if (value.discrepancy * 1 !== 0) {
-                                    var discrepancy_button_str = 'Set "Paid" Discrepancy';
-                                    var colorClass = '';
+                                    var discrepancy_button_str = '<div class="text-nowrap">Fix Discrepancy</div> ';
+                                    var colorClass = 'bg-success';
+                                    if (value.discrepancy < 0) {
+                                       colorClass = ' bg-danger ';
+                                    }
+                                    if (show_sansitive_info) {
+                                        discrepancy_button_str += '<div class="small">' + moneyFormat(value.discrepancy) + '</div>';
+                                    }
+                                    html_str += '<button class="btn btn-primary pay_disc w-100 ' + colorClass + '" data-invoice_id="' + row.id + '" data-paid_amount="' + value.discrepancy + '">' + discrepancy_button_str + '</button>';
+                                }
+                                else {
+                                    var cancel_button_str = 'Unset "Paid"';
+                                    // if(show_sansitive_info){
+                                    //     cancel_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
+                                    // }
+                                    html_str += '<button class="btn btn-sm btn-outline-danger cancel w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '"><span>' + cancel_button_str + '</small></button>';
+                                }
+                                html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" ></span></small></div>';
+                                @endif
+                            }
+                        }
+                    }
+                });
+                return html_str;
+            }
+
+            function showPayButtonDisp(row){
+                var commissionlog = '<div class="small">';
+                $.each(row.commission_payments, function(index, value){
+                    if(value.salespeople_id == {{$salespeople->id}}) {
+                        commissionlog += '<div class="text-nowrap">Paid ' + formatDate2(value.created_at) + ' ' + moneyFormat(value.paid_amount) + '</div>';
+                    }
+                });
+                commissionlog += '</div>';
+                var html_str = '';
+                $.each(row.salespeople, function( index, value ) {
+                    if(value.salespersone.id == {{$salespeople->id}}) {
+                        if(!(value.earnings*1) && !(value.discrepancy*1) && !(value.paid_amount*1)) {
+                            if(isSet(dissmissedVal[row.id])){
+                                html_str = 'Dismissed ' +   moneyFormat(dissmissedVal[row.id]);
+                            }
+                        }
+                        else {
+                            if (!value.paid_at) {
+                                        @if( Gate::check('payments-manage'))
+                                var pay_button_str = 'Set "Paid"';
+                                if (show_sansitive_info) {
+                                    pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
+                                }
+                                html_str = '<button class="btn btn-success pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
+                                html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" style="line-height: 1.1;"></span></small></div>';
+                                @else
+                                    html_str = '<div style="min-height: 50px;"></div>';
+                                @endif
+                            }
+                            else {
+                                var add_info = '';
+                                var add_commission = '';
+                                if (show_sansitive_info) {
+                                    add_info = 'Total ' + moneyFormat(value.paid_amount);
+                                    add_commission = commissionlog;
+                                }
+                                html_str = '<div class="mb-2" style="line-height: 1.2;">' + add_commission +
+                                    // '<div class="text-nowrap">Paid ' + formatDate2(value.paid_at) + '</div>' +
+                                    '<div class="text-nowrap"><strong>' + add_info + '</strong></div>' +
+                                    '</div>';
+                                @if( Gate::check('payments-manage'))
+                                if (value.discrepancy * 1 !== 0) {
+                                    var discrepancy_button_str = 'Dismiss';
+                                    var colorClass = 'bg-success';
                                     if (value.discrepancy < 0) {
                                         colorClass = ' bg-danger ';
                                     }
@@ -809,7 +991,7 @@
                 var d = formattedDate.getDate();
                 var m =  formattedDate.getMonth();
                 m += 1;  // JavaScript months are 0-11
-                var y = formattedDate.getFullYear();
+                var y = formattedDate.getFullYear().toString().substr(-2);
                 const month = formattedDate.toLocaleString('default', { month: 'short' });
                 return month + " " + d + " " + y;
             }

@@ -51,4 +51,9 @@ class Invoices extends Model
 	{
 		return $this->hasMany('App\EmailLogs', 'id','invoice_id');
 	}
+
+	public function commissionPayments()
+	{
+		return $this->hasMany('App\CommissionPaymentsLog', 'invoice_id');
+	}
 }
