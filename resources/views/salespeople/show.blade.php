@@ -261,7 +261,7 @@
 
             var dispInvoices = {};
             var dissmissedVal = {};
-            var paidVal = {};
+
             // var dispInvoices = {401:401,407:407, 415:415, 383:383};
 
             var sens_info_box = $( "#sens_info" );
@@ -294,7 +294,6 @@
                 onClose: function() {
                     dispInvoices = {};
                     dissmissedVal = {};
-                    paidVal = {};
                     getReportData();
                 },
                 plugins: [
@@ -719,6 +718,10 @@
 
             function showPayButton(row){
                 var commissionlog = '<div class="small">';
+                var need_to_show_total = 0;
+                if(row.commission_payments.length > 1){
+                    need_to_show_total = 1;
+                }
                 $.each(row.commission_payments, function(index, value){
                     if(value.salespeople_id == {{$salespeople->id}}) {
                         commissionlog += '<div class="text-nowrap">Paid ' + formatDate2(value.created_at) + ' ' + moneyFormat(value.paid_amount) + '</div>';
@@ -732,7 +735,9 @@
                             var add_info = '';
                             var add_commission = '';
                             if (show_sansitive_info) {
-                                add_info = 'Total ' + moneyFormat(value.paid_amount);
+                                if(need_to_show_total) {
+                                    add_info = 'Total ' + moneyFormat(value.paid_amount);
+                                }
                                 add_commission = commissionlog;
                             }
                             html_str = '<div class="mb-2" style="line-height: 1.2;">' + add_commission +
@@ -756,7 +761,9 @@
                                 var add_info = '';
                                 var add_commission = '';
                                 if (show_sansitive_info) {
-                                    add_info = 'Total ' + moneyFormat(value.paid_amount);
+                                    if(need_to_show_total) {
+                                        add_info = 'Total ' + moneyFormat(value.paid_amount);
+                                    }
                                     add_commission = commissionlog;
                                 }
                                 html_str = '<div class="mb-2" style="line-height: 1.2;">' + add_commission +
@@ -793,6 +800,10 @@
 
             function showPayButtonDisp(row){
                 var commissionlog = '<div class="small">';
+                var need_to_show_total = 0;
+                if(row.commission_payments.length > 1){
+                    need_to_show_total = 1;
+                }
                 $.each(row.commission_payments, function(index, value){
                     if(value.salespeople_id == {{$salespeople->id}}) {
                         commissionlog += '<div class="text-nowrap">Paid ' + formatDate2(value.created_at) + ' ' + moneyFormat(value.paid_amount) + '</div>';
@@ -802,20 +813,18 @@
                 var html_str = '';
                 $.each(row.salespeople, function( index, value ) {
                     if(value.salespersone.id == {{$salespeople->id}}) {
-                        if(!(value.earnings*1) && !(value.discrepancy*1) && !(value.paid_amount*1)) {
-                            if(isSet(dissmissedVal[row.id])){
-                                html_str = 'Dismissed ' +   moneyFormat(dissmissedVal[row.id]);
-                            }
+                        if(!(value.discrepancy*1)) {
+                            html_str = 'Dismissed ' + moneyFormat(dissmissedVal[row.id]);
                         }
                         else {
                             if (!value.paid_at) {
-                                        @if( Gate::check('payments-manage'))
-                                var pay_button_str = 'Set "Paid"';
-                                if (show_sansitive_info) {
-                                    pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
-                                }
-                                html_str = '<button class="btn btn-success pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
-                                html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" style="line-height: 1.1;"></span></small></div>';
+                                @if( Gate::check('payments-manage'))
+                                    var pay_button_str = 'Set "Paid"';
+                                    if (show_sansitive_info) {
+                                        pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
+                                    }
+                                    html_str = '<button class="btn btn-success pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
+                                    html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" style="line-height: 1.1;"></span></small></div>';
                                 @else
                                     html_str = '<div style="min-height: 50px;"></div>';
                                 @endif
@@ -824,7 +833,9 @@
                                 var add_info = '';
                                 var add_commission = '';
                                 if (show_sansitive_info) {
-                                    add_info = 'Total ' + moneyFormat(value.paid_amount);
+                                    if (need_to_show_total) {
+                                        add_info = 'Total ' + moneyFormat(value.paid_amount);
+                                    }
                                     add_commission = commissionlog;
                                 }
                                 html_str = '<div class="mb-2" style="line-height: 1.2;">' + add_commission +
