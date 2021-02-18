@@ -38,7 +38,7 @@
                     </label>
                 </div>
             </div>
-            @can('invoice-create')
+            @can('view-summary')
 
                     <div style="padding-right: 11px;padding-left: 11px;">
                         <div class="row mb-4">
