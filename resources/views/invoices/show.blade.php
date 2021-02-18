@@ -249,7 +249,7 @@
 
                 </div>
                 <div class="col-md-6">
-                    @can('invoice-create')
+                    @if( Gate::check('invoice-create') || Gate::check('send-email-test'))
                     <div class="mb-2">
                         <input type="hidden" id="invoice_id" value="{{ $invoice->id }}">
                         <div class="form-group">
@@ -271,7 +271,7 @@
                         <button class="btn btn-primary" id="send_email">Send Invoice Email</button>
                         <div class="err_box"></div>
                     </div>
-                    @endcan
+                    @endif
                     <div class="text-muted details_bgcolor" id="log_box">
                         @if(!empty($logs) && $logs->count())
                             @foreach ($logs as $k=>$log)
