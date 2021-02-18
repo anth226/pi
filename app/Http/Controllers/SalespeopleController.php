@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\CommissionPaymentsLog;
 use App\CommissionsBalance;
 use App\Errors;
 use App\Invoices;
@@ -56,12 +57,27 @@ class SalespeopleController extends InvoicesController
 		if($salesperson_id) {
 
 			if(! empty( $request['discrepancy'] )){
+				$dispInvoices = !empty($request['dispInvoices']) ? $request['dispInvoices'] : [];
+
 				$query = Invoices::with( 'customer' )
 				                 ->with( 'salespeople.salespersone' )
-				                 ->whereHas( 'salespeople', function ( $query ) use ( $salesperson_id ) {
-					                 $query->where( 'salespeople_id', $salesperson_id )->where('discrepancy','<>', 0);
+				                 ->whereHas( 'salespeople', function ( $query2 ) use ( $salesperson_id, $dispInvoices ) {
+					                 $query2->where( 'salespeople_id', $salesperson_id )->where(function($q3) use($dispInvoices) {
+						                 $q3->where('discrepancy','<>', 0);
+						                 if(count($dispInvoices)){
+							                 $q3->orWhereIn('invoices.id', $dispInvoices);
+						                 };
+					                 });
 				                 } )
-				                 ->with( 'salespeople.level' );
+				                 ->with( 'salespeople.level' )
+				                 ->with( 'commissionPayments' )
+//				                 ->whereHas( 'commissionPayments', function ( $query3 ) use ( $salesperson_id ) {
+//				                 	    $query3->where( 'salespeople_id', $salesperson_id );
+//				                 } )
+				;
+
+
+
 				if ( ! empty( $request['date_range'] )) {
 					$date      = $request['date_range'];
 					$dateArray = $this->parseDateRange( $date );
@@ -72,6 +88,9 @@ class SalespeopleController extends InvoicesController
 						$q->orWhere( 'invoices.access_date', '>', $dateTo );
 					});
 				}
+
+
+
 				if ( ! empty( $request['summary'] ) ) {
 					$discrepancy    = 0;
 					$invoices   = $query->get();
@@ -98,10 +117,15 @@ class SalespeopleController extends InvoicesController
 			else {
 				$query = Invoices::with( 'customer' )
 				                 ->with( 'salespeople.salespersone' )
-				                 ->whereHas( 'salespeople', function ( $query ) use ( $salesperson_id ) {
-					                 $query->where( 'salespeople_id', $salesperson_id );
+				                 ->whereHas( 'salespeople', function ( $query2 ) use ( $salesperson_id ) {
+					                 $query2->where( 'salespeople_id', $salesperson_id );
 				                 } )
-				                 ->with( 'salespeople.level' );
+				                 ->with( 'salespeople.level' )
+				                 ->with( 'commissionPayments' )
+//								 ->whereHas( 'commissionPayments', function ( $query3 ) use ( $salesperson_id ) {
+//									 $query3->where( 'salespeople_id', $salesperson_id );
+//								 } )
+				;
 				if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
 					$date      = $request['date_range'];
 					$dateArray = $this->parseDateRange( $date );
@@ -123,9 +147,7 @@ class SalespeopleController extends InvoicesController
 								foreach ( $sp as $s ) {
 									if ( $s->salespeople_id == $salesperson_id ) {
 										$commission += $s->earnings;
-//									if($s->paid_at){
 										$paid += $s->paid_amount;
-//									}
 									}
 								}
 							}
@@ -162,6 +184,8 @@ class SalespeopleController extends InvoicesController
 			$discrepancy = $record->discrepancy * 1;
 			$paid_at = $record->paid_at;
 			$refresh_page_html = 'Data were changed. Please click <a class="h6 refresh_page" href="#">here</a> to refresh the page.';
+			$payment_type = 0;
+			$log_paid_amount = $request['paid_amount'] * 1;
 			switch ($request['action']){
 				case 'pay':
 					$new_paid_amount =  $request['paid_amount'] * 1;
@@ -179,6 +203,7 @@ class SalespeopleController extends InvoicesController
 					$paid_amount = $paid_amount*1 + $new_paid_amount*1;
 					$discrepancy = 0;
 					$paid_at = Carbon::now();
+					$payment_type = 1;
 					break;
 				case 'cancel':
 					$new_paid_amount =  $request['paid_amount'] * 1;
@@ -188,15 +213,27 @@ class SalespeopleController extends InvoicesController
 					$paid_amount = 0;
 					$discrepancy = 0;
 					$paid_at = null;
+					$payment_type = 2;
+					$log_paid_amount =  $log_paid_amount * (-1);
 					break;
 			}
-
+			$user = Auth::user();
 			$dataToUpdate = [
 				'paid_amount' => $paid_amount,
 				'discrepancy' => $discrepancy,
 				'paid_at' => $paid_at
 			];
+			$logData = [
+				'paid_amount' => $log_paid_amount,
+				'payment_type' => $payment_type,
+				'invoice_id' =>  $request['invoice_id'],
+				'salespeople_id' =>  $request['salespeople_id'],
+				'user_id' => $user->id
+			];
+
 			$res = SecondarySalesPeople::where('id', $record->id)->update($dataToUpdate);
+
+			CommissionPaymentsLog::create($logData);
 
 			return $this->sendResponse($res);
 
