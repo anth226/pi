@@ -540,6 +540,7 @@
                         }  },
                     { data: 'customer.email', name: 'customer.email', "sortable": false ,  "visible": false},
                     { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap" ,  "visible": false},
+                    @if( Gate::check('invoice-list'))
                     { data: 'id', name: 'id', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 return '<a title="Open invoice in a new tab" target="_blank" href="/invoices/' + data + '"><span class="badge badge-success">View</span></a>';
@@ -548,6 +549,7 @@
                                 return '';
                             }
                         }},
+                    @endif
                     @if( Gate::check('payments-manage'))
                     { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
                             return showPayButtonDisp(row);
@@ -638,14 +640,16 @@
                         }  },
                     { data: 'customer.email', name: 'customer.email', "sortable": false ,  "visible": false},
                     { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap" ,  "visible": false},
-                    { data: 'id', name: 'id', "searchable": false, "sortable": false, render: function ( data, type, row ){
-                            if(isSet(data)) {
-                                return '<a title="Open invoice in a new tab" target="_blank" href="/invoices/' + data + '"><span class="badge badge-success">View</span></a>';
-                            }
-                            else{
-                                return '';
-                            }
-                        }},
+                        @if( Gate::check('invoice-list'))
+                        { data: 'id', name: 'id', "searchable": false, "sortable": false, render: function ( data, type, row ){
+                                if(isSet(data)) {
+                                    return '<a title="Open invoice in a new tab" target="_blank" href="/invoices/' + data + '"><span class="badge badge-success">View</span></a>';
+                                }
+                                else{
+                                    return '';
+                                }
+                            }},
+                        @endif
                         @if( Gate::check('payments-manage'))
                         { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
                                 return showPayButton(row);
@@ -746,7 +750,7 @@
                                     if (show_sansitive_info) {
                                         pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
                                     }
-                                    html_str = '<div class="p-2 w-100">' + pay_button_str + '</div>';
+                                    html_str = '<div class="p-2 bg-success text-center">' + pay_button_str + '</div>';
                             }
                             else {
                                 var add_info = '<span class="small text-muted">Paid</span> ' + moneyFormat(value.paid_amount);
@@ -761,7 +765,7 @@
                                     if (show_sansitive_info) {
                                         discrepancy_button_str += '<div class="small">' + moneyFormat(value.discrepancy) + '</div>';
                                     }
-                                    html_str += '<div class="p-2 ' + colorClass + '">' + discrepancy_button_str + '</div>';
+                                    html_str += '<div class="p-2 text-center ' + colorClass + '">' + discrepancy_button_str + '</div>';
                                 }
 
                             }
