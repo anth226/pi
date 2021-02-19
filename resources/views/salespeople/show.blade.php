@@ -113,9 +113,13 @@
                             @endif
                         </div>
                     @endcan
+                    @if( Gate::check('payments-manage'))
                      <div class="mt-4">
                          <label><input id="sens_info" checked type="checkbox"><span class="ml-2 text-info">Show Sensitive Information</span></label>
                      </div>
+                        @else
+                            <input id="sens_info" type="hidden" checked value="1">
+                     @endif
                 </div>
                 <div class="col-md-8">
 
@@ -138,7 +142,7 @@
     </div>
 
 
-    <div class="sticky w-100">
+    <div class="sticky w-100 sansitive">
         <div class="container">
             <div class="col-lg-12 m-auto">
                 <div class="stat_wrapper">
@@ -262,6 +266,8 @@
             var dispInvoices = {};
             var dissmissedVal = {};
 
+            var discrepancy_box = $('.discrepancy_box');
+
             // var dispInvoices = {401:401,407:407, 415:415, 383:383};
 
             var sens_info_box = $( "#sens_info" );
@@ -271,9 +277,11 @@
             sens_info_box.change(function() {
                 if(this.checked) {
                     show_sansitive_info = true;
+                    $('.sansitive').removeClass('d-none');
                 }
                 else{
                     show_sansitive_info = false;
+                    $('.sansitive').addClass('d-none');
                 }
                 getReportData();
             });
@@ -294,6 +302,7 @@
                 onClose: function() {
                     dispInvoices = {};
                     dissmissedVal = {};
+                    discrepancy_box.addClass('d-none');
                     getReportData();
                 },
                 plugins: [
@@ -400,11 +409,9 @@
                         if (response) {
                             if (response.success) {
                                 var discrepancy = response.data.discrepancy;
-                                var discrepancy_box = $('.discrepancy_box');
                                 if(discrepancy) {
                                     $('#discrepancies').html(moneyFormat(discrepancy));
                                     payments.discrepancies = discrepancy;
-                                    discrepancy_box.removeClass('d-none');
                                     if(discrepancy < 0){
                                         $('.discrepancies_stat').removeClass('bg-success-light').addClass('text-white').addClass('bg-danger');
                                     }
@@ -413,7 +420,6 @@
                                     }
                                 }
                                 else{
-                                    discrepancy_box.addClass('d-none');
                                     $('#discrepancies').html(moneyFormat(0));
                                     payments.discrepancies = 0;
                                     $('.discrepancies_stat').removeClass('bg-success-light').removeClass('text-white').removeClass('bg-danger');
@@ -470,6 +476,8 @@
                             dissmissedVal[invoice_id] = value.discrepancy;
                         }
                     });
+                    discrepancy_box.removeClass('d-none');
+
                 },
                 processing: true,
                 serverSide: true,
@@ -544,11 +552,16 @@
                     { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
                             return showPayButtonDisp(row);
                         }},
+                    @else
+                    { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
+                            return showPayments(row);
+                        }},
                     @endif
                     { data: 'customer.last_name', name: 'customer.last_name', "sortable": false,  "visible": false }
 
                 ]
             });
+
 
             var table = $('table#customers_table');
             var table_dt = table.DataTable({
@@ -634,9 +647,13 @@
                             }
                         }},
                         @if( Gate::check('payments-manage'))
-                    { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
-                            return showPayButton(row);
-                        }},
+                        { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
+                                return showPayButton(row);
+                            }},
+                        @else
+                        { data: 'id', name: 'id', "searchable": false, "sortable": false, "visible": true, render: function ( data, type, row ){
+                                return showPayments(row);
+                            }},
                         @endif
                     { data: 'customer.last_name', name: 'customer.last_name', "sortable": false,  "visible": false }
 
@@ -716,11 +733,49 @@
                 });
             }
 
+            function showPayments(row){
+                var html_str = '';
+                $.each(row.salespeople, function( index, value ) {
+                    if(value.salespersone.id == {{$salespeople->id}}) {
+                        if(!(value.earnings*1) && !(value.discrepancy*1) && !(value.paid_amount*1)) {
+
+                        }
+                        else {
+                            if (!value.paid_at) {
+                                    var pay_button_str = '';
+                                    if (show_sansitive_info) {
+                                        pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
+                                    }
+                                    html_str = '<div class="p-2 w-100">' + pay_button_str + '</div>';
+                            }
+                            else {
+                                var add_info = '<span class="small text-muted">Paid</span> ' + moneyFormat(value.paid_amount);
+                                html_str = '<div class="text-nowrap"><strong>' + add_info + '</strong></div>';
+
+                                if (value.discrepancy * 1 !== 0) {
+                                    var discrepancy_button_str = '<div class="text-nowrap">Discrepancy</div> ';
+                                    var colorClass = 'bg-success';
+                                    if (value.discrepancy < 0) {
+                                       colorClass = ' bg-danger ';
+                                    }
+                                    if (show_sansitive_info) {
+                                        discrepancy_button_str += '<div class="small">' + moneyFormat(value.discrepancy) + '</div>';
+                                    }
+                                    html_str += '<div class="p-2 ' + colorClass + '">' + discrepancy_button_str + '</div>';
+                                }
+
+                            }
+                        }
+                    }
+                });
+                return html_str;
+            }
+
             function showPayButton(row){
                 var commissionlog = '<div class="small">';
-                var need_to_show_total = 0;
-                if(row.commission_payments.length > 1){
-                    need_to_show_total = 1;
+                var need_to_show_details = 0;
+                if(isSet(row.commission_payments) && row.commission_payments.length > 1){
+                    need_to_show_details = 1;
                 }
                 $.each(row.commission_payments, function(index, value){
                     if(value.salespeople_id == {{$salespeople->id}}) {
@@ -735,10 +790,14 @@
                             var add_info = '';
                             var add_commission = '';
                             if (show_sansitive_info) {
-                                if(need_to_show_total) {
+                                if(need_to_show_details) {
+                                    add_commission = commissionlog;
                                     add_info = 'Total ' + moneyFormat(value.paid_amount);
                                 }
-                                add_commission = commissionlog;
+                                else{
+                                    add_info = '<span class="small text-muted">Paid ' + formatDate2(value.paid_at) + '</span> ' + moneyFormat(value.paid_amount);
+                                }
+
                             }
                             html_str = '<div class="mb-2" style="line-height: 1.2;">' + add_commission +
                                 '<div class="text-nowrap"><strong>' + add_info + '</strong></div>' +
@@ -746,13 +805,13 @@
                         }
                         else {
                             if (!value.paid_at) {
-                                @if( Gate::check('payments-manage'))
-                                    var pay_button_str = 'Set "Paid"';
-                                    if (show_sansitive_info) {
-                                        pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
-                                    }
-                                    html_str = '<button class="btn btn-success pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
-                                    html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" style="line-height: 1.1;"></span></small></div>';
+                                        @if( Gate::check('payments-manage'))
+                                var pay_button_str = 'Set "Paid"';
+                                if (show_sansitive_info) {
+                                    pay_button_str += '<div class="small">' + moneyFormat(value.earnings) + '</div>';
+                                }
+                                html_str = '<button class="btn btn-success pay w-100" data-invoice_id="' + row.id + '" data-paid_amount="' + value.earnings + '">' + pay_button_str + '</button>';
+                                html_str += '<div class="text-danger err_box"><small><span id="error_' + row.id + '" style="line-height: 1.1;"></span></small></div>';
                                 @else
                                     html_str = '<div style="min-height: 50px;"></div>';
                                 @endif
@@ -761,10 +820,14 @@
                                 var add_info = '';
                                 var add_commission = '';
                                 if (show_sansitive_info) {
-                                    if(need_to_show_total) {
+                                    if(need_to_show_details) {
+                                        add_commission = commissionlog;
                                         add_info = 'Total ' + moneyFormat(value.paid_amount);
                                     }
-                                    add_commission = commissionlog;
+                                    else{
+                                        add_info = '<span class="small text-muted">Paid ' + formatDate2(value.paid_at) + '</span> ' + moneyFormat(value.paid_amount);
+                                    }
+
                                 }
                                 html_str = '<div class="mb-2" style="line-height: 1.2;">' + add_commission +
                                     // '<div class="text-nowrap">Paid ' + formatDate2(value.paid_at) + '</div>' +
@@ -775,7 +838,7 @@
                                     var discrepancy_button_str = '<div class="text-nowrap">Fix Discrepancy</div> ';
                                     var colorClass = 'bg-success';
                                     if (value.discrepancy < 0) {
-                                       colorClass = ' bg-danger ';
+                                        colorClass = ' bg-danger ';
                                     }
                                     if (show_sansitive_info) {
                                         discrepancy_button_str += '<div class="small">' + moneyFormat(value.discrepancy) + '</div>';
@@ -800,9 +863,9 @@
 
             function showPayButtonDisp(row){
                 var commissionlog = '<div class="small">';
-                var need_to_show_total = 0;
-                if(row.commission_payments.length > 1){
-                    need_to_show_total = 1;
+                var need_to_show_details = 0;
+                if(isSet(row.commission_payments) && row.commission_payments.length > 1){
+                    need_to_show_details = 1;
                 }
                 $.each(row.commission_payments, function(index, value){
                     if(value.salespeople_id == {{$salespeople->id}}) {
@@ -833,10 +896,14 @@
                                 var add_info = '';
                                 var add_commission = '';
                                 if (show_sansitive_info) {
-                                    if (need_to_show_total) {
+                                    if (need_to_show_details) {
+                                        add_commission = commissionlog;
                                         add_info = 'Total ' + moneyFormat(value.paid_amount);
                                     }
-                                    add_commission = commissionlog;
+                                    else{
+                                        add_info = '<span class="small text-muted">Paid ' + formatDate2(value.paid_at) + '</span> ' + moneyFormat(value.paid_amount);
+                                    }
+
                                 }
                                 html_str = '<div class="mb-2" style="line-height: 1.2;">' + add_commission +
                                     // '<div class="text-nowrap">Paid ' + formatDate2(value.paid_at) + '</div>' +
@@ -988,23 +1055,29 @@
             };
 
             function formatDate(date){
-                var formattedDate = new Date(date+'T00:00:01');
-                var d = formattedDate.getDate();
-                var m =  formattedDate.getMonth();
-                m += 1;  // JavaScript months are 0-11
-                var y = formattedDate.getFullYear();
-                const month = formattedDate.toLocaleString('default', { month: 'short' });
-                return month + " " + d + " " + y;
+                if(isSet(date)) {
+                    var formattedDate = new Date(date + 'T00:00:01');
+                    var d = formattedDate.getDate();
+                    var m = formattedDate.getMonth();
+                    m += 1;  // JavaScript months are 0-11
+                    var y = formattedDate.getFullYear();
+                    const month = formattedDate.toLocaleString('default', {month: 'short'});
+                    return month + " " + d + " " + y;
+                }
+                return '';
             }
 
             function formatDate2(date){
-                var formattedDate = new Date(date.replace(' ', 'T'));
-                var d = formattedDate.getDate();
-                var m =  formattedDate.getMonth();
-                m += 1;  // JavaScript months are 0-11
-                var y = formattedDate.getFullYear().toString().substr(-2);
-                const month = formattedDate.toLocaleString('default', { month: 'short' });
-                return month + " " + d + " " + y;
+                if(isSet(date)) {
+                    var formattedDate = new Date(date.replace(' ', 'T'));
+                    var d = formattedDate.getDate();
+                    var m = formattedDate.getMonth();
+                    m += 1;  // JavaScript months are 0-11
+                    var y = formattedDate.getFullYear().toString().substr(-2);
+                    const month = formattedDate.toLocaleString('default', {month: 'short'});
+                    return month + " " + d + " " + y;
+                }
+                return '';
             }
 
             function isSet(variable){

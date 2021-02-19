@@ -70,10 +70,7 @@ class SalespeopleController extends InvoicesController
 					                 });
 				                 } )
 				                 ->with( 'salespeople.level' )
-				                 ->with( 'commissionPayments' )
-//				                 ->whereHas( 'commissionPayments', function ( $query3 ) use ( $salesperson_id ) {
-//				                 	    $query3->where( 'salespeople_id', $salesperson_id );
-//				                 } )
+//				                 ->with( 'commissionPayments' )
 				;
 
 
@@ -121,10 +118,7 @@ class SalespeopleController extends InvoicesController
 					                 $query2->where( 'salespeople_id', $salesperson_id );
 				                 } )
 				                 ->with( 'salespeople.level' )
-				                 ->with( 'commissionPayments' )
-//								 ->whereHas( 'commissionPayments', function ( $query3 ) use ( $salesperson_id ) {
-//									 $query3->where( 'salespeople_id', $salesperson_id );
-//								 } )
+//				                 ->with( 'commissionPayments' )
 				;
 				if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
 					$date      = $request['date_range'];
