@@ -474,6 +474,134 @@ class CustomersController extends BaseController
 
 	}
 
+	public function findFirebaseUser($email){
+		try {
+			$this->createFirebase();
+			if($this->firebase) {
+				$auth = $this->firebase->createAuth();
+				$res =  $auth->getUserByEmail($email);
+				if($res && $res->uid){
+					return $res->uid;
+				}
+				else{
+					return false;
+				}
+			}
+			$error = "Wrong Firebase credentials or connection issue";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'getFirebaseUser'
+			]);
+			return false;
+		} catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'findFirebaseUser'
+			]);
+			return false;
+		}
+	}
+
+
+	public function getFirebaseUserData($email){
+		try {
+			$firebase_uid = $this->findFirebaseUser( $email );
+			if ( $firebase_uid ) {
+				$ret_data = [
+					'uid' => $firebase_uid,
+					'customerId' => '',
+					'subscriptionId' => ''
+				];
+				$user_data = $this->getFirebaseCollectionRecord( $firebase_uid );
+				if ( ! empty( $user_data ) && ! empty( $user_data['customerId'] ) ) {
+					$ret_data['customerId'] = $user_data['customerId'];
+					$ret_data['subscriptionId'] = !empty($user_data['subscriptionId']) ? $user_data['subscriptionId'] : '';
+					return $ret_data;
+				}
+			}
+			return false;
+		} catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'getFirebaseUserData'
+			]);
+			return false;
+		}
+	}
+
+	public function deleteFirebaseUserAndDoc($uid, $collection = 'users'){
+		try {
+			$this->createFirebase();
+			if($this->firebase) {
+				$auth = $this->firebase->createAuth();
+				$del_res = $auth->deleteUser($uid);
+				if($del_res !== false){
+					//successfuly deleted
+					$firestore         = $this->firebase->createFirestore();
+					$database          = $firestore->database();
+					$collection        = $database->collection( $collection );
+					$documentReference = $collection->document( $uid );
+					$result = $documentReference->delete();
+					return $result;
+				}
+				return false;
+			}
+			$error = "Wrong Firebase credentials or connection issue";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'deleteFirebaseUserAndDoc'
+			]);
+			return false;
+		} catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'deleteFirebaseUserAndDoc'
+			]);
+			return false;
+		}
+	}
+
+	public function refundSequence($email){
+		try {
+			$user_data = $this->getFirebaseUserData( $email );
+			$report = [
+				'firebase' => '',
+				'stripe' => '',
+				'klavio' => '',
+				'sms_system' => '',
+			];
+			if($user_data){
+				if($this->deleteFirebaseUserAndDoc($email)){
+					//firebase data deleted
+					$report['firebase'] = 'deleted';
+				}
+				if(!empty($user_data['customerId'])){
+
+				}
+			}
+			return $report;
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'refundSequence'
+			]);
+			return false;
+		}
+	}
+
+
+
 	public function getFirebaseCollectionRecord($id, $collection= 'users'){
 		try {
 			$this->createFirebase();
@@ -483,7 +611,7 @@ class CustomersController extends BaseController
 				$collection        = $database->collection( $collection );
 				$documentReference = $collection->document( $id );
 				$snapshot = $documentReference->snapshot();
-				return $this->sendResponse($snapshot);
+				return $snapshot->data();
 			}
 			$error = "Wrong Firebase credentials or connection issue";
 			Errors::create([
@@ -491,7 +619,7 @@ class CustomersController extends BaseController
 				'controller' => 'CustomersController',
 				'function' => 'getFirebaseUser'
 			]);
-			return $this->sendError($error);
+			return false;
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -500,7 +628,7 @@ class CustomersController extends BaseController
 				'controller' => 'CustomersController',
 				'function' => 'getFirebaseCollectionRecord'
 			]);
-			return $this->sendError($error);
+			return false;
 		}
 	}
 
