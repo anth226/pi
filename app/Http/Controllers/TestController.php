@@ -36,12 +36,14 @@ class TestController extends BaseController
 	{
 //		dd(phpinfo());
 //		$c = new CustomersController();
+//		$res = $c->deleteFirebaseUserAndDoc('WRX8Kb0s8dYGKI6xBlj9L1LDABH3');
+//		dd($res);
 //		$userProperties = [
-//			'email'         => 'charlie.whitelaw11@gmail.com',
-//			'phone'         => '732-759-5344',
-//			'first_name' => 'Charlie',
-//			'last_name' => 'Whitelaw',
-//			'full_name' => 'Charlie Whitelaw',
+//			'email'         => 'mike.santens@gmail.com',
+//			'phone'         => '(703) 489-1872',
+//			'first_name' => 'Mike',
+//			'last_name' => 'Santens',
+//			'full_name' => 'Mike Santens',
 //			'source' => 'portfolioinsider',
 //			'tags' => 'portfolioinsider,portfolio-insider-prime',
 //		];
