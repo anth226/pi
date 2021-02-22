@@ -65,10 +65,11 @@ class TestController extends BaseController
 //		$this->moveSP();
 //		dd(Invoices::with('customer')->with('salespeople.salespersone')->get()->toArray());
 
-		$i = new InvoicesController();
-		$invoice = Invoices::find(734);
-		dd($i->calcEarning($invoice));
-//		dd($i->recalcAll());
+//		$i = new InvoicesController();
+//		$invoice = Invoices::find(734);
+//		dd($i->calcEarning($invoice));
+		dd($this->recalcAll());
+
 
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\CreateDeal( 33, 11916517, 1200, 'Test Person', 'lll' ) );
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPerson( 'test1@test.com' ) );
@@ -79,6 +80,10 @@ class TestController extends BaseController
 //		dd(LevelsSalespeople::getSalespersonInfo(5));
 	}
 
+	public function recalcAll(){
+		$i = new InvoicesController();
+
+	}
 
 	public function moveSP(){
 		$invoices = Invoices::withTrashed()->get();
