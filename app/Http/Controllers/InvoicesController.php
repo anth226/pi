@@ -14,6 +14,7 @@ use App\KmClasses\Sms\UsStates;
 use App\LevelsSalespeople;
 use App\Products;
 use App\Salespeople;
+use App\SalespeopleLevels;
 use App\SalespeopleLevelsUpdates;
 use App\SalespeoplePecentageLog;
 use App\SecondarySalesPeople;
@@ -561,6 +562,129 @@ class InvoicesController extends BaseController
 	}
 
 	public function calcEarning(Invoices $invoice){
+		try{
+			$max_percentage = 50;
+			$sales_price = $invoice->paid;
+			$max_earning  = $sales_price*$max_percentage/100;
+			$earnings = [];
+			$percentages = $this->getInvoiceCurrentPercentage($invoice);
+			if($percentages && count($percentages)) {
+				$levels = [];
+				$levels_earnings_sum = 0;
+				foreach ($percentages as $salespeople_id => $p) {
+					// find people with same level_id
+					$level_id = $percentages[ $salespeople_id ]['level_id'];
+					$percentage = $percentages[ $salespeople_id ]['percentage'];
+					if($percentage > 0) { //remove 0 pecentages level
+						$levels[ $level_id ]['salespeople'][ $salespeople_id ] = $percentage;
+					}
+					else{
+						$earnings[$salespeople_id] = [
+							'earnings' => 0
+						];
+					}
+				}
+				if(!empty($levels) && count($levels)) {
+					foreach ( $levels as $l_id => $l ) {
+						$level_max_earning = 0;
+						//find same level max pesentage (most likely they are the same)
+						foreach ( $l['salespeople'] as $s => $p ) {
+							$earning = ( $sales_price / 100 ) * $p;
+							if ( $level_max_earning < $earning ) {
+								$level_max_earning = $earning;
+							}
+						}
+						if ( $level_max_earning > $max_earning ) {
+							$level_max_earning = $max_earning;
+						}
+						$levels[ $l_id ]['earnings'] = $level_max_earning; //earnings for level
+						$earning                     = $level_max_earning / count( $levels[ $l_id ]['salespeople'] ); // earning for every salesperson from that level
+						foreach ( $l['salespeople'] as $sid => $p ) {
+							$earnings[ $sid ] = [
+								'earnings' => $earning
+							];
+						}
+						$levels_earnings_sum += $level_max_earning;
+					}
+
+					// in case if all salespeople earnings are more the max earning for deal
+					if ( $levels_earnings_sum > $max_earning ) {
+						$earnings     = [];
+						$levels_count = count( $levels );
+
+						$min_level_earnings = [ // min level earnings
+							'earning'  => 0,
+							'level_id' => 0
+						];
+
+						//minimal level earning
+						$minEarn = $max_earning;
+						foreach ( $levels as $lev_id => $lp ) {
+							if ( $lp['earnings'] <= $minEarn ) {
+								$minEarn            = $lp['earnings'];
+								$min_level_earnings = [ // min level earnings
+									'earning'  => $minEarn,
+									'level_id' => $lev_id
+								];
+							}
+						}
+
+						$remain_earnings = $max_earning - $min_level_earnings['earning'];
+						if ( $remain_earnings < $min_level_earnings['earning'] ) {
+							// all levels earnings should be the same
+							$level_earnings = $max_earning / $levels_count;
+							foreach ( $levels as $l_id => $l ) {
+								$earning = $level_earnings / count( $levels[ $l_id ]['salespeople'] ); // earning for every salesperson from that level
+								foreach ( $l['salespeople'] as $sid => $p ) {
+									$earnings[ $sid ] = [
+										'earnings' => $earning
+									];
+								}
+							}
+						} else {
+							$possible_earnings = $remain_earnings;
+							if ( $levels_count > 1 ) {
+								$possible_earnings = $remain_earnings / ( $levels_count - 1 );
+							}
+
+							foreach ( $levels as $l_id => $l ) {
+								if ( $l_id == $min_level_earnings['level_id'] ) { //if min percentage level
+									$earning = $min_level_earnings['earning'] / count( $levels[ $l_id ]['salespeople'] );
+									foreach ( $l['salespeople'] as $sid => $p ) {
+										$earnings[ $sid ] = [
+											'earnings' => $earning
+										];
+									}
+								} else {
+									$level_earning = $l['earnings'];
+									if ( $possible_earnings <= $level_earning ) {
+										$level_earning = $possible_earnings;
+									}
+									$earning = $level_earning / count( $levels[ $l_id ]['salespeople'] );
+									foreach ( $l['salespeople'] as $sid => $p ) {
+										$earnings[ $sid ] = [
+											'earnings' => $earning
+										];
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			return $earnings;
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'InvoicesController',
+				'function' => 'calcEarning'
+			]);
+			return false;
+		}
+	}
+
+	public function calcEarning_v1(Invoices $invoice){
 		try{
 			$max_percentage = 50;
 			$sales_price = $invoice->paid;
