@@ -545,7 +545,7 @@ class InvoicesController extends BaseController
 						$levels[ $level_id ]['salespeople'][ $salespeople_id ] = $percentage;
 					}
 					else{
-						$earnings[$level_id] = [
+						$earnings[$salespeople_id] = [
 							'earnings' => 0
 						];
 					}
