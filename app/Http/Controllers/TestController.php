@@ -81,8 +81,31 @@ class TestController extends BaseController
 	}
 
 	public function recalcAll(){
-		$i = new InvoicesController();
-
+		try {
+			$errors   = [];
+			$invoices = Invoices::withTrashed()->get();
+			if ( $invoices && $invoices->count() ) {
+				$i = new InvoicesController();
+				foreach ( $invoices as $invoice ) {
+					$earnings = $i->calcEarning( $invoice );
+					if ( ! empty( $earnings ) && count( $earnings ) ) {
+						foreach ( $earnings as $salespeople_id => $e ) {
+							if ( isset( $e['earnings'] ) ) {
+								SecondarySalesPeople::where( 'salespeople_id', $salespeople_id )->where( 'invoice_id', $invoice->id )->update( $e );
+							} else {
+								$errors[] = 'No earnings for invoice: ' . $invoice->id . ', for salespeople id: ' . $salespeople_id;
+							}
+						}
+					} else {
+						$errors[] = 'No earnings for invoice: ' . $invoice->id;
+					}
+				}
+			}
+		}
+		catch (Exception $ex){
+			$errors[] = 'Fatal Error! ' . $ex->getMessage();
+		}
+		dd($errors);
 	}
 
 	public function moveSP(){
