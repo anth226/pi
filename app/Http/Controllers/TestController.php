@@ -68,9 +68,10 @@ class TestController extends BaseController
 //		dd(Invoices::with('customer')->with('salespeople.salespersone')->get()->toArray());
 
 //		$i = new InvoicesController();
-//		$invoice = Invoices::find(112);
+//		$invoice = Invoices::find(734);
 //		dd($i->calcEarning($invoice));
-//		dd($i->recalcAll());
+//		dd($this->recalcAll());
+
 
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\CreateDeal( 33, 11916517, 1200, 'Test Person', 'lll' ) );
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\SearchPerson( 'test1@test.com' ) );
@@ -81,6 +82,33 @@ class TestController extends BaseController
 //		dd(LevelsSalespeople::getSalespersonInfo(5));
 	}
 
+	public function recalcAll(){
+		try {
+			$errors   = [];
+			$invoices = Invoices::withTrashed()->get();
+			if ( $invoices && $invoices->count() ) {
+				$i = new InvoicesController();
+				foreach ( $invoices as $invoice ) {
+					$earnings = $i->calcEarning( $invoice );
+					if ( ! empty( $earnings ) && count( $earnings ) ) {
+						foreach ( $earnings as $salespeople_id => $e ) {
+							if ( isset( $e['earnings'] ) ) {
+								SecondarySalesPeople::where( 'salespeople_id', $salespeople_id )->where( 'invoice_id', $invoice->id )->update( $e );
+							} else {
+								$errors[] = 'No earnings for invoice: ' . $invoice->id . ', for salespeople id: ' . $salespeople_id;
+							}
+						}
+					} else {
+						$errors[] = 'No earnings for invoice: ' . $invoice->id;
+					}
+				}
+			}
+		}
+		catch (Exception $ex){
+			$errors[] = 'Fatal Error! ' . $ex->getMessage();
+		}
+		dd($errors);
+	}
 
 	public function moveSP(){
 		$invoices = Invoices::withTrashed()->get();
