@@ -33,7 +33,7 @@ class InvoicesController extends BaseController
 	function __construct()
 	{
 		$this->middleware(['auth','verified']);
-		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete|salespeople-reports-view-own', ['only' => ['index']]);
+		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete|generated-invoice-list|generated-invoice-create|generated-invoice-edit|generated-invoice-delete|salespeople-reports-view-own', ['only' => ['index']]);
 		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['show', 'showPdf']]);
 		$this->middleware('permission:invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:invoice-edit', ['only' => ['edit','update']]);
@@ -58,18 +58,24 @@ class InvoicesController extends BaseController
 			return abort(404);
 		}
 		else {
-	//	    $firstReportDate = Invoices::orderBy('access_date', 'asc')->value('access_date');
-			$lastReportDate = Invoices::orderBy( 'access_date', 'desc' )->value( 'access_date' );
-			$firstDate      = date( "F j, Y" );
-			$lastDate       = date( "F j, Y" );
-	//		if($firstReportDate) {
-	//			$firstDate = date( "F j, Y", strtotime( $firstReportDate ) );
-	//		}
-			if ( $lastReportDate ) {
-				$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
+			if( $user->hasRole('Customer Service User')){
+				$generated_invoice = new InvoiceGeneratorController();
+				return $generated_invoice->index($request);
 			}
+			else {
+				//	    $firstReportDate = Invoices::orderBy('access_date', 'asc')->value('access_date');
+				$lastReportDate = Invoices::orderBy( 'access_date', 'desc' )->value( 'access_date' );
+				$firstDate      = date( "F j, Y" );
+				$lastDate       = date( "F j, Y" );
+				//		if($firstReportDate) {
+				//			$firstDate = date( "F j, Y", strtotime( $firstReportDate ) );
+				//		}
+				if ( $lastReportDate ) {
+					$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
+				}
 
-			return view( 'invoices.index', compact( 'firstDate', 'lastDate' ) );
+				return view( 'invoices.index', compact( 'firstDate', 'lastDate' ) );
+			}
 		}
 	}
 
