@@ -58,7 +58,7 @@ class InvoicesController extends BaseController
 			return abort(404);
 		}
 		else {
-			if( $user->hasRole('Customer Service User')){
+			if( $user->hasRole('Generated Invoices Only')){
 				$generated_invoice = new InvoiceGeneratorController();
 				return $generated_invoice->create($request);
 			}
