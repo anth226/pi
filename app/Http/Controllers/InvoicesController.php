@@ -60,7 +60,7 @@ class InvoicesController extends BaseController
 		else {
 			if( $user->hasRole('Customer Service User')){
 				$generated_invoice = new InvoiceGeneratorController();
-				return $generated_invoice->index($request);
+				return $generated_invoice->create($request);
 			}
 			else {
 				//	    $firstReportDate = Invoices::orderBy('access_date', 'asc')->value('access_date');
