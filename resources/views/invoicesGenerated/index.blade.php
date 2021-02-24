@@ -18,7 +18,7 @@
                 <div class="row">
                     <div class="col-lg-12 margin-tb">
                         <div class="pull-left">
-                            @can('invoice-create')
+                            @can('generated-invoice-create')
                                 <a class="btn btn-success mb-4 mt-2" href="{{ route('invoice-generator.create') }}"> Generate Invoice</a>
                             @endcan
                             <h2>Generated Invoices</h2>
