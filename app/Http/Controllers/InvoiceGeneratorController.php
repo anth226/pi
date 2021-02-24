@@ -20,7 +20,17 @@ class InvoiceGeneratorController extends InvoicesController
 
 	function __construct()
 	{
-		parent::__construct();
+//		parent::__construct();
+		$this->middleware(['auth','verified']);
+		$this->middleware('permission:generated-invoice-list|generated-invoice-create|generated-invoice-edit|generated-invoice-delete', ['only' => ['index','show', 'showPdf']]);
+		$this->middleware('permission:generated-invoice-create', ['only' => ['create','store']]);
+		$this->middleware('permission:generated-invoice-edit', ['only' => ['edit','update']]);
+		$this->middleware('permission:generated-invoice-delete', ['only' => ['destroy']]);
+
+		$this->pdf_path = base_path().'/resources/views/invoicesPdf/';
+		$this->full_path =  config('app.url').'/pdfview/';
+		$this->app_url =  config('app.url');
+
 		$this->pdf_path = base_path().'/resources/views/invoicesGeneratedPdf/';
 		$this->full_path =  config('app.url').'/pdfviewforgeneratedinvoices/';
 

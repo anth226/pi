@@ -69,7 +69,7 @@
 
                     </div>
                     <div class="pull-right mb-4 ">
-                        @can('invoice-create')
+                        @can('generated-invoice-create')
                         <a class="btn btn-success mb-4 mt-2" href="{{ route('invoice-generator.create') }}"> Generate Invoice</a>
                         @endcan
                         <a class="btn btn-success mb-4 mt-2" href="{{ route('invoice-generator.index') }}"> Generated Invoices List</a>
@@ -132,7 +132,7 @@
 
                 </div>
                 <div class="col-md-6">
-                    @can('invoice-create')
+                    @can('generated-invoice-create')
                     <div class="mb-2">
                         <input type="hidden" id="invoice_id" value="{{ $invoice->id }}">
                         <div class="form-group">
