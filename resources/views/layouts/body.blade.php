@@ -49,7 +49,7 @@
                                     </a>
                                 @endif
 
-                                @if( Gate::check('invoice-create'))
+                                @if( Gate::check('generated-invoice-create'))
                                     <a class="dropdown-item" href="{{ route('invoice-generator.create') }}" >
                                         {{ __('Invoice Generator') }}
                                     </a>
