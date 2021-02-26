@@ -34,7 +34,7 @@ class InvoiceGeneratorController extends InvoicesController
 		$this->pdf_path = base_path().'/resources/views/invoicesGeneratedPdf/';
 		$this->full_path =  config('app.url').'/pdfviewforgeneratedinvoices/';
 
-		$title1 = '2020-Q1-Q2-stock-picks.pdf';
+		$title1 = 'PI Returns From Daily Digest.pdf';
 		$mime1 = 'application/pdf';
 		if(config('app.env') == 'local'){
 			$title1 = 'qqq.pdf';
