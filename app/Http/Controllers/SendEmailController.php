@@ -15,10 +15,14 @@ use Exception;
 
 class SendEmailController extends BaseController
 {
+	public $emailFromAddress, $emailFromName;
+
 	public function __construct()
 	{
 		$this->middleware(['auth','verified']);
 		$this->middleware('permission:invoice-create|send-email-test');
+		$this->emailFromAddress =  config('mail.from.address');
+		$this->emailFromName =  config('mail.from.name');
 	}
 
 	protected function sendInvoiceEmail(Request $request){
@@ -30,9 +34,13 @@ class SendEmailController extends BaseController
 			$to         = ! empty( $input['email'] ) ? $input['email'] : '';
 			$bcc        = ! empty( $input['bcc'] ) ? $input['bcc'] : '';
 			$cc        = ! empty( $input['cc'] ) ? $input['cc'] : '';
-			$from_name           = 'Support Portfolio Insider';
-			$from_email          = 'support@portfolioinsider.com';
-//			$from_email          = 'support@portfolioinsidersystem.com';
+
+//			$from_name           = 'Support Portfolio Insider';
+//			$from_email          = 'support@portfolioinsider.com';
+
+			$from_name           = $this->emailFromName;
+			$from_email          = $this->emailFromAddress;
+
 			if ( $to && $invoice_id && $email_template_id) {
 				$to = array_map('trim', explode(',', $to));
 				if($bcc) {
@@ -169,9 +177,13 @@ class SendEmailController extends BaseController
 			$to         = ! empty( $input['email'] ) ? $input['email'] : '';
 			$bcc        = ! empty( $input['bcc'] ) ? $input['bcc'] : '';
 			$cc        = ! empty( $input['cc'] ) ? $input['cc'] : '';
-			$from_name           = 'Support Portfolio Insider';
-			$from_email          = 'support@portfolioinsider.com';
-//			$from_email          = 'support@portfolioinsidersystem.com';
+
+//			$from_name           = 'Support Portfolio Insider';
+//			$from_email          = 'support@portfolioinsider.com';
+
+			$from_name           = $this->emailFromName;
+			$from_email          = $this->emailFromAddress;
+
 			if ( $to && $invoice_id && $email_template_id) {
 				$to = array_map('trim', explode(',', $to));
 				if($bcc) {
