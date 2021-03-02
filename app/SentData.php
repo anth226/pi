@@ -10,6 +10,7 @@ class SentData extends Model
 		'customer_id',
 		'service_type', // 1 -stripe, 2 - firebase, 3 - klaviyo, 4 - sms_system, 5 - pipedrive
 		'field',
-		'value'
+		'value',
+		'action' //0 - create, 1-delete/unsubscribe/cancel
 	];
 }
