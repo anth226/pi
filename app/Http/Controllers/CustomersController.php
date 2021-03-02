@@ -110,7 +110,7 @@ class CustomersController extends BaseController
 		];
 
 		if(config('app.env') == 'production') {
-			$this->sendDataToSMSSystem( $dataToSend, $customer->id );
+			$this->sendDataToSMSSystem( $dataToSend );
 		}
 
 
@@ -569,34 +569,125 @@ class CustomersController extends BaseController
 		}
 	}
 
-	public function refundSequence($email){
+	public function refundSequence(Invoices $invoice){
 		try {
-			$user_data = $this->getFirebaseUserData( $email );
 			$report = [
-				'firebase' => '',
-				'stripe' => '',
-				'klavio' => '',
-				'sms_system' => '',
+				'success' => true,
+				'errors' => []
 			];
-			if($user_data){
-				if($this->deleteFirebaseUserAndDoc($email)){
-					//firebase data deleted
-					$report['firebase'] = 'deleted';
-				}
-				if(!empty($user_data['customerId'])){
+			$email = $invoice->customer()->email;
+			$customer_id = $invoice->customer()->id;
+			if($email && $customer_id) {
+				$user_data = $this->getFirebaseUserData( $email );
+				if ( $user_data ) {
+					if ( $this->deleteFirebaseUserAndDoc( $email ) ) {
+						//firebase data deleted
+						SentData::create( [
+							'service_type' => 2,
+							'field'        => 'uid',
+							'value'        => $user_data['uid'],
+							'action'       => 1
+						] );
 
+						if ( ! empty( $user_data['subscriptionId'] ) ) {
+							$subscription = $this->stripe->subscriptions->cancel( $user_data['subscriptionId'], [] );
+							if ( $subscription && ! empty( $subscription->status ) && $subscription->status == 'canceled' ) {
+								SentData::create( [
+									'service_type' => 1,
+									'field'        => 'subscriber_id',
+									'value'        => $user_data['subscriptionId'],
+									'action'       => 1
+								] );
+							}
+							else{
+								$report['success'] = false;
+								$report['errors'][] = 'Can\'t cancel stripe subscription';
+							}
+						}
+						else{
+							$report['success'] = false;
+							$report['errors'][] = 'Can\'t cancel stripe subscription, no strip subscriptionId found';
+						}
+
+						if ( ! empty( $user_data['customerId'] ) ) {
+							$customer = $this->stripe->customer->delete( $user_data['customerId'], [] );
+							if ( $customer && ! empty( $customer->deleted ) ) {
+								SentData::create( [
+									'service_type' => 1,
+									'field'        => 'customer_id',
+									'value'        => $user_data['customerId'],
+									'action'       => 1
+								] );
+							}
+							else{
+								$report['success'] = false;
+								$report['errors'][] = 'Can\'t delete stripe user';
+							}
+						}
+						else{
+							$report['success'] = false;
+							$report['errors'][] = 'Can\'t delete stripe user, no stripe customerId found';
+						}
+
+						// unsubscribe sms
+						$sms_lead_id = SentData::where( 'customer_id', $customer_id )
+						                       ->where( 'service_type', 4 )
+						                       ->where( 'field', 'lead_id' )
+						                       ->where( 'action', 0 )
+						                       ->orderBy( 'id', 'desc' )
+						                       ->value( 'value' );
+						if ( $sms_lead_id ) {
+							$input = [
+								'lead_id' => $sms_lead_id,
+								'token'   => 'PortInsQezInch111'
+							];
+							$res   = $this->sendDataToSMSSystem( $input );
+							if ( $res && ! empty( $res['success'] ) ) {
+								SentData::create( [
+									'service_type' => 4,
+									'field'        => 'lead_id',
+									'value'        => $sms_lead_id,
+									'action'       => 1
+								] );
+							}
+							else{
+								$report['success'] = false;
+								$report['errors'][] = 'Can\'t unsubscribe SMS';
+							}
+						}
+						else{
+							$report['success'] = false;
+							$report['errors'][] = 'Can\'t find lead_id from logs';
+						}
+					}
+					else{
+						$report['success'] = false;
+						$report['errors'][] = 'Can\'t delete firebase user';
+					}
 				}
+				else{
+					$report['success'] = false;
+					$report['errors'][] = 'Can\'t get firebase user';
+				}
+			}
+			else{
+				$report['success'] = false;
+				$report['errors'][] = 'Can\'t get customer or email';
 			}
 			return $report;
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
+			$report = [
+				'success' => false,
+				'errors' => [$error]
+			];
 			Errors::create([
 				'error' => $error,
 				'controller' => 'CustomersController',
 				'function' => 'refundSequence'
 			]);
-			return false;
+			return $report;
 		}
 	}
 
