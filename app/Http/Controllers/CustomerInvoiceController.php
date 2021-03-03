@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Customers;
 use App\Invoices;
+use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
@@ -243,6 +244,8 @@ class CustomerInvoiceController extends CustomersController
 			$invoice_instance = new InvoicesController();
 			$invoice_instance->generatePDF($invoice->id);
 
+			$invoice_salespeople = [];
+
 			SecondarySalesPeople::create( [
 				'salespeople_id' => $salespeople_id->salespeople_id,
 				'invoice_id'     => $invoice->id,
@@ -251,6 +254,8 @@ class CustomerInvoiceController extends CustomersController
 				'percentage' => $salespeople_id->level->percentage,
 				'level_id' => $salespeople_id->level_id
 			] );
+
+			$invoice_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('name_for_invoice');
 
 			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
 				foreach ($request->input('second_salespeople_id') as $val){
@@ -264,6 +269,8 @@ class CustomerInvoiceController extends CustomersController
 						'percentage' => $salespeople_id->level->percentage,
 						'level_id' => $salespeople_id->level_id
 					] );
+
+					$invoice_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('name_for_invoice');
 				}
 			}
 
@@ -287,6 +294,7 @@ class CustomerInvoiceController extends CustomersController
 							'field' => 'deal_id',
 							'service_type' => 5 // pipedrive,
 						]);
+						Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\AddNote( $pipedrive_res['data'], implode(', ', $invoice_salespeople) ) );
 					}
 				}
 			}
