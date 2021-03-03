@@ -35,9 +35,10 @@ class TestController extends BaseController
 	public function index()
 	{
 //		dd(phpinfo());
-//		$c = new CustomersController();
-//		$res = $c->deleteFirebaseUserAndDoc('WRX8Kb0s8dYGKI6xBlj9L1LDABH3');
-//		dd($res);
+		$c = new CustomersController();
+		$invoice = Invoices::where('id',852)->with('customer')->first();
+		$res = $c->refundSequence($invoice);
+		dd($res);
 //		$userProperties = [
 //			'email'         => 'mike.santens@gmail.com',
 //			'phone'         => '(703) 489-1872',

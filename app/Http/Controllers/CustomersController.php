@@ -204,11 +204,11 @@ class CustomersController extends BaseController
 	}
 
 
-	protected function sendDataToSMSSystem($input){
+	protected function sendDataToSMSSystem($input, $action_path = 'ulpi'){
 		try {
 			$this->createSMSsystem();
 			if($this->smssystem) {
-				$url      = $this->smssystem;
+				$url      = $this->smssystem.$action_path;
 				$postvars = http_build_query( $input );
 				$ch       = curl_init();
 				curl_setopt( $ch, CURLOPT_URL, $url );
@@ -229,7 +229,7 @@ class CustomersController extends BaseController
 						Errors::create( [
 							'error'      => $error,
 							'controller' => 'CustomersController',
-							'function'   => 'sendLead'
+							'function'   => 'sendDataToSMSSystem'
 						] );
 
 						return $this->sendError( $error, [], 404, false );
@@ -239,7 +239,7 @@ class CustomersController extends BaseController
 					Errors::create( [
 						'error'      => $error,
 						'controller' => 'CustomersController',
-						'function'   => 'sendLead'
+						'function'   => 'sendDataToSMSSystem'
 					] );
 
 					return $this->sendError( $error, [], 404, false );
@@ -575,12 +575,12 @@ class CustomersController extends BaseController
 				'success' => true,
 				'errors' => []
 			];
-			$email = $invoice->customer()->email;
-			$customer_id = $invoice->customer()->id;
+			$email = $invoice->customer->email;
+			$customer_id = $invoice->customer->id;
 			if($email && $customer_id) {
 				$user_data = $this->getFirebaseUserData( $email );
-				if ( $user_data ) {
-					if ( $this->deleteFirebaseUserAndDoc( $email ) ) {
+				if ( $user_data  && !empty($user_data['uid'])) {
+					if ( $this->deleteFirebaseUserAndDoc( $user_data['uid'] ) ) {
 						//firebase data deleted
 						SentData::create( [
 							'service_type' => 2,
@@ -588,77 +588,6 @@ class CustomersController extends BaseController
 							'value'        => $user_data['uid'],
 							'action'       => 1
 						] );
-
-						if ( ! empty( $user_data['subscriptionId'] ) ) {
-							$subscription = $this->stripe->subscriptions->cancel( $user_data['subscriptionId'], [] );
-							if ( $subscription && ! empty( $subscription->status ) && $subscription->status == 'canceled' ) {
-								SentData::create( [
-									'service_type' => 1,
-									'field'        => 'subscriber_id',
-									'value'        => $user_data['subscriptionId'],
-									'action'       => 1
-								] );
-							}
-							else{
-								$report['success'] = false;
-								$report['errors'][] = 'Can\'t cancel stripe subscription';
-							}
-						}
-						else{
-							$report['success'] = false;
-							$report['errors'][] = 'Can\'t cancel stripe subscription, no strip subscriptionId found';
-						}
-
-						if ( ! empty( $user_data['customerId'] ) ) {
-							$customer = $this->stripe->customer->delete( $user_data['customerId'], [] );
-							if ( $customer && ! empty( $customer->deleted ) ) {
-								SentData::create( [
-									'service_type' => 1,
-									'field'        => 'customer_id',
-									'value'        => $user_data['customerId'],
-									'action'       => 1
-								] );
-							}
-							else{
-								$report['success'] = false;
-								$report['errors'][] = 'Can\'t delete stripe user';
-							}
-						}
-						else{
-							$report['success'] = false;
-							$report['errors'][] = 'Can\'t delete stripe user, no stripe customerId found';
-						}
-
-						// unsubscribe sms
-						$sms_lead_id = SentData::where( 'customer_id', $customer_id )
-						                       ->where( 'service_type', 4 )
-						                       ->where( 'field', 'lead_id' )
-						                       ->where( 'action', 0 )
-						                       ->orderBy( 'id', 'desc' )
-						                       ->value( 'value' );
-						if ( $sms_lead_id ) {
-							$input = [
-								'lead_id' => $sms_lead_id,
-								'token'   => 'PortInsQezInch111'
-							];
-							$res   = $this->sendDataToSMSSystem( $input );
-							if ( $res && ! empty( $res['success'] ) ) {
-								SentData::create( [
-									'service_type' => 4,
-									'field'        => 'lead_id',
-									'value'        => $sms_lead_id,
-									'action'       => 1
-								] );
-							}
-							else{
-								$report['success'] = false;
-								$report['errors'][] = 'Can\'t unsubscribe SMS';
-							}
-						}
-						else{
-							$report['success'] = false;
-							$report['errors'][] = 'Can\'t find lead_id from logs';
-						}
 					}
 					else{
 						$report['success'] = false;
@@ -669,6 +598,105 @@ class CustomersController extends BaseController
 					$report['success'] = false;
 					$report['errors'][] = 'Can\'t get firebase user';
 				}
+
+				//delete stripe
+				if ( ! empty( $user_data['subscriptionId'] ) ) {
+					$this->createStripe();
+					if($this->stripe) {
+						$subscription = $this->stripe->subscriptions->cancel( $user_data['subscriptionId'], [] );
+						if ( $subscription && ! empty( $subscription->status ) && $subscription->status == 'canceled' ) {
+							SentData::create( [
+								'service_type' => 1,
+								'field'        => 'subscriber_id',
+								'value'        => $user_data['subscriptionId'],
+								'action'       => 1
+							] );
+						} else {
+							$report['success']  = false;
+							$report['errors'][] = 'Can\'t cancel stripe subscription';
+						}
+					}
+					else{
+							$report['success'] = false;
+							$report['errors'][] = 'Can\'t connect to Stripe';
+					}
+				}
+				else{
+					$report['success'] = false;
+					$report['errors'][] = 'Can\'t cancel stripe subscription, no strip subscriptionId found';
+				}
+
+				if ( ! empty( $user_data['customerId'] ) ) {
+					$customer = $this->stripe->customers->delete( $user_data['customerId'], [] );
+					if ( $customer && ! empty( $customer->deleted ) ) {
+						SentData::create( [
+							'service_type' => 1,
+							'field'        => 'customer_id',
+							'value'        => $user_data['customerId'],
+							'action'       => 1
+						] );
+					}
+					else{
+						$report['success'] = false;
+						$report['errors'][] = 'Can\'t delete stripe user';
+					}
+				}
+				else{
+					$report['success'] = false;
+					$report['errors'][] = 'Can\'t delete stripe user, no stripe customerId found';
+				}
+
+				//delete klavio customer
+				$this->createKlaviyo();
+				if($this->klaviyo) {
+					$list_id = $this->klaviyo_listId;
+					$res = $this->klaviyo->lists->unsubscribeMembersFromList($list_id, $email);
+//					dd($res);
+					SentData::create( [
+						'service_type' => 3,
+						'field'        => 'email',
+						'value'        => $email,
+						'action'       => 1
+					] );
+				}
+				else{
+					$report['success'] = false;
+					$report['errors'][] = 'No Klaviyo API Key found';
+				}
+
+
+				// unsubscribe sms
+				$sms_lead_id = SentData::where( 'customer_id', $customer_id )
+				                       ->where( 'service_type', 4 )
+				                       ->where( 'field', 'lead_id' )
+				                       ->where( 'action', 0 )
+				                       ->orderBy( 'id', 'desc' )
+				                       ->value( 'value' );
+				if ( $sms_lead_id ) {
+					$input = [
+						'lead_id' => $sms_lead_id,
+						'token'   => 'PortInsQezInch111'
+					];
+					$res   = $this->sendDataToSMSSystem( $input, 'ungrancellead' );
+					if ( $res && ! empty( $res['success'] ) ) {
+						SentData::create( [
+							'service_type' => 4,
+							'field'        => 'lead_id',
+							'value'        => $sms_lead_id,
+							'action'       => 1
+						] );
+					}
+					else{
+						$report['success'] = false;
+						$report['errors'][] = 'Can\'t unsubscribe SMS';
+					}
+				}
+				else{
+					$report['success'] = false;
+					$report['errors'][] = 'Can\'t find lead_id from logs';
+				}
+
+
 			}
 			else{
 				$report['success'] = false;
