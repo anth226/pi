@@ -421,7 +421,6 @@ class InvoicesController extends BaseController
 							'service_type' => 5 // pipedrive,
 						] );
 					}
-
 				}
 			}
 
