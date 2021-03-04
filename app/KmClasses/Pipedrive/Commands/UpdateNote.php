@@ -9,20 +9,20 @@ use App\KmClasses\Pipedrive\CommandInterface;
  * Class SearchPerson
  * @package App\KmClasses\Pipedrive\Commands
  */
-class AddNote implements CommandInterface
+class UpdateNote implements CommandInterface
 {
     /**
      * @var
      */
-    private $deal_id, $content;
+    private $note_id, $content;
 
     /**
      * SearchPerson constructor.
      * @param $email
      */
-    public function __construct($deal_id, $content)
+    public function __construct($note_id, $content)
     {
-        $this->deal_id = $deal_id;
+        $this->note_id = $note_id;
         $this->content = $content;
     }
 
@@ -31,10 +31,10 @@ class AddNote implements CommandInterface
 	{
 		$note_data = [
 			"content" => $this->content,
-			"dealId" => $this->deal_id,
+			"id" => $this->note_id,
 		];
 
-		$data = $client->getInstance()->getNotes()->addANote($note_data);
+		$data = $client->getInstance()->getNotes()->updateANote($note_data);
 
 		return $data;
 	}

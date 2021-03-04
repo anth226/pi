@@ -8,6 +8,7 @@ use App\EmailTemplates;
 use App\Errors;
 use App\Http\Controllers\API\BaseController;
 use App\Invoices;
+use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
@@ -321,6 +322,8 @@ class InvoicesController extends BaseController
 
 			$salespeople_id = LevelsSalespeople::getSalespersonInfo($request->input('salespeople_id'));
 
+			$invoice_salespeople = [];
+
 			if($need_update_salespeople) {
 				$dataToUpdate['salespeople_id'] = $salespeople_id->salespeople_id;
 
@@ -357,6 +360,7 @@ class InvoicesController extends BaseController
 					'percentage' => $salespeople_id->level->percentage,
 					'level_id' => $salespeople_id->level_id
 				] );
+				$invoice_salespeople[] = Salespeople::where('id', $dataToUpdate['salespeople_id'])->withTrashed()->value('name_for_invoice');
 
 				if ( ! empty( $request->input( 'second_salespeople_id' ) ) && count( $request->input( 'second_salespeople_id' ) ) ) {
 					foreach ( $request->input( 'second_salespeople_id' ) as $val ) {
@@ -368,8 +372,19 @@ class InvoicesController extends BaseController
 							'percentage' => $salespeople_id->level->percentage,
 							'level_id' => $salespeople_id->level_id
 						] );
+						$invoice_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('name_for_invoice');
 					}
 				}
+				$note_id = SentData::where('service_type', 5)
+				                   ->where('customer_id', $invoice_before->customer->id)
+				                   ->where('field', 'note_id')
+				                   ->orderBy('id', 'desc')
+				                   ->value('value')
+				;
+				if($note_id) {
+					Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\UpdateNote( $note_id, implode( ', ', $invoice_salespeople ) ) );
+				}
+
 			}
 
 			$this->generatePDF($id);
@@ -408,6 +423,7 @@ class InvoicesController extends BaseController
 							'service_type' => 5 // pipedrive,
 						] );
 					}
+
 				}
 			}
 
