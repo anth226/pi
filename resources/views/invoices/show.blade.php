@@ -78,7 +78,9 @@
                                                         $service_name = 'SMS System';
                                                         break;
                                                     case 5:
-                                                        $service_name = 'Pipedrive';
+                                                        if($d->field == "deal_id"){
+                                                            $service_name = 'Pipedrive';
+                                                        }
                                                         break;
                                                     default:
                                                         $service_name = '';

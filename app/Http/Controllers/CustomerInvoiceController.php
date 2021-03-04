@@ -294,7 +294,15 @@ class CustomerInvoiceController extends CustomersController
 							'field' => 'deal_id',
 							'service_type' => 5 // pipedrive,
 						]);
-						Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\AddNote( $pipedrive_res['data'], implode(', ', $invoice_salespeople) ) );
+						$note = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\AddNote( $pipedrive_res['data'], implode(', ', $invoice_salespeople) ) );
+						if($note && !empty($note->data) && !empty($note->data->id)){
+							SentData::create([
+								'customer_id' => $customer->id,
+								'value' => $note->data->id,
+								'field' => 'note_id',
+								'service_type' => 5 // pipedrive,
+							]);
+						}
 					}
 				}
 			}
