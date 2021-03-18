@@ -45,8 +45,8 @@ class TestController extends BaseController
 //			'first_name' => 'Mike',
 //			'last_name' => 'Santens',
 //			'full_name' => 'Mike Santens',
-//			'source' => 'portfolioinsider',
-//			'tags' => 'portfolioinsider,portfolio-insider-prime',
+//			'source' => 'portfolio-insider-prime',
+//			'tags' => 'portfolio-insider-prime',
 //		];
 //		dd($this->sendDataToSMSSystem($userProperties));
 //		dd($this->sendDataToKlaviyo($userProperties));
