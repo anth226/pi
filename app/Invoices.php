@@ -24,7 +24,8 @@ class Invoices extends Model
 		'paid',
 		'own',
 		'paid_at',
-		'refunded_at'
+		'refunded_at',
+		'pdftemplate_id'
 	];
 
 	public function customer()
@@ -55,5 +56,10 @@ class Invoices extends Model
 	public function commissionPayments()
 	{
 		return $this->hasMany('App\CommissionPaymentsLog', 'invoice_id');
+	}
+
+	public function pdftemplate()
+	{
+		return $this->hasOne('App\PdfTemplates', 'id','pdftemplate_id')->withTrashed();
 	}
 }

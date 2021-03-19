@@ -9,6 +9,7 @@
 namespace App\KmClasses\Sms;
 
 use App\LevelsSalespeople;
+use App\PdfTemplates;
 use Carbon\Carbon;
 
 class Elements {
@@ -26,6 +27,34 @@ class Elements {
 		$carbon = Carbon::instance(date_create_from_format('m-d-Y', $datetimestring));
 		$carbon->timezone($timezone);
 		return $carbon->toDateTimeString();
+	}
+
+	public static function pdfTemplatesSelect($name, $params = [], $value = 0){
+		$res = '';
+		$templates = PdfTemplates::get();
+		if($templates && $templates->count()) {
+			foreach ( $templates as $ss ) {
+					$option_title = $ss->title;
+					$selected     = '';
+					if ( $value  && $value == $ss->id) {
+						$selected = ' selected ';
+					}
+					$res .= '<option value="' . $ss->id . '" ' . $selected . ' >' . $option_title . '</option>';
+			}
+		}
+		if($res) {
+			$added_params = '';
+			if ( count( $params ) ) {
+				foreach ( $params as $n => $val ) {
+					$added_params .= ' ' . $n . '="' . $val . '" ';
+				}
+			}
+			$res = '<select
+						 name="' . $name . '"
+                         ' . $added_params . '
+                        >' . $res . '</select>';
+		}
+		return $res;
 	}
 
 	public static function salespeopleSelect($name, $params = [], $values = []){

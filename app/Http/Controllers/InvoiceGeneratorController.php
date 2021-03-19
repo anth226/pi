@@ -223,7 +223,7 @@ class InvoiceGeneratorController extends InvoicesController
 	}
 
 
-	public function generatePDF($invoice){
+	public function generatePDF($invoice, $pdfTemplate = 'pdfgeneratedviewmain'){
 		try {
 			if ( $invoice && $invoice->count() ) {
 				$invoice->invoice_number = $this->generateInvoiceNumber( $invoice->id, '00746-' );
@@ -238,7 +238,7 @@ class InvoiceGeneratorController extends InvoicesController
 				$full_path               = $this->full_path;
 				$app_url                 = $this->app_url;
 				PDF::setOptions( [ 'dpi' => 400 ] );
-				$pdf = PDF::loadView( 'pdfgeneratedviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'grand_total', 'price_before_discount', 'total_before_discount', 'discounts', 'discount_total' ) );
+				$pdf = PDF::loadView( $pdfTemplate, compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'grand_total', 'price_before_discount', 'total_before_discount', 'discounts', 'discount_total' ) );
 				$pdf->save( $this->pdf_path . $file_name );
 				$invoice->save();
 				return true;

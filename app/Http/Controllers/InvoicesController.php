@@ -13,6 +13,7 @@ use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\LevelsSalespeople;
+use App\PdfTemplates;
 use App\Products;
 use App\Salespeople;
 use App\SalespeoplePecentageLog;
@@ -244,7 +245,10 @@ class InvoicesController extends BaseController
 				$salespeople_multiple = false;
 				$salespeople = false;
 			}
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple') );
+
+			$pdftemplates_select = Elements::pdfTemplatesSelect( 'pdftemplate_id', [ 'class' => 'form-control' ], $invoice->pdftemplate_id );
+
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select') );
 		}
 		return abort(404);
 	}
@@ -385,7 +389,19 @@ class InvoicesController extends BaseController
 
 			}
 
-			$this->generatePDF($id);
+			$pdftemplate = 'pdfviewmain';
+			$pdftemplate_id = 1;
+			if(!empty($request->input('pdftemplate_id'))){
+				$pdftemplate_id = $request->input('pdftemplate_id');
+				$pdftemplate = PdfTemplates::where('id', $pdftemplate_id)->value('slug');
+			}
+
+			$this->generatePDF($id, $pdftemplate);
+			if($invoice_before->pdftemplate_id != $pdftemplate_id){
+				Invoices::where('id', $id)->update(['pdftemplate_id' => $pdftemplate_id]);
+			}
+
+
 			$invoice_percentages = $this->calcEarning(Invoices::find($id));
 
 			$all_salespeople = SecondarySalesPeople::where( 'invoice_id', $id )->get();
@@ -467,7 +483,7 @@ class InvoicesController extends BaseController
 		return date('m-d-Y', strtotime($datetimestring));
 	}
 
-	public function generatePDF($id){
+	public function generatePDF($id, $pdftemplate = 'pdfviewmain'){
 		$item_price = 9995;
 		$invoice = Invoices::
 							with('customer')
@@ -490,7 +506,7 @@ class InvoicesController extends BaseController
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
 			PDF::setOptions(['dpi' => 400]);
-			$pdf = PDF::loadView('pdfviewmain', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'price_before_discount', 'total_before_discount', 'discount' ));
+			$pdf = PDF::loadView($pdftemplate, compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'price_before_discount', 'total_before_discount', 'discount' ));
 			$pdf->save($this->pdf_path.$file_name);
 			$invoice->save();
 			return true;
