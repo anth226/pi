@@ -69,6 +69,16 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <strong>PDF Template *:</strong>
+                                {!! $pdftemplates_select !!}
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
             <div class="p-2">
