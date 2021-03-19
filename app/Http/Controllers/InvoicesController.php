@@ -49,34 +49,30 @@ class InvoicesController extends BaseController
 	public function index(Request $request)
 	{
 		$user = Auth::user();
-		if( $user->hasRole('Salesperson')){
-			$salesperson_id = Salespeople::where('email', $user->email)->value('id');
-			if($salesperson_id) {
-				$salespeopleController = new SalespeopleController();
-				return $salespeopleController->show($salesperson_id);
+		if($user->hasRole('Generated Invoices Only') || $user->hasRole('Salesperson')) {
+			if ( $user->hasRole( 'Salesperson' ) ) {
+				$salesperson_id = Salespeople::where( 'email', $user->email )->value( 'id' );
+				if ( $salesperson_id ) {
+					$salespeopleController = new SalespeopleController();
+					return $salespeopleController->show( $salesperson_id );
+				}
+			}
+			if ( $user->hasRole( 'Generated Invoices Only' ) ) {
+				$generated_invoice = new InvoiceGeneratorController();
+				return $generated_invoice->create( $request );
 			}
 			return abort(404);
 		}
 		else {
-			if( $user->hasRole('Generated Invoices Only')){
-				$generated_invoice = new InvoiceGeneratorController();
-				return $generated_invoice->create($request);
+			$lastReportDate = Invoices::orderBy( 'access_date', 'desc' )->value( 'access_date' );
+			$firstDate      = date( "F j, Y" );
+			$lastDate       = date( "F j, Y" );
+			if ( $lastReportDate ) {
+				$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
 			}
-			else {
-				//	    $firstReportDate = Invoices::orderBy('access_date', 'asc')->value('access_date');
-				$lastReportDate = Invoices::orderBy( 'access_date', 'desc' )->value( 'access_date' );
-				$firstDate      = date( "F j, Y" );
-				$lastDate       = date( "F j, Y" );
-				//		if($firstReportDate) {
-				//			$firstDate = date( "F j, Y", strtotime( $firstReportDate ) );
-				//		}
-				if ( $lastReportDate ) {
-					$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
-				}
-
-				return view( 'invoices.index', compact( 'firstDate', 'lastDate' ) );
-			}
+			return view( 'invoices.index', compact( 'firstDate', 'lastDate' ) );
 		}
+
 	}
 
 	public function anyData(Request $request){
