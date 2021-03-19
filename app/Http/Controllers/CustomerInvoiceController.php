@@ -9,6 +9,7 @@ use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\LevelsSalespeople;
+use App\PdfTemplates;
 use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
@@ -48,7 +49,8 @@ class CustomerInvoiceController extends CustomersController
 		$salespeople = Elements::salespeopleSelect('salespeople_id', ['class' => 'form-control']);
 		$products = Products::getIdsAndFullNames();
 		$test_mode = !empty($request->input('test_mode')) ? $request->input('test_mode') : 0;
-		return view('customers.createandsend', compact('states', 'salespeople', 'salespeople_multiple', 'products', 'test_mode'));
+		$pdftemplates_select = Elements::pdfTemplatesSelect( 'pdftemplate_id', [ 'class' => 'form-control' ]);
+		return view('customers.createandsend', compact('states', 'salespeople', 'salespeople_multiple', 'products', 'test_mode', 'pdftemplates_select'));
 	}
 
 
@@ -228,6 +230,13 @@ class CustomerInvoiceController extends CustomersController
 
 			$salespeople_id = LevelsSalespeople::getSalespersonInfo($request->input('salespeople_id'));
 
+			$pdftemplate = 'pdfviewmain';
+			$pdftemplate_id = 1;
+			if(!empty($request->input('pdftemplate_id'))){
+				$pdftemplate_id = $request->input('pdftemplate_id');
+				$pdftemplate = PdfTemplates::where('id', $pdftemplate_id)->value('slug');
+			}
+
 			$invoice = Invoices::create([
 				'customer_id' => $customer->id,
 				'salespeople_id' => $salespeople_id->salespeople_id,
@@ -238,11 +247,12 @@ class CustomerInvoiceController extends CustomersController
 				'cc_number' => $request->input('cc'),
 				'paid' => $paid,
 				'own' => $sales_price - $paid,
-				'paid_at' => Carbon::now()
+				'paid_at' => Carbon::now(),
+				'pdftemplate_id' => $pdftemplate_id
 			]);
 
 			$invoice_instance = new InvoicesController();
-			$invoice_instance->generatePDF($invoice->id);
+			$invoice_instance->generatePDF($invoice->id, $pdftemplate);
 
 			$invoice_salespeople = [];
 

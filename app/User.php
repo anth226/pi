@@ -7,11 +7,15 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
+use Kyslik\ColumnSortable\Sortable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, Notifiable;
 	use HasRoles;
+	use Sortable;
+	use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

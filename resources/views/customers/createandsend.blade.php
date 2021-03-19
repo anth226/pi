@@ -177,16 +177,22 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <strong>Access Date *:</strong>
                         {!! Form::text('access_date', null, array('id="access_date"', 'placeholder' => 'Access Date','class' => 'form-control datetimepicker-input', 'data-toggle="datetimepicker"', 'data-target="#access_date"', 'value="'.date("m-d-Y").'"')) !!}
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <strong>CC *:</strong>
                         {!! Form::number('cc', null, array('placeholder' => 'CC','class' => 'form-control', 'maxlength="4"', 'minlength="4"', 'required="required"')) !!}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <strong>PDF Template:</strong>
+                        {!! $pdftemplates_select !!}
                     </div>
                 </div>
             </div>
