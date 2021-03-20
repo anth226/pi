@@ -4,11 +4,13 @@
 namespace App\Http\Controllers;
 
 
+use App\ActionsLog;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use DB;
+use Illuminate\Support\Facades\Auth;
 
 
 class RoleController extends Controller
@@ -69,6 +71,14 @@ class RoleController extends Controller
 
 		$role = Role::create(['name' => $request->input('name')]);
 		$role->syncPermissions($request->input('permission'));
+
+		$user_logged = Auth::user();
+		ActionsLog::create([
+			'user_id' => $user_logged->id,
+			'model' => 7,
+			'action' => 0,
+			'related_id' => $role->id
+		]);
 
 
 		return redirect()->route('roles.index')
@@ -133,11 +143,54 @@ class RoleController extends Controller
 
 
 		$role = Role::find($id);
+
+		$old_value = Role::where('id', $id)->value('name');
+
 		$role->name = $request->input('name');
 		$role->save();
 
+		$new_value = Role::where('id', $id)->value('name');
+
+		$user_logged = Auth::user();
+
+		if($old_value != $new_value){
+			ActionsLog::create( [
+				'user_id'    => $user_logged->id,
+				'model'      => 7,
+				'field_name' => 'name',
+				'old_value' => $old_value,
+				'new_value' => $new_value,
+				'action'     => 1,
+				'related_id' => $id
+			] );
+		}
+
+		$rolePermissions_old = Permission::join( "role_has_permissions", "role_has_permissions.permission_id", "=", "permissions.id" )
+		                             ->where( "role_has_permissions.role_id", $id )
+		                             ->pluck('permissions.name');
+		$old_value = !empty($rolePermissions_old) ? implode(', ', $rolePermissions_old->toArray()) : '';
+
+
 
 		$role->syncPermissions($request->input('permission'));
+
+
+		$rolePermissions_new = Permission::join( "role_has_permissions", "role_has_permissions.permission_id", "=", "permissions.id" )
+		                                 ->where( "role_has_permissions.role_id", $id )
+		                                 ->pluck('permissions.name');
+		$new_value = !empty($rolePermissions_new) ? implode(', ', $rolePermissions_new->toArray()) : '';
+
+		if($old_value != $new_value) {
+			ActionsLog::create( [
+				'user_id'    => $user_logged->id,
+				'model'      => 7,
+				'field_name' => 'permissions',
+				'old_value'  => $old_value,
+				'new_value'  => $new_value,
+				'action'     => 1,
+				'related_id' => $id
+			] );
+		}
 
 
 		return redirect()->route('roles.index')
@@ -152,6 +205,15 @@ class RoleController extends Controller
 	public function destroy($id)
 	{
 		DB::table("roles")->where('id',$id)->delete();
+
+		$user_logged = Auth::user();
+		ActionsLog::create([
+			'user_id' => $user_logged->id,
+			'model' => 7,
+			'action' => 2,
+			'related_id' => $id
+		]);
+
 		return redirect()->route('roles.index')
 		                 ->with('success','Role deleted successfully');
 	}

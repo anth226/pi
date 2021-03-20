@@ -9,6 +9,7 @@ class EmailLogsGeneratedInvoices extends Model
 	protected $fillable = [
 		'invoice_id',
 		'email_template_id',
+		'user_id',
 		'from',
 		'to'
 	];

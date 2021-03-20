@@ -2,6 +2,7 @@
 
 namespace App\KmClasses\MailEclipse;
 
+use App\ActionsLog;
 use App\EmailTemplates;
 use RegexIterator;
 use ErrorException;
@@ -18,6 +19,8 @@ use Illuminate\Container\Container;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Database\Eloquent\Factory as EloquentFactory;
+use Illuminate\Support\Facades\Auth;
+
 
 class mailEclipse
 {
@@ -116,7 +119,14 @@ class mailEclipse
 
     public static function saveTemplates($templates)
     {
-        EmailTemplates::create($templates);
+        $et = EmailTemplates::create($templates);
+	    $user_logged = Auth::user();
+	    ActionsLog::create([
+		    'user_id' => $user_logged->id,
+		    'model' => 6,
+		    'action' => 0,
+		    'related_id' => $et->id
+	    ]);
     }
 
 	public static function saveTemplates_v1(Collection $templates)
@@ -510,6 +520,18 @@ class mailEclipse
         if (! $save) {
             return $replaced;
         }
+
+	    $user_logged = Auth::user();
+        $slug = str_replace(['/app/resources/views/vendor/maileclipse/templates/','.blade.php'], ['',''], $viewPath);
+        $template_id = EmailTemplates::where('template_slug', $slug)->value('id');
+	    ActionsLog::create( [
+		    'user_id'    => $user_logged->id,
+		    'model'      => 6,
+		    'field_name' => 'file',
+		    'action'     => 1,
+		    'related_id' => $template_id
+	    ] );
+
 
         return file_put_contents($viewPath, $replaced) === false ? false : true;
     }
