@@ -22,12 +22,14 @@ class ActionsLog extends Model
 		1 => 'Invoices',
 		2 => 'Customers',
 		3 => 'Salespeople',
-		4 => 'Users'
+		4 => 'Users',
+		5 => 'InvoiceGenerator'
 	];
 
 	public const ACTION = [
 		0 => 'Created',
 		1 => 'Updated',
-		2 => 'Deleted'
+		2 => 'Deleted',
+		3 => 'EmailSent'
 	];
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\ActionsLog;
 use App\EmailLogs;
 use App\EmailLogsGeneratedInvoices;
 use App\EmailTemplates;
@@ -13,6 +14,7 @@ use App\KmClasses\Sms\UsStates;
 use Illuminate\Http\Request;
 use Exception;
 use PDF;
+use Illuminate\Support\Facades\Auth;
 
 class InvoiceGeneratorController extends InvoicesController
 {
@@ -145,6 +147,15 @@ class InvoiceGeneratorController extends InvoicesController
 
 			$invoice = InvoiceGenerator::create( $dataToSend );
 			$this->generatePDF( $invoice );
+
+			$user = Auth::user();
+			ActionsLog::create([
+				'user_id' => $user->id,
+				'model' => 5,
+				'action' => 0,
+				'related_id' => $invoice->id
+			]);
+
 			return $this->sendResponse( $invoice->id );
 		}
 		catch ( Exception $ex){
