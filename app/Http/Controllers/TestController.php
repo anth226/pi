@@ -34,6 +34,7 @@ class TestController extends BaseController
 
 	public function index()
 	{
+//		dd(LevelsSalespeople::getSalespersonInfo(23)->toArray());
 //		dd(phpinfo());
 //		$c = new CustomersController();
 //		$invoice = Invoices::where('id',852)->with('customer')->first();

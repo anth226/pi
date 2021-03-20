@@ -12,6 +12,8 @@ use App\Invoices;
 use App\KmClasses\Sms\EmailSender;
 use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Support\Facades\Auth;
+
 
 class SendEmailController extends BaseController
 {
@@ -52,12 +54,15 @@ class SendEmailController extends BaseController
 					$cc = array_unique( $cc );
 				}
 
+				$user = Auth::user();
+
 				if(count($to)) {
 					foreach ($to as $t) {
 						if($this->validateEMAIL($t)) {
 							$dataToLog[] = [
 								'invoice_id'        => $invoice_id,
 								'email_template_id' => $email_template_id,
+								'user_id'           => $user->id,
 								'from'              => $from_email,
 								'to'                => $t,
 								'created_at'        => date( 'Y-m-d H:i:s' ),
@@ -75,6 +80,7 @@ class SendEmailController extends BaseController
 							$dataToLog[] = [
 								'invoice_id'        => $invoice_id,
 								'email_template_id' => $email_template_id,
+								'user_id'           => $user->id,
 								'from'              => $from_email,
 								'to'                => $t,
 								'created_at'        => date( 'Y-m-d H:i:s' ),
@@ -92,6 +98,7 @@ class SendEmailController extends BaseController
 							$dataToLog[] = [
 								'invoice_id'        => $invoice_id,
 								'email_template_id' => $email_template_id,
+								'user_id'           => $user->id,
 								'from'              => $from_email,
 								'to'                => $t,
 								'created_at'        => date( 'Y-m-d H:i:s' ),
@@ -195,12 +202,15 @@ class SendEmailController extends BaseController
 					$cc = array_unique( $cc );
 				}
 
+				$user = Auth::user();
+
 				if(count($to)) {
 					foreach ($to as $t) {
 						if($this->validateEMAIL($t)) {
 							$dataToLog[] = [
 								'invoice_id'        => $invoice_id,
 								'email_template_id' => $email_template_id,
+								'user_id'           => $user->id,
 								'from'              => $from_email,
 								'to'                => $t,
 								'created_at'        => date( 'Y-m-d H:i:s' ),
@@ -218,6 +228,7 @@ class SendEmailController extends BaseController
 							$dataToLog[] = [
 								'invoice_id'        => $invoice_id,
 								'email_template_id' => $email_template_id,
+								'user_id'           => $user->id,
 								'from'              => $from_email,
 								'to'                => $t,
 								'created_at'        => date( 'Y-m-d H:i:s' ),
@@ -235,6 +246,7 @@ class SendEmailController extends BaseController
 							$dataToLog[] = [
 								'invoice_id'        => $invoice_id,
 								'email_template_id' => $email_template_id,
+								'user_id'           => $user->id,
 								'from'              => $from_email,
 								'to'                => $t,
 								'created_at'        => date( 'Y-m-d H:i:s' ),

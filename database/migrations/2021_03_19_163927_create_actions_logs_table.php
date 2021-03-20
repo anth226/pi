@@ -21,8 +21,8 @@ class CreateActionsLogsTable extends Migration
             $table->unsignedTinyInteger('action')->default(0);
             $table->unsignedBigInteger('related_id')->default(0);
             $table->string('field_name')->nullable();
-            $table->string('old_value')->nullable();
-            $table->string('new_value')->nullable();
+            $table->string('old_value', 2000)->nullable();
+            $table->string('new_value', 2000)->nullable();
 	        $table->foreign('user_id')->references('id')->on('users')->onUpdate('CASCADE');
         });
     }

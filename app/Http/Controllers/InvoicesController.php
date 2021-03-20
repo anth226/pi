@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\ActionsLog;
 use App\Customers;
 use App\EmailLogs;
 use App\EmailTemplates;
@@ -19,6 +20,7 @@ use App\Salespeople;
 use App\SalespeoplePecentageLog;
 use App\SecondarySalesPeople;
 use App\SentData;
+use Aws\imagebuilder\imagebuilderClient;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -346,7 +348,33 @@ class InvoicesController extends BaseController
 
 			$invoice = Invoices::where('id', $id)->update($dataToUpdate);
 
+			$user_logged = Auth::user();
+			if($dataToUpdate && count($dataToUpdate)) {
+				foreach($dataToUpdate as $field_name => $new_value) {
+					if(isset($invoice_before->$field_name) && $invoice_before->$field_name != $new_value && $field_name != "salespeople_id") {
+						ActionsLog::create( [
+							'user_id'    => $user_logged->id,
+							'model'      => 1,
+							'field_name' => $field_name,
+							'old_value' => $invoice_before->$field_name,
+							'new_value' => $new_value,
+							'action'     => 1,
+							'related_id' => $id
+						] );
+					}
+				}
+			}
+
 			if($need_update_salespeople) {
+
+				$sp_before = SecondarySalesPeople::where( 'invoice_id', $id )->with('salespersone')->with('level')->get();
+				$sp_old = [];
+				if($sp_before && $sp_before->count()){
+					foreach($sp_before as $sp){
+						$sp_old[] = $sp->salespersone->name_for_invoice.'|'.$sp->level->title.'|'.$sp->percentage.'%';
+					}
+				}
+				$old_value = !empty($sp_old) ? implode(', ',$sp_old) : '';
 
 				SecondarySalesPeople::where( 'invoice_id', $id )->delete();
 
@@ -381,6 +409,26 @@ class InvoicesController extends BaseController
 				;
 				if($note_id) {
 					Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\UpdateNote( $note_id, implode( ', ', $invoice_salespeople ) ) );
+				}
+
+				$sp_after = SecondarySalesPeople::where( 'invoice_id', $id )->with('salespersone')->with('level')->get();
+				$sp_new = [];
+				if($sp_after && $sp_after->count()){
+					foreach($sp_after as $sp){
+						$sp_new[] = $sp->salespersone->name_for_invoice.'|'.$sp->level->title.'|'.$sp->percentage.'%';
+					}
+				}
+				$new_value = !empty($sp_new) ? implode(', ',$sp_new) : '';
+				if($new_value != $old_value){
+					ActionsLog::create( [
+						'user_id'    => $user_logged->id,
+						'model'      => 1,
+						'field_name' => 'salespeople',
+						'old_value' => $old_value,
+						'new_value' => $new_value,
+						'action'     => 1,
+						'related_id' => $id
+					] );
 				}
 
 			}

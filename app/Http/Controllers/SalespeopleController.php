@@ -434,10 +434,41 @@ class SalespeopleController extends InvoicesController
 			$salespeople->name_for_invoice      = ! empty( $request->input( 'name_for_invoice' ) ) ? $request->input( 'name_for_invoice' ) : $request->input( 'first_name' ) . ' ' . $last_name;
 			$salespeople->phone_number          = ! empty( $request->input( 'phone_number' ) ) ? $request->input( 'phone_number' ) : '';
 			$salespeople->formated_phone_number = ! empty( $request->input( 'phone_number' ) ) ? FormatUsPhoneNumber::formatPhoneNumber( $request->input( 'phone_number' ) ) : '';
+
+
+			$sp_before_update = Salespeople::where('id', $id)->first()->toArray();
+
+			$user_logged = Auth::user();
+			if($sp_before_update && count($sp_before_update)) {
+				foreach($sp_before_update as $field_name => $old_value) {
+					if(isset($salespeople->$field_name) && $salespeople->$field_name != $old_value && ($field_name == 'first_name' || $field_name != 'last_name' || $field_name != 'email' || $field_name != 'name_for_invoice' || $field_name != 'phone_number') ) {
+						ActionsLog::create( [
+							'user_id'    => $user_logged->id,
+							'model'      => 3,
+							'field_name' => $field_name,
+							'old_value' => $old_value,
+							'new_value' => $salespeople->$field_name,
+							'action'     => 1,
+							'related_id' => $id
+						] );
+					}
+				}
+			}
+
 			$salespeople->save();
 
 
 			if ( is_array( $request->input( 'level_id' ) ) ) {
+
+				$levels_before_update = LevelsSalespeople::where('salespeople_id', $id)->with('level')->get();
+				$levels_before = [];
+				if($levels_before_update && $levels_before_update->count()){
+					foreach($levels_before_update as $l){
+						$levels_before[] = $l->level->title;
+					}
+				}
+				$old_value = !empty($levels_before) ? implode(', ', $levels_before) : '';
+
 				LevelsSalespeople::where('salespeople_id', $id)->delete();
 				foreach ( $request->input( 'level_id' ) as $level_id ) {
 					$new_level = SalespeopleLevels::find( $level_id );
@@ -449,6 +480,28 @@ class SalespeopleController extends InvoicesController
 						] );
 					}
 				}
+
+				$levels_after_update = LevelsSalespeople::where('salespeople_id', $id)->with('level')->get();
+				$levels_after = [];
+				if($levels_after_update && $levels_after_update->count()){
+					foreach($levels_after_update as $l){
+						$levels_after[] = $l->level->title;
+					}
+				}
+				$new_value = !empty($levels_after) ? implode(', ', $levels_after) : '';
+
+				if($old_value != $new_value) {
+					ActionsLog::create( [
+						'user_id'    => $user_logged->id,
+						'model'      => 3,
+						'field_name' => 'levels',
+						'old_value'  => $old_value,
+						'new_value'  => $new_value,
+						'action'     => 1,
+						'related_id' => $id
+					] );
+				}
+
 			}
 			else{
 				return back()->withErrors( ['Error, No level selected' ] )
