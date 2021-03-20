@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\ActionsLog;
 use App\CommissionPaymentsLog;
 use App\CommissionsBalance;
 use App\Errors;
@@ -285,6 +286,14 @@ class SalespeopleController extends InvoicesController
 				'formated_phone_number' => ! empty( $request->input( 'phone_number' ) ) ? FormatUsPhoneNumber::formatPhoneNumber( $request->input( 'phone_number' ) ) : '',
 			] );
 
+			$user = Auth::user();
+			ActionsLog::create([
+				'user_id' => $user->id,
+				'model' => 3,
+				'action' => 0,
+				'related_id' => $salespeople->id
+			]);
+
 			if ( is_array( $request->input( 'level_id' ) ) ) {
 				foreach ( $request->input( 'level_id' ) as $level_id ) {
 					$new_level = SalespeopleLevels::find( $level_id );
@@ -468,6 +477,13 @@ class SalespeopleController extends InvoicesController
 	public function destroy($id)
 	{
 		Salespeople::where('id',$id)->delete();
+		$user = Auth::user();
+		ActionsLog::create([
+			'user_id' => $user->id,
+			'model' => 3,
+			'action' => 2,
+			'related_id' => $id
+		]);
 		return redirect()->route('salespeople.index')
 		                 ->with('success','Salesperson deleted successfully');
 	}

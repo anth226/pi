@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\ActionsLog;
 use Illuminate\Http\Request;
 use App\User;
 
 use Spatie\Permission\Models\Role;
 use DB;
 use Hash;
+use Illuminate\Support\Facades\Auth;
 
 
 class UserController extends Controller
@@ -68,6 +70,15 @@ class UserController extends Controller
 
 
 		$user = User::create($input);
+
+		$user_logged = Auth::user();
+		ActionsLog::create([
+			'user_id' => $user_logged->id,
+			'model' => 4,
+			'action' => 0,
+			'related_id' => $user->id
+		]);
+
 		$user->assignRole($request->input('roles'));
 
 		$user->sendEmailVerificationNotification();
@@ -139,11 +150,50 @@ class UserController extends Controller
 
 
 		$user = User::find($id);
+
+		$user_before_update = User::where('id', $id)->first()->toArray();
+
+		$user_logged = Auth::user();
+		if($user_before_update && count($user_before_update)) {
+			foreach($user_before_update as $field_name => $old_value) {
+				if(isset($input[$field_name]) && $input[$field_name] != $old_value && $field_name != 'created_at' && $field_name != 'updated_at' && $field_name != 'deleted_at' ) {
+					ActionsLog::create( [
+						'user_id'    => $user_logged->id,
+						'model'      => 4,
+						'field_name' => $field_name,
+						'old_value' => $old_value,
+						'new_value' => $input[$field_name],
+						'action'     => 1,
+						'related_id' => $id
+					] );
+				}
+			}
+		}
+
 		$user->update($input);
+
+		$roles_before_update = $user->getRoleNames();
+//		dd($roles_before_update->toArray());
+		$old_value = !empty($roles_before_update) ? implode(', ', $roles_before_update->toArray()) : '';
+
 		DB::table('model_has_roles')->where('model_id',$id)->delete();
 
-
 		$user->assignRole($request->input('roles'));
+
+		$roles_after_update = $user->getRoleNames();
+		$new_value = !empty($roles_after_update) ? implode(', ', $roles_after_update->toArray()) : '';
+
+		if($old_value != $new_value) {
+			ActionsLog::create( [
+				'user_id'    => $user_logged->id,
+				'model'      => 4,
+				'field_name' => 'roles',
+				'old_value'  => $old_value,
+				'new_value'  => $new_value,
+				'action'     => 1,
+				'related_id' => $id
+			] );
+		}
 
 
 		return redirect()->route('users.index')
@@ -160,6 +210,13 @@ class UserController extends Controller
 	public function destroy($id)
 	{
 		User::find($id)->delete();
+		$user_logged = Auth::user();
+		ActionsLog::create([
+			'user_id' => $user_logged->id,
+			'model' => 4,
+			'action' => 2,
+			'related_id' => $id
+		]);
 		return redirect()->route('users.index')
 		                 ->with('success','User deleted successfully');
 	}

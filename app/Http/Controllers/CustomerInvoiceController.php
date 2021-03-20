@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\ActionsLog;
 use App\Customers;
 use App\Invoices;
 use App\KmClasses\Pipedrive;
@@ -17,6 +18,7 @@ use App\SentData;
 use App\SentDataLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Validator;
 
 
@@ -249,6 +251,14 @@ class CustomerInvoiceController extends CustomersController
 				'own' => $sales_price - $paid,
 				'paid_at' => Carbon::now(),
 				'pdftemplate_id' => $pdftemplate_id
+			]);
+
+			$user = Auth::user();
+			ActionsLog::create([
+				'user_id' => $user->id,
+				'model' => 1,
+				'action' => 0,
+				'related_id' => $invoice->id
 			]);
 
 			$invoice_instance = new InvoicesController();
