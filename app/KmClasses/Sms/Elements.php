@@ -29,6 +29,13 @@ class Elements {
 		return $carbon->toDateTimeString();
 	}
 
+	public static function createDate($datetimestring){
+		$timezone = config('app.timezone');
+		$carbon = Carbon::instance(date_create_from_format('m-d-Y', $datetimestring));
+		$carbon->timezone($timezone);
+		return $carbon->toDateString();
+	}
+
 	public static function pdfTemplatesSelect($name, $params = [], $value = 0){
 		$res = '';
 		$templates = PdfTemplates::get();
