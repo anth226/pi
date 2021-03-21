@@ -217,6 +217,11 @@ class UserController extends Controller
 			'action' => 2,
 			'related_id' => $id
 		]);
+		$u = User::where('id', $id)->withTrashed()->first();
+		if($u) {
+			$u->email = $id . 'deleted_' . $u->email;
+			$u->save();
+		}
 		return redirect()->route('users.index')
 		                 ->with('success','User deleted successfully');
 	}

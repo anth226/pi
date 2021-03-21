@@ -204,6 +204,10 @@ class RoleController extends Controller
 	 */
 	public function destroy($id)
 	{
+		$rolePermissions_old = Permission::join( "role_has_permissions", "role_has_permissions.permission_id", "=", "permissions.id" )
+		                                 ->where( "role_has_permissions.role_id", $id )
+		                                 ->pluck('permissions.name');
+		$old_value = !empty($rolePermissions_old) ? implode(', ', $rolePermissions_old->toArray()) : '';
 		DB::table("roles")->where('id',$id)->delete();
 
 		$user_logged = Auth::user();
@@ -211,6 +215,7 @@ class RoleController extends Controller
 			'user_id' => $user_logged->id,
 			'model' => 7,
 			'action' => 2,
+			'old_value' => $old_value,
 			'related_id' => $id
 		]);
 
