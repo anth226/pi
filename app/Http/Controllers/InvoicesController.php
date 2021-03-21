@@ -317,8 +317,19 @@ class InvoicesController extends BaseController
 				}
 				$dataToUpdate['own'] = $sales_price - $paid;
 			}
-			$dataToUpdate['access_date'] = Elements::createDateTime($request->input('access_date'));
+			$dataToUpdate['access_date'] = Elements::createDate($request->input('access_date'));
 			$dataToUpdate['cc_number'] = $request->input('cc_number');
+
+			$pdftemplate = 'pdfviewmain';
+			$pdftemplate_id = 1;
+			if(!empty($request->input('pdftemplate_id'))){
+				$pdftemplate_id = $request->input('pdftemplate_id');
+				$pdftemplate = PdfTemplates::where('id', $pdftemplate_id)->value('slug');
+			}
+
+			if($invoice_before->pdftemplate_id != $pdftemplate_id){
+				$dataToUpdate['pdftemplate_id'] =   $pdftemplate_id;
+			}
 
 			$salespeople_id = LevelsSalespeople::getSalespersonInfo($request->input('salespeople_id'));
 
@@ -351,12 +362,18 @@ class InvoicesController extends BaseController
 			$user_logged = Auth::user();
 			if($dataToUpdate && count($dataToUpdate)) {
 				foreach($dataToUpdate as $field_name => $new_value) {
-					if(isset($invoice_before->$field_name) && $invoice_before->$field_name != $new_value && $field_name != "salespeople_id") {
+					if(isset($invoice_before->$field_name) && $invoice_before->$field_name != $new_value && $field_name != "salespeople_id" && $field_name != "paid_at") {
+						$old_value = $invoice_before->$field_name;
+						if($field_name == 'pdftemplate_id'){
+							$field_name = 'pdftemplate';
+							$new_value = PdfTemplates::where('id', $new_value)->value('title');
+							$old_value = PdfTemplates::where('id', $invoice_before->pdftemplate_id)->value('title');
+						}
 						ActionsLog::create( [
 							'user_id'    => $user_logged->id,
 							'model'      => 1,
 							'field_name' => $field_name,
-							'old_value' => $invoice_before->$field_name,
+							'old_value' => $old_value,
 							'new_value' => $new_value,
 							'action'     => 1,
 							'related_id' => $id
@@ -433,18 +450,9 @@ class InvoicesController extends BaseController
 
 			}
 
-			$pdftemplate = 'pdfviewmain';
-			$pdftemplate_id = 1;
-			if(!empty($request->input('pdftemplate_id'))){
-				$pdftemplate_id = $request->input('pdftemplate_id');
-				$pdftemplate = PdfTemplates::where('id', $pdftemplate_id)->value('slug');
-			}
+
 
 			$this->generatePDF($id, $pdftemplate);
-			if($invoice_before->pdftemplate_id != $pdftemplate_id){
-				Invoices::where('id', $id)->update(['pdftemplate_id' => $pdftemplate_id]);
-			}
-
 
 			$invoice_percentages = $this->calcEarning(Invoices::find($id));
 
