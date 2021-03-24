@@ -195,23 +195,3 @@
             </tr>
         @endif
     </table>
-    <div style="text-align: center;margin-top: 30px;width: 100%">
-        <div>
-            <small>
-                Thanks for becoming a valued customer at PortfolioInsider.com.<br>
-                If you are not entirely satisfied with your purchase, we're here to help you with world class support. <br>
-                We guarantee ACCESS to our platform and daily newsletter. <br>
-                You are entitled to cancel your order within 6 months without giving any reason for doing so. In order to exercise your right of refund, you must inform us of your decision.<br>
-                You can inform us of your decision by email: support@portfolioinsider.com,<br> by phone number: (866) 980-2909 or by mail:
-                9465 Wilshire Boulevard Office #300. Beverly Hills, CA 90212<br>
-                We will reimburse you no later than 14 days from the day on which we receive the notification.<br>
-                We will use the same means of payment as you used for the order, and you will not incur any fees for such reimbursement.
-                If you have any questions about our returns and refunds policy, please contact us:
-            </small>
-        </div>
-        <div>
-            <small>
-                <strong>We love our customers and our phone service operates 24/7 to make you happy! Call (866) 980-2909</strong>
-            </small>
-        </div>
-    </div>

@@ -27,5 +27,6 @@
 </head>
 <body style="background-color: white;padding:4%;font-family: 'Poppins-Regular', sans-serif;font-size: 15px;margin: 0 auto;">
     @include('pdfviewNoLifetimeNoSixMonth')
+    {!! $pdf_footer !!}
 </body>
 </html>
