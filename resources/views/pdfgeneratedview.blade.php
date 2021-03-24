@@ -201,7 +201,7 @@
         <div>
             <small>
                 Thanks for becoming a valued customer at PortfolioInsider.com.<br>
-                If you are not entirely satisfied with your purchase, we're here to help your with world class support. <br>
+                If you are not entirely satisfied with your purchase, we're here to help you with world class support. <br>
                 We guarantee ACCESS to our platform and daily newsletter. <br>
                 You are entitled to cancel your order within 6 months without giving any reason for doing so. In order to exercise your right of refund, you must inform us of your decision.<br>
                 You can inform us of your decision by email: support@portfolioinsider.com,<br> by phone number: (866) 980-2909 or by mail:
