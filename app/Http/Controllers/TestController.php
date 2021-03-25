@@ -36,7 +36,9 @@ class TestController extends BaseController
 	{
 //		dd(LevelsSalespeople::getSalespersonInfo(23)->toArray());
 //		dd(phpinfo());
-//		$c = new CustomersController();
+		$c = new CustomersController();
+		$res = $c->getPipedriveLeadSources('rson226@gmail.com', 1156);
+		dd($res);
 //		$invoice = Invoices::where('id',852)->with('customer')->first();
 //		$res = $c->refundSequence($invoice);
 //		dd($res);
