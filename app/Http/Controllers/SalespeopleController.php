@@ -369,7 +369,17 @@ class SalespeopleController extends InvoicesController
 			if($salesperson_id && $id == $salesperson_id) {
 				$salespeople = Salespeople::with( 'level.level' )->find( $salesperson_id );
 				if ( $salespeople ) {
-
+					$firstDate = date("F j, Y");
+					$lastDate = date("F j, Y");
+					$lastReportDate =  SecondarySalesPeople::join( 'invoices', function ( $join ) use($id){
+						$join->on( 'invoices.id', 'secondary_sales_people.invoice_id' )
+						     ->where('secondary_sales_people.salespeople_id', $id)
+						     ->whereNull( 'invoices.deleted_at' );
+					} )->orderBy('invoices.access_date', 'desc')->first()
+					;
+					if($lastReportDate && !empty($lastReportDate->access_date)) {
+						$firstDate = $lastDate = date( "F j, Y", strtotime( $lastReportDate->access_date ) );
+					}
 					return view( 'salespeople.show', compact( 'salespeople', 'firstDate', 'lastDate' ) );
 				}
 			}
