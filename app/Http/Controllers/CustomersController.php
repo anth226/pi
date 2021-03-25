@@ -9,8 +9,10 @@ use App\Invoices;
 use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
+use App\PipedriveData;
 use App\SentData;
 use App\SentDataLog;
+use App\Strings;
 use Illuminate\Http\Request;
 use Stripe\StripeClient;
 use Kreait\Firebase\Factory;
@@ -971,5 +973,99 @@ class CustomersController extends BaseController
 			Errors::create( ['error' => 'Pipedrive: '.$error, 'controller' => 'CustomersController', 'function' => 'updateOrAddPipedriveDeal'] );
 			return $this->sendError($error, [], 404, false);
 		}
+	}
+
+	public function getPipedriveLeadSources($email, $customer_id){
+		try {
+//			$key = config( 'pipedrive.api_key' );
+			$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
+			$searchPerson = Pipedrive::executeCommand( $key, new Pipedrive\Commands\SearchPersonByName( $email, 1 ) );
+
+			if (
+				!empty($searchPerson) &&
+				!empty($searchPerson->data) &&
+				!empty($searchPerson->data->items) &&
+				count($searchPerson->data->items)
+			)
+			{
+				foreach($searchPerson->data->items as $itm){
+					if(!empty($itm->item) && !empty($itm->item->emails) && count($itm->item->emails)){
+						foreach($itm->item->emails as $em){
+							if(trim(strtolower($email)) == trim(strtolower($em))){
+								//found lead
+								if(!empty($itm->item->customFields)){
+									$sources_str = !empty($itm->item->customFields[0]) ? $itm->item->customFields[0] : '';
+									$extra_fields_str = !empty($itm->item->customFields[2]) ? $itm->item->customFields[2] : '';
+									if($sources_str){
+										$sources_arr = explode(',', $sources_str);
+										if($sources_arr && count($sources_arr)){
+											foreach($sources_arr as $s){
+												$s_trimed = trim($s);
+												if($s_trimed){
+													// check if string exist
+													$str_id = Strings::where('pi_name', $s_trimed)->value('id');
+													if(!$str_id){
+														$str = Strings::create(['pi_name' => $s_trimed]);
+														$str_id = $str->id;
+													}
+													// saving to pipedrive_data table
+													PipedriveData::where('customer_id', $customer_id)
+																	->where('field_name', 0)
+																	->where('pd_source_string_id', $str_id)
+																	->delete();
+
+													PipedriveData::create( [
+														'customer_id'         => $customer_id,
+														'field_name'          => 0,
+														'pd_person_id'        => $itm->item->id,
+														'pd_source_string_id' => $str_id
+													] );
+												}
+											}
+										}
+									}
+									if($extra_fields_str){
+										$extra_fields_arr = explode(',', $extra_fields_str);
+										if($extra_fields_arr && count($extra_fields_arr)){
+											foreach($extra_fields_arr as $x){
+												$x_trimed = trim($x);
+												if($x_trimed){
+													// check if string exist
+													$str_id = Strings::where('pi_name', $x_trimed)->value('id');
+													if(!$str_id){
+														$str = Strings::create(['pi_name' => $x_trimed]);
+														$str_id = $str->id;
+													}
+													// saving to pipedrive_data table
+													PipedriveData::where('customer_id', $customer_id)
+											                       ->where('field_name', 1)
+											                       ->where('pd_source_string_id', $str_id)
+											                       ->delete();
+
+													PipedriveData::create( [
+														'customer_id'         => $customer_id,
+														'field_name'          => 1,
+														'pd_person_id'        => $itm->item->id,
+														'pd_source_string_id' => $str_id
+													] );
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+			}
+			return $this->sendResponse($itm->item, '', false);
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create( ['error' => 'Pipedrive: '.$error, 'controller' => 'CustomersController', 'function' => 'getPipedriveLeadSources'] );
+			return $this->sendError($error, [], 404, false);
+		}
+
 	}
 }
