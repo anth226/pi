@@ -30,6 +30,21 @@
             border-bottom: 1px solid deepskyblue;
         }
 
+        .nextMonthDay.text-danger{
+            color:rgba(255,0,0,0.3) !important;
+        }
+
+        .nextMonthDay.text-success{
+            color:rgba(0,255,0,0.3) !important;
+        }
+
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonthDay, .flatpickr-day.startRange.prevMonthDay, .flatpickr-day.endRange.prevMonthDay, .flatpickr-day.selected.nextMonthDay, .flatpickr-day.startRange.nextMonthDay, .flatpickr-day.endRange.nextMonthDay {
+            background: rgba(0,0,255,0.2) !important;
+            border-color: rgba(0,0,255,0.2) !important;
+        }
+
+
+
         @media (max-width: 1199px) {
             div.sticky {
                 border-bottom: 1px solid deepskyblue;
@@ -313,12 +328,41 @@
                 defaultDate:['{{$firstDate}}','{{$lastDate}}'],
                 dateFormat:"F j, Y",
                 allowInput:false,
+                // onDayCreate: function(dObj, dStr, fp, dayElem){
+                //     var current_date = moment(dObj[0], "F j, Y");
+                //     console.log(current_date.month());
+                //     if (Math.random() < 0.15)
+                //         dayElem.innerHTML += "<span class='event'></span>";
+                //
+                //     else
+                //         dayElem.innerHTML += "<span class='event busy'></span>";
+                // },
+                // parseDate: function(datestr, format){
+                //     var current_date = moment(datestr, "F j, Y");
+                //
+                //         console.log(current_date.toDate());
+                //
+                //     // return datestr.toDay();
+                // },
                 onClose: function() {
                     dispInvoices = {};
                     dissmissedVal = {};
                     discrepancy_box.addClass('d-none');
                     getReportData();
                 },
+                onOpen: function() {
+                    setPayrolDays();
+                },
+                onChange: function() {
+                    setPayrolDays();
+                },
+                onMonthChange: function() {
+                    setPayrolDays();
+                },
+                onYearChange: function() {
+                    setPayrolDays();
+                },
+
                 plugins: [
                     ShortcutButtonsPlugin({
                         button: [
@@ -1146,6 +1190,27 @@
                 }
                 return false;
             }
+
+            function setPayrolDays(){
+                const format = 'MMMM D, YYYY';
+                var first_day_m = moment('January 3, 2020', format);
+                var class_name = 'text-danger';
+                $.each($('.flatpickr-day'), function(item){
+                    var curr_date = $(this).attr("aria-label");
+                    var curr_date_m = moment(curr_date, format);
+                    var days_count = curr_date_m.diff(first_day_m, 'days');
+                    if(days_count%14 == 0){
+                        if(class_name == 'text-success'){
+                            class_name = 'text-danger';
+                        }
+                        else{
+                            class_name = 'text-success';
+                        }
+                    }
+                    $(this).addClass(class_name);
+                });
+            }
+
         });
     </script>
 @endsection

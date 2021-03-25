@@ -29,6 +29,7 @@
     {{--<script src="{{ asset('js/jquery.fancybox.min.js') }}" defer></script>--}}
     <script src="{{ asset('js/flatpickr/flatpickr.min.js') }}"></script>
     <script src="{{ asset('js/flatpickr/buttons.min.js') }}"></script>
+    <script src="{{ asset('js/moment.js') }}"></script>
 
 
     <script src="{{ asset('js/script.js') }}" defer></script>
