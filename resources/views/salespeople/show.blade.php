@@ -1193,7 +1193,7 @@
 
             function setPayrolDays(){
                 const format = 'MMMM D, YYYY';
-                var first_day_m = moment('January 3, 2020', format);
+                var first_day_m = moment('January 10, 2020', format);
                 var class_name = 'text-danger';
                 $.each($('.flatpickr-day'), function(item){
                     var curr_date = $(this).attr("aria-label");
