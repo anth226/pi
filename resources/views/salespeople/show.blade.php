@@ -147,7 +147,11 @@
             <div class="col-lg-12 m-auto">
                 <div class="stat_wrapper">
                     <div class="row mt-2">
-                    <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                            <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        @else
+                            <div class="col-12 col-lg-2 px-1 mb-1 my-lg-auto">
+                        @endif
                         <div class="card order-card bg-info">
                             <div class="text-center py-2 px-1 text-white">
                                 <h4 class="text-center"><span id="subscriptions">0</span></h4>
@@ -155,14 +159,16 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
-                        <div class="card order-card bg-primary">
-                            <div class="text-center py-2 px-1 text-white">
-                                <h4 class="text-center"><span id="revenue">0</span></h4>
-                                <h4 class="lead text-center mb-0">Revenue</h4>
+                    @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                        <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                            <div class="card order-card bg-primary">
+                                <div class="text-center py-2 px-1 text-white">
+                                    <h4 class="text-center"><span id="revenue">0</span></h4>
+                                    <h4 class="lead text-center mb-0">Revenue</h4>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
                     <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
                         <div class="card order-card bg-info">
                             <div class="text-center py-2 px-1 text-white">
@@ -179,7 +185,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                            <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        @else
+                             <div class="col-6 col-lg-3 px-1 mb-1 my-lg-auto">
+                        @endif
                         <div class="card order-card paid_stat">
                             <div class="text-center py-2 px-1">
                                 <h2 class="text-center"><span id="paid">0</span></h2>
@@ -187,7 +197,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                            <div class="col-6 col-lg-2 px-1 mb-1 my-lg-auto">
+                        @else
+                            <div class="col-6 col-lg-3 px-1 mb-1 my-lg-auto">
+                        @endif
                         <div class="card order-card topay_stat">
                             <div class="text-center py-2 px-1">
                                 <h2 class="text-center"><strong><span id="topay">0</span></strong></h2>
@@ -512,7 +526,14 @@
                     { data: 'id', name: 'id', "searchable": false,  "visible": false },
 
                     { data: 'customer.first_name', name: 'customer.first_name',"sortable": false,  render: function ( data, type, row ){
-                            return '<a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a><div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>'
+                            var customer_html = '';
+                            @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                                customer_html = '<a href="/customers/' + row.customer.id + '" target="_blank">' + row.customer.first_name + ' ' + row.customer.last_name + '</a>';
+                            @else
+                                customer_html = row.customer.first_name + ' ' + row.customer.last_name;
+                            @endif
+                                customer_html += '<div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>';
+                            return customer_html;
                         }},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
@@ -612,7 +633,14 @@
                     { data: 'id', name: 'id', "searchable": false,  "visible": false },
 
                     { data: 'customer.first_name', name: 'customer.first_name',"sortable": false,  render: function ( data, type, row ){
-                            return '<a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a><div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>'
+                            var customer_html = '';
+                            @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                                customer_html = '<a href="/customers/' + row.customer.id + '" target="_blank">' + row.customer.first_name + ' ' + row.customer.last_name + '</a>';
+                            @else
+                                customer_html = row.customer.first_name + ' ' + row.customer.last_name;
+                            @endif
+                            customer_html += '<div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>';
+                            return customer_html;
                         }},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
@@ -947,15 +975,19 @@
                     if(row.salespeople.length){
                         $.each(row.salespeople, function( index, value ) {
                             var additions = '';
+                            var level_title = '';
+                            @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                                level_title = value.level.title + ' | ';
+                            @endif
                             if(show_sansitive_info) {
                                 @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
                                     if (value.earnings) {
-                                        additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + value.level.title + ' | ' + value.percentage + '%)</span></small></span>';
+                                        additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + level_title + value.percentage + '%)</span></small></span>';
                                     }
                                 @else
                                     @if( Gate::check('salespeople-reports-view-own'))
                                         if (value.earnings && value.salespersone.id == {{$salespeople->id}}) {
-                                            additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + value.level.title + ' | ' + value.percentage + '%)</span></small></span>';
+                                            additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + level_title + value.percentage + '%)</span></small></span>';
                                         }
                                     @endif
                                 @endif
@@ -968,24 +1000,38 @@
                                         '</div>';
                                 }
                                 else {
-                                    ret_data += '<div>' +
+                                    @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                                        ret_data += '<div>' +
                                         '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' + value.salespersone.name_for_invoice + '</a>' +
                                         additions +
                                         '</div>';
+                                    @else
+                                            @if( Gate::check('salespeople-reports-view-own'))
+                                                ret_data += '<div>' +
+                                                '<p title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '">' + value.salespersone.name_for_invoice + '</p>' +
+                                                additions +
+                                                '</div>';
+                                            @endif
+                                    @endif
+
                                 }
                             }
                         });
                         $.each(row.salespeople, function( index, value ) {
                             var additions = '';
+                            var level_title = '';
+                            @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                                level_title = value.level.title + ' | ';
+                            @endif
                             if(show_sansitive_info) {
                                 @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
                                     if (value.earnings) {
-                                        additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + value.level.title + ' | ' + value.percentage + '%)</span></small></span>';
+                                        additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + level_title + value.percentage + '%)</span></small></span>';
                                     }
                                 @else
                                     @if( Gate::check('salespeople-reports-view-own'))
                                         if (value.earnings && value.salespersone.id == {{$salespeople->id}}) {
-                                            additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + value.level.title + ' | ' + value.percentage + '%)</span></small></span>';
+                                            additions = ' <span><small>' + moneyFormat(value.earnings) + ' <span class="text-muted">(' + level_title + value.percentage + '%)</span></small></span>';
                                         }
                                     @endif
                                 @endif
@@ -998,10 +1044,20 @@
                                         '</div>';
                                 }
                                 else {
-                                    ret_data += '<div style="line-height: 1.1">' +
+                                    @if( Gate::check('invoice-create') || Gate::check('salespeople-reports-view-all'))
+                                        ret_data += '<div style="line-height: 1.1">' +
                                         '<a href="/salespeople/' + value.salespersone.id + '" target="_blank" title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '"><small>' + value.salespersone.name_for_invoice + '</small></a>' +
                                         additions +
                                         '</div>';
+                                    @else
+                                            @if( Gate::check('salespeople-reports-view-own'))
+                                                ret_data += '<div style="line-height: 1.1">' +
+                                                '<p title="' + value.salespersone.first_name + ' ' + value.salespersone.last_name + '"><small>' + value.salespersone.name_for_invoice + '</small></p>' +
+                                                additions +
+                                                '</div>';
+                                            @endif
+                                    @endif
+
                                 }
                             }
                         });
