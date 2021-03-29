@@ -38,4 +38,14 @@ class Customers extends Model
 	public function invoices()	{
 		return $this->hasOne('App\Invoices', 'customer_id','id');
 	}
+
+	public function pipedriveData()	{
+		return $this->hasMany('App\PipedriveData', 'customer_id','id');
+	}
+	public function pipedriveSources()	{
+		return $this->hasMany('App\PipedriveData', 'customer_id','id')->where('field_name',0);
+	}
+	public function pipedriveExtra()	{
+		return $this->hasMany('App\PipedriveData', 'customer_id','id')->where('field_name',1);
+	}
 }

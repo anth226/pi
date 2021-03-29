@@ -975,10 +975,19 @@ class CustomersController extends BaseController
 		}
 	}
 
-	public function getPipedriveLeadSources($email, $customer_id){
+	public function getPipedriveLeadSources(Customers $customers){
 		try {
-//			$key = config( 'pipedrive.api_key' );
-			$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
+			$key = config( 'pipedrive.api_key' );
+			$source_field_name = config( 'pipedrive.source_field_id' );
+			$extra_field_name = config( 'pipedrive.extra_field_id' );
+
+//			$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
+//			$source_field_name = '0d42d585b2f6407cd384cd02838de179c0a1527d';
+//			$extra_field_name = '012fe2582b1a93009814bdd11aa6a630622eb209';
+
+			$email = $customers->email;
+			$customer_id = $customers->id;
+
 			$searchPerson = Pipedrive::executeCommand( $key, new Pipedrive\Commands\SearchPersonByName( $email, 1 ) );
 
 			if (
@@ -993,63 +1002,68 @@ class CustomersController extends BaseController
 						foreach($itm->item->emails as $em){
 							if(trim(strtolower($email)) == trim(strtolower($em))){
 								//found lead
-								if(!empty($itm->item->customFields)){
-									$sources_str = !empty($itm->item->customFields[0]) ? $itm->item->customFields[0] : '';
-									$extra_fields_str = !empty($itm->item->customFields[2]) ? $itm->item->customFields[2] : '';
-									if($sources_str){
-										$sources_arr = explode(',', $sources_str);
-										if($sources_arr && count($sources_arr)){
-											foreach($sources_arr as $s){
-												$s_trimed = trim($s);
-												if($s_trimed){
-													// check if string exist
-													$str_id = Strings::where('pi_name', $s_trimed)->value('id');
-													if(!$str_id){
-														$str = Strings::create(['pi_name' => $s_trimed]);
-														$str_id = $str->id;
-													}
-													// saving to pipedrive_data table
-													PipedriveData::where('customer_id', $customer_id)
-																	->where('field_name', 0)
-																	->where('pd_source_string_id', $str_id)
-																	->delete();
 
-													PipedriveData::create( [
-														'customer_id'         => $customer_id,
-														'field_name'          => 0,
-														'pd_person_id'        => $itm->item->id,
-														'pd_source_string_id' => $str_id
-													] );
+								if(!empty($itm->item->id)){
+									//delete previous data
+									PipedriveData::where( 'customer_id', $customer_id )
+									             ->delete();
+									$res = Pipedrive::executeCommand( $key, new Pipedrive\Commands\GetPersonCustomField( $itm->item->id ) );
+									if(!empty($res) && !empty($res->data)) {
+										if(!empty($res->data->$source_field_name)) {
+												$sources_arr = explode( ',', $res->data->$source_field_name );
+												if ( $sources_arr && count( $sources_arr ) ) {
+													foreach ( $sources_arr as $s ) {
+														$s_trimed = trim( $s );
+														if ( $s_trimed ) {
+															// check if string exist
+															$str_id = Strings::where( 'pi_name', $s_trimed )->value( 'id' );
+															if ( ! $str_id ) {
+																$str    = Strings::create( [ 'pi_name' => $s_trimed ] );
+																$str_id = $str->id;
+															}
+															// saving to pipedrive_data table
+															PipedriveData::where( 'customer_id', $customer_id )
+															             ->where( 'field_name', 0 )
+															             ->where( 'pd_source_string_id', $str_id )
+															             ->delete();
+
+															PipedriveData::create( [
+																'customer_id'         => $customer_id,
+																'field_name'          => 0,
+																'pd_person_id'        => $itm->item->id,
+																'pd_source_string_id' => $str_id
+															] );
+														}
+													}
 												}
-											}
 										}
-									}
-									if($extra_fields_str){
-										$extra_fields_arr = explode(',', $extra_fields_str);
-										if($extra_fields_arr && count($extra_fields_arr)){
-											foreach($extra_fields_arr as $x){
-												$x_trimed = trim($x);
-												if($x_trimed){
-													// check if string exist
-													$str_id = Strings::where('pi_name', $x_trimed)->value('id');
-													if(!$str_id){
-														$str = Strings::create(['pi_name' => $x_trimed]);
-														$str_id = $str->id;
-													}
-													// saving to pipedrive_data table
-													PipedriveData::where('customer_id', $customer_id)
-											                       ->where('field_name', 1)
-											                       ->where('pd_source_string_id', $str_id)
-											                       ->delete();
+										if(!empty($res->data->$extra_field_name)) {
+												$extra_fields_arr = explode( ',', $res->data->$extra_field_name );
+												if ( $extra_fields_arr && count( $extra_fields_arr ) ) {
+													foreach ( $extra_fields_arr as $x ) {
+														$x_trimed = trim( $x );
+														if ( $x_trimed ) {
+															// check if string exist
+															$str_id = Strings::where( 'pi_name', $x_trimed )->value( 'id' );
+															if ( ! $str_id ) {
+																$str    = Strings::create( [ 'pi_name' => $x_trimed ] );
+																$str_id = $str->id;
+															}
+															// saving to pipedrive_data table
+															PipedriveData::where( 'customer_id', $customer_id )
+															             ->where( 'field_name', 1 )
+															             ->where( 'pd_source_string_id', $str_id )
+															             ->delete();
 
-													PipedriveData::create( [
-														'customer_id'         => $customer_id,
-														'field_name'          => 1,
-														'pd_person_id'        => $itm->item->id,
-														'pd_source_string_id' => $str_id
-													] );
+															PipedriveData::create( [
+																'customer_id'         => $customer_id,
+																'field_name'          => 1,
+																'pd_person_id'        => $itm->item->id,
+																'pd_source_string_id' => $str_id
+															] );
+														}
+													}
 												}
-											}
 										}
 									}
 								}
@@ -1059,7 +1073,7 @@ class CustomersController extends BaseController
 				}
 
 			}
-			return $this->sendResponse($itm->item, '', false);
+			return $this->sendResponse([], '', false);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();

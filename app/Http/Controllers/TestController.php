@@ -36,18 +36,19 @@ class TestController extends BaseController
 	{
 //		dd(LevelsSalespeople::getSalespersonInfo(23)->toArray());
 //		dd(phpinfo());
-		$c = new CustomersController();
-		$res = $c->getPipedriveLeadSources('rson226@gmail.com', 1156);
-		dd($res);
+
+		dd($this->getPersonsSources());
+
 //		$invoice = Invoices::where('id',852)->with('customer')->first();
+
 //		$res = $c->refundSequence($invoice);
 //		dd($res);
 //		$userProperties = [
-//			'email'         => 'mike.santens@gmail.com',
-//			'phone'         => '(703) 489-1872',
-//			'first_name' => 'Mike',
-//			'last_name' => 'Santens',
-//			'full_name' => 'Mike Santens',
+//			'email'         => 'velayomarilyn@gmail.com',
+//			'phone'         => '(903) 641-5553',
+//			'first_name' => 'Jason',
+//			'last_name' => 'Clayton',
+//			'full_name' => 'Jason Clayton',
 //			'source' => 'portfolio-insider-prime',
 //			'tags' => 'portfolio-insider-prime',
 //		];
@@ -84,6 +85,16 @@ class TestController extends BaseController
 
 //		dd($this->findOwnerOnPipedrive());
 //		dd(LevelsSalespeople::getSalespersonInfo(5));
+	}
+
+	public function getPersonsSources(){
+		ini_set( 'memory_limit', '8024M' );
+		set_time_limit( 7200 );
+		$customers = Customers::withTrashed()->get();
+		foreach($customers as $c){
+			$cc = new CustomersController();
+			$cc->getPipedriveLeadSources($c);
+		}
 	}
 
 	public function recalcAll(){
