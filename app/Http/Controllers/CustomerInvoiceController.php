@@ -330,6 +330,8 @@ class CustomerInvoiceController extends CustomersController
 			$invoice_percentages = $invoice_instance->calcEarning(Invoices::find($invoice->id));
 			$invoice_instance->savePercentages($invoice_percentages, $invoice->id);
 
+			$this->getPipedriveLeadSources($customer);
+
 			return $this->sendResponse($invoice->id);
 		}
 

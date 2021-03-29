@@ -18,4 +18,8 @@ class PipedriveData extends Model
 		0 => 'Source',
 		1 => 'EXTRA FIELD'
 	];
+
+	public function fieldName()	{
+		return $this->hasOne('App\Strings', 'id','pd_source_string_id');
+	}
 }

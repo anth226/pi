@@ -112,6 +112,8 @@ class InvoicesController extends BaseController
 		$query =  Invoices::with('customer')
 		                  ->with('salespeople.salespersone')
 						  ->with('salespeople.level')
+						  ->with('customer.pipedriveSources')
+						  ->with('customer.pipedriveSources.fieldName')
 		;
 		if ( ! empty( $request['date_range'] ) && empty( $request['search']['value'] ) ) {
 			$date      = $request['date_range'];

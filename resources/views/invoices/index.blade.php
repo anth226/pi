@@ -94,11 +94,12 @@
                     <th>Access Date</th>
                     <th>ID</th>
                     <th>Name</th>
-                    <th>Amount</th>
-                    <th>Salesperson</th>
+                    <th>Salespeople</th>
                     <th>Email</th>
                     <th>Phone</th>
+                    <th>Amount</th>
                     <th>To Pay</th>
+                    <th>Sources</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -258,8 +259,14 @@
                     { data: 'id', name: 'id', "searchable": false,  "visible": false },
 
                     { data: 'customer.first_name', name: 'customer.first_name',"sortable": false,  render: function ( data, type, row ){
-                            return '<a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a>'
+                            return '<div><a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a></div>';
                         }},
+
+                    { data: 'salespersone', name: 'salespersone',"sortable": false,"searchable": false, className:"text-nowrap", render: function ( data, type, row ){
+                            return generateSalespeople(row);
+                        }  },
+                    { data: 'customer.email', name: 'customer.email', "sortable": false },
+                    { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap"},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 if(data > 0) {
@@ -278,11 +285,6 @@
                                 return '';
                             }
                         } },
-                    { data: 'salespersone', name: 'salespersone',"sortable": false,"searchable": false, className:"text-nowrap", render: function ( data, type, row ){
-                            return generateSalespeople(row);
-                        }  },
-                    { data: 'customer.email', name: 'customer.email', "sortable": false },
-                    { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap"},
                     { data: 'own', name: 'own', "sortable": true, className:"text-nowrap", "searchable": false, render: function ( data, type, row ){
                             if(data > 0) {
                                 return '<div class="text-danger">' + moneyFormat(data) + '</div>';
@@ -291,6 +293,17 @@
                                 return '';
                             }
                         }  },
+                    { data: 'customer.pipedrive_sources', name: 'customer.pipedrive_sources', "searchable": false, "sortable": false,  "visible": true, render: function ( data, type, row ) {
+                            var resulHtml = '';
+                            if(data && data.length) {
+                                $.each(data, function(i, item){
+                                    if(item && item.field_name && item.field_name.pi_name){
+                                        resulHtml += '<div class="mb-2" style="line-height: 1;">'+item.field_name.pi_name+'</div>';
+                                    }
+                                })
+                            }
+                            return resulHtml;
+                        }},
                     { data: 'id', name: 'id', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 return '<a title="Open invoice in a new tab" target="_blank" href="/invoices/' + data + '"><span class="badge badge-success">View</span></a>';
