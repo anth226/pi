@@ -37,7 +37,7 @@ class TestController extends BaseController
 //		dd(LevelsSalespeople::getSalespersonInfo(23)->toArray());
 //		dd(phpinfo());
 
-		dd($this->getPersonsSources());
+//		dd($this->getPersonsSources());
 
 //		$invoice = Invoices::where('id',852)->with('customer')->first();
 
