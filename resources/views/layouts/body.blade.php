@@ -61,11 +61,11 @@
                                     </a>
                                 @endif
 
-                                @if( Gate::check('performance-reports-view'))
-                                    <a class="dropdown-item" href="/reports/salespeople" >
-                                        {{ __('Salespeople Report') }}
-                                    </a>
-                                @endif
+                                {{--@if( Gate::check('performance-reports-view'))--}}
+                                    {{--<a class="dropdown-item" href="/reports/salespeople" >--}}
+                                        {{--{{ __('Salespeople Report') }}--}}
+                                    {{--</a>--}}
+                                {{--@endif--}}
                                 @if( Gate::check('sources-reports-view'))
                                     <a class="dropdown-item" href="/reports/sources" >
                                         {{ __('Sources Report') }}
