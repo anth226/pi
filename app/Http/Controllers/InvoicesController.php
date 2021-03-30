@@ -684,7 +684,10 @@ class InvoicesController extends BaseController
 
 	public function calcEarning(Invoices $invoice){
 		try{
-			$max_percentage = 50;
+			$max_percentage = 30;
+			if(strtotime($invoice->access_date.' 00:00:01') <  strtotime('2021-03-30 00:00:01')){
+				$max_percentage = 50;
+			}
 			$sales_price = $invoice->paid;
 			$max_earning  = $sales_price*$max_percentage/100;
 			$earnings = [];
