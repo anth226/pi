@@ -10,13 +10,14 @@ use Twilio\Jwt\Grants\VoiceGrant;
 class TwilioTokenController extends Controller
 {
 	public $clientToken ;
+	public $accessToken ;
 
 	public function __construct()
 	{
 		$this->middleware(['auth','verified']);
 		$this->middleware('permission:salespeople-reports-view-all');
-		$this->clientToken = new ClientToken(config('services.twilio.twilio_sid'), config('services.twilio.twilio_token'));
-//		$this->clientToken = new AccessToken(config('services.twilio.twilio_sid'), config('services.twilio.twilio_key'), config('services.twilio.twilio_secret'));
+		$this->clientToken = new ClientToken(config('twilio.twilio_sid'), config('twilio.twilio_token'));
+//		$this->accessToken = new AccessToken(config('twilio.twilio_sid'), config('twilio.twilio_key'), config('twilio.twilio_secret'));
 
 	}
 
@@ -29,8 +30,6 @@ class TwilioTokenController extends Controller
 	{
 		$forPage = $request->input('forPage');
 
-		$applicationSid = config('services.twilio.twilio_app_sid');
-
 		if ($forPage === route('test-call', [], false)) {
 			$this->clientToken->allowClientIncoming('support_agent');
 		} else {
@@ -38,6 +37,36 @@ class TwilioTokenController extends Controller
 		}
 
 		$token = $this->clientToken->generateToken();
+		return response()->json(['token' => $token]);
+	}
+
+	public function newToken_v2(Request $request)
+	{
+		$forPage = $request->input('forPage');
+		$accountSid = config('twilio.twilio_sid');
+		$applicationSid = config('twilio.twilio_app_sid');
+		$apiKey = config('twilio.twilio_key');
+		$apiSecret = config('twilio.twilio_secret');
+
+		if ($forPage === route('dashboard', [], false)) {
+			$this->accessToken->setIdentity('support_agent');
+		} else {
+			$this->accessToken->setIdentity('customer');
+		}
+
+		// Create Voice grant
+		$voiceGrant = new VoiceGrant();
+		$voiceGrant->setOutgoingApplicationSid($applicationSid);
+
+		// Optional: add to allow incoming calls
+		$voiceGrant->setIncomingAllow(true);
+
+		// Add grant to token
+		$this->accessToken->addGrant($voiceGrant);
+
+		// render token to string
+		$token = $this->accessToken->toJWT();
+
 		return response()->json(['token' => $token]);
 	}
 }
