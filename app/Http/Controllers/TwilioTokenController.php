@@ -48,7 +48,7 @@ class TwilioTokenController extends Controller
 		$apiKey = config('twilio.twilio.twilio_key');
 		$apiSecret = config('twilio.twilio.twilio_secret');
 
-		if ($forPage === route('dashboard', [], false)) {
+		if ($forPage === route('test-call', [], false)) {
 			$this->accessToken->setIdentity('support_agent');
 		} else {
 			$this->accessToken->setIdentity('customer');
