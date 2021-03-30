@@ -22,4 +22,8 @@ class PipedriveData extends Model
 	public function fieldName()	{
 		return $this->hasOne('App\Strings', 'id','pd_source_string_id');
 	}
+
+	public function customer()	{
+		return $this->hasOne('App\Customers', 'id','customer_id');
+	}
 }
