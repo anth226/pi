@@ -74,7 +74,7 @@
 
         <div class="row">
 
-            <div class="col-md-5 order-md-2 mb-4">
+            <div class="col-md-10 order-md-2 mb-4">
                 <div class="card">
                     {{--<h5 class="card-header">--}}
                         {{--Make a call--}}
@@ -86,11 +86,12 @@
                                 <input id="call-status" class="form-control" type="text" placeholder="Connecting to Twilio..." readonly>
                             </div>
                         </div>
-                        {{--<button class="btn btn-lg btn-success answer-button" disabled>Answer call</button>--}}
+
                         <button onclick="callCustomer('+18184507532')" type="button" class="btn btn-primary btn-lg call-customer-button">
                             818-450-7532
                         </button>
                         <button class="btn btn-lg btn-danger hangup-button" disabled onclick="hangUp()">Hang up</button>
+                        <button class="btn btn-lg btn-success answer-button" disabled>Answer call</button>
                     </div>
                 </div>
             </div>
