@@ -16,8 +16,8 @@ class TwilioTokenController extends Controller
 	{
 		$this->middleware(['auth','verified']);
 		$this->middleware('permission:salespeople-reports-view-all');
-		$this->clientToken = new ClientToken(config('twilio.twilio.twilio_sid'), config('twilio.twilio.twilio_token'));
-//		$this->accessToken = new AccessToken(config('twilio.twilio.twilio_sid'), config('twilio.twilio.twilio_key'), config('twilio.twilio.twilio_secret'));
+//		$this->clientToken = new ClientToken(config('twilio.twilio.twilio_sid'), config('twilio.twilio.twilio_token'));
+		$this->accessToken = new AccessToken(config('twilio.twilio.twilio_sid'), config('twilio.twilio.twilio_key'), config('twilio.twilio.twilio_secret'));
 
 	}
 
@@ -26,7 +26,7 @@ class TwilioTokenController extends Controller
 	 *
 	 * @return \Illuminate\Http\Response
 	 */
-	public function newToken(Request $request)
+	public function newToken_v1(Request $request)
 	{
 		$forPage = $request->input('forPage');
 
@@ -40,7 +40,7 @@ class TwilioTokenController extends Controller
 		return response()->json(['token' => $token]);
 	}
 
-	public function newToken_v2(Request $request)
+	public function newToken(Request $request)
 	{
 		$forPage = $request->input('forPage');
 		$accountSid = config('twilio.twilio.twilio_sid');
