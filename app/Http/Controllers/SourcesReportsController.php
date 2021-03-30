@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Invoices;
-use App\PipedriveData;
-use App\SecondarySalesPeople;
 use Illuminate\Http\Request;
 
 class SourcesReportsController extends InvoicesController
