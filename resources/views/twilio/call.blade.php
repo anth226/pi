@@ -205,7 +205,7 @@
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(function (data) {
                 // Set up the Twilio Client device with the token
-                device = new Device();
+                device = new Twilio.Device();
                 device.setup(data.token);
 
                 setupHandlers(device);
