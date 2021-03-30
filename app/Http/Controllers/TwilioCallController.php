@@ -16,7 +16,7 @@ class TwilioCallController extends Controller
 	public function newCall(Request $request)
 	{
 		$response = new VoiceResponse();
-		$callerIdNumber = config('services.twilio')['number'];
+		$callerIdNumber = config('twilio.twilio.twilio_from');
 
 		$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 		$phoneNumberToDial = $request->input('phoneNumber');
