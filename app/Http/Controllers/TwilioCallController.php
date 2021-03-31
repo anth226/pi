@@ -24,7 +24,8 @@ class TwilioCallController extends Controller
 		if (isset($phoneNumberToDial)) {
 			$dial->number($phoneNumberToDial);
 		} else {
-			$dial->client('support_agent');
+			//$dial->client('support_agent');
+			$dial->client(json_encode($request->input()));
 		}
 
 		return $response;
