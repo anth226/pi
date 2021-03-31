@@ -66,11 +66,11 @@
                                         {{ __('Salespeople Report') }}
                                     </a>
                                 @endif
-                                {{--@if( Gate::check('sources-reports-view'))--}}
-                                    {{--<a class="dropdown-item" href="/reports/sources" >--}}
-                                        {{--{{ __('Sources Report') }}--}}
-                                    {{--</a>--}}
-                                {{--@endif--}}
+                                @if( Gate::check('sources-reports-view'))
+                                    <a class="dropdown-item" href="/reports/sources" >
+                                        {{ __('Sources Report') }}
+                                    </a>
+                                @endif
 
                                 @if( Gate::check('edit-email-templates') || Gate::check('create-email-templates') || Gate::check('view-email-templates'))
                                     <a class="dropdown-item" href="/email-templates/templates" >
