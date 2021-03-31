@@ -192,7 +192,8 @@
 
             /* Callback for when Twilio Client receives a new incoming call */
             device.on('incoming', function(connection) {
-                console.log(device);
+                console.log(connection);
+                console.log(connection.callerInfo);
                 updateCallStatus("Incoming support call");
 
                 // Set a callback to be executed when the connection is accepted
