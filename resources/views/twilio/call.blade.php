@@ -64,7 +64,7 @@
                 <div class="row">
                     <div class="col-lg-12 margin-tb">
                         <div class="pull-left">
-                            <h2>Test Call</h2>
+                            <h2>Test Calls</h2>
                         </div>
                     </div>
                 </div>
@@ -72,55 +72,60 @@
             </div>
         </div>
 
-        <div class="row">
-
-            <div class="col-md-10 order-md-2 mb-4">
+        <div class="row mb-2">
+            <div class="col-lg-12 m-auto">
                 <div class="card">
-                    {{--<h5 class="card-header">--}}
-                        {{--Make a call--}}
-                    {{--</h5>--}}
                     <div class="card-body">
                         <div class="form-group row">
-                            <label for="call-status" class="col-3 col-form-label">Status</label>
-                            <div class="col-9">
+                            <div class="col-12">
                                 <input id="call-status" class="form-control" type="text" placeholder="Connecting to Twilio..." readonly>
                             </div>
                         </div>
-
-                        <button onclick="callCustomer('+18184507532')" type="button" class="btn btn-primary btn-lg call-customer-button">
-                            818-450-7532
-                        </button>
-                        <button class="btn btn-lg btn-danger hangup-button" disabled onclick="hangUp()">Hang up</button>
-                        <button class="btn btn-lg btn-success answer-button" disabled>Answer call</button>
+                        <div class="form-group row">
+                            <div class="col-12">
+                                <button class="btn btn-lg btn-danger hangup-button" disabled onclick="hangUp()">Hang up</button>
+                                <button class="btn btn-lg btn-success answer-button" disabled>Answer call</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            {{--<div class="col-md-7 order-md-1">--}}
-
-                    {{--<div class="card border-default">--}}
-                        {{--<div class="card-body">--}}
-                            {{--<div class="row">--}}
-                                {{--<div class="col">--}}
-                                    {{--<p><strong>Name:</strong> Kevin</p>--}}
-                                    {{--<p><strong>Phone number:</strong> 818-450-7532</p>--}}
-                                    {{--<p><strong>Description:</strong></p>--}}
-                                    {{--Test call to Kevin--}}
-                                {{--</div>--}}
-
-                                {{--<div class="col col-auto">--}}
-                                    {{--<button onclick="callCustomer('+18184507532')" type="button" class="btn btn-primary btn-lg call-customer-button">--}}
-                                        {{--Call customer--}}
-                                    {{--</button>--}}
-                                {{--</div>--}}
-                            {{--</div>--}}
-                        {{--</div>--}}
-                    {{--</div>--}}
-
-            {{--</div>--}}
-
-
         </div>
+
+        <div class="row mb-2">
+            <div class="col-lg-12 m-auto">
+                <div class="card">
+                    <h5 class="card-header">
+                    Call Kevin
+                    </h5>
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <div class="col-12">
+                                <button onclick="callCustomer('+18184507532')" type="button" class="btn btn-primary btn-lg call-customer-button">818-450-7532</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-lg-12 m-auto">
+                <div class="card">
+                    <h5 class="card-header">
+                        Call Kevin (Google Voice)
+                    </h5>
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <div class="col-12">
+                                <button onclick="callCustomer('+17472214363')" type="button" class="btn btn-primary btn-lg call-customer-button">747-221-4363</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 @endsection
 
