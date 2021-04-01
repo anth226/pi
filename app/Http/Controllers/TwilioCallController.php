@@ -23,7 +23,7 @@ class TwilioCallController extends Controller
 		$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 		$phoneNumberToDial = $request->input('phoneNumber');
 
-//		Storage::put('headers.txt', json_encode($request->input('phoneNumber')) );
+		Storage::put('input.txt', json_encode($request->input()) );
 		Storage::put('phon_number.txt', $phoneNumberToDial );
 
 		if (isset($phoneNumberToDial)) {
