@@ -18,14 +18,14 @@ class TwilioCallController extends Controller
 		$response = new VoiceResponse();
 		$callerIdNumber = config('twilio.twilio.twilio_from');
 
-		$dial = $response->dial(null, ['callerId'=>json_encode($request->input())]);
+		$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 		$phoneNumberToDial = $request->input('phoneNumber');
 
 		if (isset($phoneNumberToDial)) {
 			$dial->number($phoneNumberToDial);
-		} else {
+		}
+		else {
 			$dial->client('support_agent');
-//			$response->a('Map', json_encode($request->input('From')));
 		}
 
 		return $response;
