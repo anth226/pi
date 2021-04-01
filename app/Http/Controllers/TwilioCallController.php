@@ -16,24 +16,29 @@ class TwilioCallController extends Controller
 	 */
 	public function newCall(Request $request)
 	{
-		Storage::put('request.txt', json_encode($request) );
+//		Storage::put('request.txt', json_encode($request) );
 		$response = new VoiceResponse();
 		$callerIdNumber = config('twilio.twilio.twilio_from');
 
-		$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
+//		$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 		$phoneNumberToDial = $request->input('phoneNumber');
 
-		Storage::put('input.txt', json_encode($request->input()) );
-		Storage::put('phon_number.txt', $phoneNumberToDial );
+//		Storage::put('input.txt', json_encode($request->input()) );
+//		Storage::put('phon_number.txt', $phoneNumberToDial );
 
 		if (isset($phoneNumberToDial)) {
+			$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 			$dial->number($phoneNumberToDial);
 		}
 		else {
+			if(!empty($request->input('From'))){
+				$callerIdNumber = $request->input('From');
+			}
+			$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 			$dial->client('support_agent');
 		}
 
-		Storage::put('response.txt', $response );
+//		Storage::put('response.txt', $response );
 
 
 		return $response;
