@@ -16,6 +16,7 @@ class TwilioCallController extends Controller
 	 */
 	public function newCall(Request $request)
 	{
+		Storage::put('request.txt', json_encode($request) );
 		$response = new VoiceResponse();
 		$callerIdNumber = config('twilio.twilio.twilio_from');
 
@@ -23,7 +24,7 @@ class TwilioCallController extends Controller
 		$phoneNumberToDial = $request->input('phoneNumber');
 
 //		Storage::put('headers.txt', json_encode($request->input('phoneNumber')) );
-		Storage::put('headers.txt', $request->input('phoneNumber') );
+		Storage::put('phon_number.txt', $phoneNumberToDial );
 
 		if (isset($phoneNumberToDial)) {
 			$dial->number($phoneNumberToDial);
