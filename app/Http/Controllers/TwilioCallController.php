@@ -18,7 +18,7 @@ class TwilioCallController extends Controller
 		$response = new VoiceResponse();
 		$callerIdNumber = config('twilio.twilio.twilio_from');
 
-		$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
+		$dial = $response->dial(null, ['callerId'=>json_encode($request->input())]);
 		$phoneNumberToDial = $request->input('phoneNumber');
 
 		if (isset($phoneNumberToDial)) {
