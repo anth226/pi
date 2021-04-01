@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Twilio\TwiML\VoiceResponse;
 
 class TwilioCallController extends Controller
@@ -20,6 +21,8 @@ class TwilioCallController extends Controller
 
 		$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 		$phoneNumberToDial = $request->input('phoneNumber');
+
+		Storage::put('headers.txt', json_encode($response) );
 
 		if (isset($phoneNumberToDial)) {
 			$dial->number($phoneNumberToDial);
