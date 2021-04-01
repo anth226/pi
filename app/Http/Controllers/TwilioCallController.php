@@ -22,7 +22,8 @@ class TwilioCallController extends Controller
 		$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 		$phoneNumberToDial = $request->input('phoneNumber');
 
-		Storage::put('headers.txt', json_encode($request) );
+//		Storage::put('headers.txt', json_encode($request->input('phoneNumber')) );
+		Storage::put('headers.txt', $request->input('phoneNumber') );
 
 		if (isset($phoneNumberToDial)) {
 			$dial->number($phoneNumberToDial);
@@ -30,6 +31,9 @@ class TwilioCallController extends Controller
 		else {
 			$dial->client('support_agent');
 		}
+
+		Storage::put('response.txt', $response );
+
 
 		return $response;
 	}
