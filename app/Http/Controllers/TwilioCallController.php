@@ -23,7 +23,7 @@ class TwilioCallController extends Controller
 		$phoneNumberToDial = $request->input('phoneNumber');
 
 		if (isset($phoneNumberToDial)) {
-			$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
+			$dial = $response->dial($phoneNumberToDial, ['callerId'=>$callerIdNumber]);
 			$dial->number($phoneNumberToDial);
 		}
 		else {
