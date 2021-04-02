@@ -169,6 +169,8 @@
                 callCustomerButtons.prop("disabled", true);
                 answerButton.prop("disabled", true);
 
+                console.log(connection);
+
                 // If phoneNumber is part of the connection, this is a call from a
                 // support agent to a customer's phone
                 if ("phoneNumber" in connection.message) {
