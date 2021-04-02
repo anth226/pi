@@ -31,10 +31,7 @@ class TwilioCallController extends Controller
 				$callerIdNumber = $request->input('From');
 			}
 			$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
-			$identity = "No identity";
-			if(!empty($request->input('identity'))){
-				$identity = $request->input('identity');
-			}
+			$identity = "1";
 			$dial->client($identity);
 		}
 
