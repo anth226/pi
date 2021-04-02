@@ -165,8 +165,6 @@
             /* Callback for when Twilio Client initiates a new connection */
             device.on('connect', function (connection) {
                 // Enable the hang up button and disable the call buttons
-                console.log(connection);
-
                 hangUpButton.prop("disabled", false);
                 callCustomerButtons.prop("disabled", true);
                 answerButton.prop("disabled", true);
@@ -183,7 +181,6 @@
 
             /* Callback for when a call ends */
             device.on('disconnect', function(connection) {
-                console.log(connection);
                 // Disable the hangup button and enable the call buttons
                 hangUpButton.prop("disabled", true);
                 answerButton.prop("disabled", true);
@@ -198,6 +195,16 @@
                 answerButton.prop("disabled", true);
                 callCustomerButtons.prop("disabled", false);
                 updateCallStatus("Ready");
+            });
+
+            /* Callback for when a call opened */
+            device.on('open', function(connection) {
+                console.log(connection);
+            });
+
+            /* Callback for when a call closed */
+            device.on('closed', function(connection) {
+                console.log(connection);
             });
 
             /* Callback for when Twilio Client receives a new incoming call */
