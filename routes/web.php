@@ -95,6 +95,7 @@ Route::get('/testview/{id}','InvoicesController@testview');
 Route::get('/test-kevin-call', 'TwillioController@index');
 Route::post('/twilio-token', 'TwilioTokenController@newToken');
 Route::post('/support/zang', 'TwilioCallController@newCall');
+Route::post('/support/zang-vichak', 'TwilioCallController@callStats');
 
 
 
