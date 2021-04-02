@@ -141,7 +141,6 @@
         // Store some selectors for elements we'll reuse
         var callStatus = $("#call-status");
         var answerButton = $(".answer-button");
-        var callSupportButton = $(".call-support-button");
         var hangUpButton = $(".hangup-button");
         var callCustomerButtons = $(".call-customer-button");
 
@@ -172,7 +171,6 @@
                 // Enable the hang up button and disable the call buttons
                 hangUpButton.prop("disabled", false);
                 callCustomerButtons.prop("disabled", true);
-                callSupportButton.prop("disabled", true);
                 answerButton.prop("disabled", true);
 
                 // If phoneNumber is part of the connection, this is a call from a
@@ -189,9 +187,17 @@
             device.on('disconnect', function(connection) {
                 // Disable the hangup button and enable the call buttons
                 hangUpButton.prop("disabled", true);
+                answerButton.prop("disabled", true);
                 callCustomerButtons.prop("disabled", false);
-                callSupportButton.prop("disabled", false);
+                updateCallStatus("Ready");
+            });
 
+            /* Callback for when a call canceled */
+            device.on('cancel', function(connection) {
+                // Disable the hangup button and enable the call buttons
+                hangUpButton.prop("disabled", true);
+                answerButton.prop("disabled", true);
+                callCustomerButtons.prop("disabled", false);
                 updateCallStatus("Ready");
             });
 
@@ -205,12 +211,6 @@
                 // Set a callback to be executed when the connection is accepted
                 connection.accept(function() {
                     updateCallStatus("In call with customer");
-                });
-
-                connection.closed(function() {
-                    updateCallStatus("Ready");
-                    answerButton.prop("disabled", true);
-                    hangUpButton.prop("disabled", true);
                 });
 
                 // Set a callback on the answer button and enable it
