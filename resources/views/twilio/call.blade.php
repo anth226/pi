@@ -178,9 +178,8 @@
                     updateCallStatus("In call");
                 }
 
-                connection.accept(function() {
-                    console.log("to_client",connection);
-                });
+                console.log("connected",connection);
+
             });
 
             /* Callback for when a call ends */
@@ -190,6 +189,12 @@
                 answerButton.prop("disabled", true);
                 callCustomerButtons.prop("disabled", false);
                 updateCallStatus("Ready");
+                console.log("disconnect",connection);
+            });
+
+            /* Callback for when a call ends */
+            device.on('accept', function(connection) {
+                console.log("accepted",connection);
             });
 
             /* Callback for when a call canceled */
@@ -199,11 +204,7 @@
                 answerButton.prop("disabled", true);
                 callCustomerButtons.prop("disabled", false);
                 updateCallStatus("Ready");
-            });
-
-            /* Callback for when a call accepted */
-            device.on('accept', function(connection) {
-               console.log("for_all",connection);
+                console.log("canceled",connection);
             });
 
             /* Callback for when Twilio Client receives a new incoming call */
@@ -216,7 +217,7 @@
                 // Set a callback to be executed when the connection is accepted
                 connection.accept(function() {
                     updateCallStatus("In call with customer");
-                    console.log("from_client",connection);
+                    console.log("accepted_from_client",connection);
                 });
 
                 // Set a callback on the answer button and enable it
