@@ -169,8 +169,6 @@
                 callCustomerButtons.prop("disabled", true);
                 answerButton.prop("disabled", true);
 
-                console.log('connected', connection);
-
                 // If phoneNumber is part of the connection, this is a call from a
                 // support agent to a customer's phone
                 if ("phoneNumber" in connection.message) {
@@ -179,6 +177,10 @@
                     // This is a call from a website user to a support agent
                     updateCallStatus("In call");
                 }
+
+                connection.accept(function() {
+                    console.log("to_client",connection);
+                });
             });
 
             /* Callback for when a call ends */
@@ -188,8 +190,6 @@
                 answerButton.prop("disabled", true);
                 callCustomerButtons.prop("disabled", false);
                 updateCallStatus("Ready");
-
-                console.log('disconnected', connection);
             });
 
             /* Callback for when a call canceled */
@@ -199,6 +199,11 @@
                 answerButton.prop("disabled", true);
                 callCustomerButtons.prop("disabled", false);
                 updateCallStatus("Ready");
+            });
+
+            /* Callback for when a call accepted */
+            device.on('accept', function(connection) {
+               console.log("for_all",connection);
             });
 
             /* Callback for when Twilio Client receives a new incoming call */
@@ -211,6 +216,7 @@
                 // Set a callback to be executed when the connection is accepted
                 connection.accept(function() {
                     updateCallStatus("In call with customer");
+                    console.log("from_client",connection);
                 });
 
                 // Set a callback on the answer button and enable it
