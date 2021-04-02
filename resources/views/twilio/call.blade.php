@@ -131,11 +131,7 @@
 
 @section('script')
     <script src="https://sdk.twilio.com/js/client/v1.14/twilio.js"></script>
-    @if(Auth::check())
-        <script>
-            var userID = "{{ Auth::user()->id }}";
-        </script>
-    @endif
+
     <script>
 
         // Store some selectors for elements we'll reuse
@@ -169,6 +165,8 @@
             /* Callback for when Twilio Client initiates a new connection */
             device.on('connect', function (connection) {
                 // Enable the hang up button and disable the call buttons
+                console.log(connection);
+
                 hangUpButton.prop("disabled", false);
                 callCustomerButtons.prop("disabled", true);
                 answerButton.prop("disabled", true);
@@ -179,7 +177,7 @@
                     updateCallStatus("In call with " + connection.message.phoneNumber);
                 } else {
                     // This is a call from a website user to a support agent
-                    updateCallStatus("In call with support");
+                    updateCallStatus("In call");
                 }
             });
 
@@ -233,7 +231,7 @@
                 setupClient();
             });
 
-        };
+        }
 
         function setupClient() {
 
@@ -250,7 +248,7 @@
                 updateCallStatus("Could not get a token from server!");
             });
 
-        };
+        }
 
         /* Call a customer from a support ticket */
         window.callCustomer = function(phoneNumber) {
@@ -259,14 +257,6 @@
             var params = {"phoneNumber": phoneNumber};
 
             device.connect(params);
-        };
-
-        /* Call the support_agent from the home page */
-        window.callSupport = function() {
-            updateCallStatus("Calling support...");
-
-            // Our backend will assume that no params means a call to support_agent
-            device.connect();
         };
 
         /* End a call */
