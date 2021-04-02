@@ -211,6 +211,9 @@
                 answerButton.click(function() {
                     connection.accept();
                 });
+                hangUpButton.click(function() {
+                    connection.reject();
+                });
                 answerButton.prop("disabled", false);
                 hangUpButton.prop("disabled", false);
             });
@@ -244,10 +247,7 @@
         window.callCustomer = function(phoneNumber) {
             updateCallStatus("Calling " + phoneNumber + "...");
 
-            var params = {
-                "phoneNumber": phoneNumber,
-                "identity": userID
-            };
+            var params = {"phoneNumber": phoneNumber};
 
             device.connect(params);
         };
