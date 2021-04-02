@@ -183,6 +183,7 @@
 
             /* Callback for when a call ends */
             device.on('disconnect', function(connection) {
+                console.log(connection);
                 // Disable the hangup button and enable the call buttons
                 hangUpButton.prop("disabled", true);
                 answerButton.prop("disabled", true);
