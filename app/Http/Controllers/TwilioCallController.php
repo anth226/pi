@@ -40,6 +40,6 @@ class TwilioCallController extends Controller
 
 	public function callStats(Request $request){
 //		Storage::put('calls.txt', json_encode($request) );
-		Storage::append('calls.log', json_encode($request));
+		Storage::append('calls.log', json_encode($request->input()));
 	}
 }
