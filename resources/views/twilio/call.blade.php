@@ -197,16 +197,6 @@
                 updateCallStatus("Ready");
             });
 
-            /* Callback for when a call opened */
-            device.on('open', function(connection) {
-                console.log(connection);
-            });
-
-            /* Callback for when a call closed */
-            device.on('closed', function(connection) {
-                console.log(connection);
-            });
-
             /* Callback for when Twilio Client receives a new incoming call */
             device.on('incoming', function(connection) {
                 // console.log(connection.parameters);
