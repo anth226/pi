@@ -207,6 +207,12 @@
                     updateCallStatus("In call with customer");
                 });
 
+                connection.closed(function() {
+                    updateCallStatus("Ready");
+                    answerButton.prop("disabled", true);
+                    hangUpButton.prop("disabled", true);
+                });
+
                 // Set a callback on the answer button and enable it
                 answerButton.click(function() {
                     connection.accept();
