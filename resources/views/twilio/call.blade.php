@@ -213,6 +213,9 @@
                 });
                 hangUpButton.click(function() {
                     connection.reject();
+                    updateCallStatus("Ready");
+                    answerButton.prop("disabled", true);
+                    hangUpButton.prop("disabled", true);
                 });
                 answerButton.prop("disabled", false);
                 hangUpButton.prop("disabled", false);
