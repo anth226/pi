@@ -25,7 +25,6 @@ class TwilioCallController extends Controller
 		if (isset($phoneNumberToDial)) {
 			$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 			$dial->number($phoneNumberToDial);
-			Storage::put('to_customer.txt', json_encode($response) );
 		}
 		else {
 			if(!empty($request->input('From'))){
@@ -34,9 +33,13 @@ class TwilioCallController extends Controller
 			$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 			$identity = "1";
 			$dial->client($identity);
-			Storage::put('from_customer.txt', json_encode($response) );
 		}
 
 		return $response;
+	}
+
+	public function callStats(Request $request){
+//		Storage::put('calls.txt', json_encode($request) );
+		Storage::append('calls.log', 'Appended Text');
 	}
 }
