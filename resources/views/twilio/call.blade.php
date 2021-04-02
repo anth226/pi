@@ -169,7 +169,7 @@
                 callCustomerButtons.prop("disabled", true);
                 answerButton.prop("disabled", true);
 
-                console.log(connection);
+                console.log('connected', connection);
 
                 // If phoneNumber is part of the connection, this is a call from a
                 // support agent to a customer's phone
@@ -188,6 +188,8 @@
                 answerButton.prop("disabled", true);
                 callCustomerButtons.prop("disabled", false);
                 updateCallStatus("Ready");
+
+                console.log('disconnected', connection);
             });
 
             /* Callback for when a call canceled */
