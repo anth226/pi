@@ -131,6 +131,11 @@
 
 @section('script')
     <script src="https://sdk.twilio.com/js/client/v1.14/twilio.js"></script>
+    @if(Auth::check())
+        <script>
+            var userID = "{{ Auth::user()->id }}";
+        </script>
+    @endif
     <script>
 
         // Store some selectors for elements we'll reuse
@@ -207,13 +212,21 @@
                     connection.accept();
                 });
                 answerButton.prop("disabled", false);
+                hangUpButton.prop("disabled", false);
             });
+
+
+            //reconnect
+            device.on('offline', function(device) {
+                setupClient();
+            });
+
         };
 
         function setupClient() {
 
             $.post("/twilio-token", {
-                forPage: window.location.pathname,
+                // forPage: window.location.pathname,
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(function (data) {
                 // Set up the Twilio Client device with the token
@@ -231,7 +244,11 @@
         window.callCustomer = function(phoneNumber) {
             updateCallStatus("Calling " + phoneNumber + "...");
 
-            var params = {"phoneNumber": phoneNumber};
+            var params = {
+                "phoneNumber": phoneNumber,
+                "identity": userID
+            };
+
             device.connect(params);
         };
 

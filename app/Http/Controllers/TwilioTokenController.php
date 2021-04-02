@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Twilio\Jwt\AccessToken;
-use Twilio\Jwt\ClientToken;
 use Twilio\Jwt\Grants\VoiceGrant;
+use Illuminate\Support\Facades\Auth;
 
 class TwilioTokenController extends Controller
 {
@@ -27,7 +27,8 @@ class TwilioTokenController extends Controller
 
 	public function newToken(Request $request)
 	{
-		$this->accessToken->setIdentity('support_agent');
+		$user = Auth::user();
+		$this->accessToken->setIdentity($user->id);
 
 		// Create Voice grant
 		$voiceGrant = new VoiceGrant();

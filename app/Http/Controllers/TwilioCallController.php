@@ -20,11 +20,7 @@ class TwilioCallController extends Controller
 		$response = new VoiceResponse();
 		$callerIdNumber = config('twilio.twilio.twilio_from');
 
-//		$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
 		$phoneNumberToDial = $request->input('phoneNumber');
-
-//		Storage::put('input.txt', json_encode($request->input()) );
-//		Storage::put('phon_number.txt', $phoneNumberToDial );
 
 		if (isset($phoneNumberToDial)) {
 			$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
@@ -35,11 +31,12 @@ class TwilioCallController extends Controller
 				$callerIdNumber = $request->input('From');
 			}
 			$dial = $response->dial(null, ['callerId'=>$callerIdNumber]);
-			$dial->client('support_agent');
+			$identity = 0;
+			if(!empty($request->input('identity'))){
+				$identity = $request->input('identity');
+			}
+			$dial->client($identity);
 		}
-
-//		Storage::put('response.txt', $response );
-
 
 		return $response;
 	}
