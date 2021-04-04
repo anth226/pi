@@ -4,21 +4,19 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Twilio\Jwt\AccessToken;
-use Twilio\Jwt\ClientToken;
 use Twilio\Jwt\Grants\VoiceGrant;
+use Illuminate\Support\Facades\Auth;
 
 class TwilioTokenController extends Controller
 {
-	public $clientToken ;
-	public $accessToken ;
+	public $accessToken, $applicationSid ;
 
 	public function __construct()
 	{
 		$this->middleware(['auth','verified']);
 		$this->middleware('permission:salespeople-reports-view-all');
-//		$this->clientToken = new ClientToken(config('twilio.twilio.twilio_sid'), config('twilio.twilio.twilio_token'));
 		$this->accessToken = new AccessToken(config('twilio.twilio.twilio_sid'), config('twilio.twilio.twilio_key'), config('twilio.twilio.twilio_secret'));
-
+		$this->applicationSid = config('twilio.twilio.twilio_app_sid');
 	}
 
 	/**
@@ -26,37 +24,15 @@ class TwilioTokenController extends Controller
 	 *
 	 * @return \Illuminate\Http\Response
 	 */
-	public function newToken_v1(Request $request)
-	{
-		$forPage = $request->input('forPage');
-
-		if ($forPage === route('test-call', [], false)) {
-			$this->clientToken->allowClientIncoming('support_agent');
-		} else {
-			$this->clientToken->allowClientIncoming('customer');
-		}
-
-		$token = $this->clientToken->generateToken();
-		return response()->json(['token' => $token]);
-	}
 
 	public function newToken(Request $request)
 	{
-		$forPage = $request->input('forPage');
-		$accountSid = config('twilio.twilio.twilio_sid');
-		$applicationSid = config('twilio.twilio.twilio_app_sid');
-		$apiKey = config('twilio.twilio.twilio_key');
-		$apiSecret = config('twilio.twilio.twilio_secret');
-
-		if ($forPage === route('test-call', [], false)) {
-			$this->accessToken->setIdentity('support_agent');
-		} else {
-			$this->accessToken->setIdentity('customer');
-		}
+		$user = Auth::user();
+		$this->accessToken->setIdentity($user->id);
 
 		// Create Voice grant
 		$voiceGrant = new VoiceGrant();
-		$voiceGrant->setOutgoingApplicationSid($applicationSid);
+		$voiceGrant->setOutgoingApplicationSid($this->applicationSid);
 
 		// Optional: add to allow incoming calls
 		$voiceGrant->setIncomingAllow(true);

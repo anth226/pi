@@ -131,12 +131,12 @@
 
 @section('script')
     <script src="https://sdk.twilio.com/js/client/v1.14/twilio.js"></script>
+
     <script>
 
         // Store some selectors for elements we'll reuse
         var callStatus = $("#call-status");
         var answerButton = $(".answer-button");
-        var callSupportButton = $(".call-support-button");
         var hangUpButton = $(".hangup-button");
         var callCustomerButtons = $(".call-customer-button");
 
@@ -167,7 +167,6 @@
                 // Enable the hang up button and disable the call buttons
                 hangUpButton.prop("disabled", false);
                 callCustomerButtons.prop("disabled", true);
-                callSupportButton.prop("disabled", true);
                 answerButton.prop("disabled", true);
 
                 // If phoneNumber is part of the connection, this is a call from a
@@ -176,25 +175,32 @@
                     updateCallStatus("In call with " + connection.message.phoneNumber);
                 } else {
                     // This is a call from a website user to a support agent
-                    updateCallStatus("In call with support");
+                    updateCallStatus("In call");
                 }
+
             });
 
             /* Callback for when a call ends */
             device.on('disconnect', function(connection) {
                 // Disable the hangup button and enable the call buttons
                 hangUpButton.prop("disabled", true);
+                answerButton.prop("disabled", true);
                 callCustomerButtons.prop("disabled", false);
-                callSupportButton.prop("disabled", false);
+                updateCallStatus("Ready");
+            });
 
+
+            /* Callback for when a call canceled */
+            device.on('cancel', function(connection) {
+                // Disable the hangup button and enable the call buttons
+                hangUpButton.prop("disabled", true);
+                answerButton.prop("disabled", true);
+                callCustomerButtons.prop("disabled", false);
                 updateCallStatus("Ready");
             });
 
             /* Callback for when Twilio Client receives a new incoming call */
             device.on('incoming', function(connection) {
-                // console.log(connection.parameters);
-                // console.log(connection.customParameters);
-                // console.log(connection.parameters.ForwardedFrom);
                 updateCallStatus("Incoming call from " +  connection.parameters.From);
 
                 // Set a callback to be executed when the connection is accepted
@@ -206,14 +212,28 @@
                 answerButton.click(function() {
                     connection.accept();
                 });
+                hangUpButton.click(function() {
+                    connection.reject();
+                    updateCallStatus("Ready");
+                    answerButton.prop("disabled", true);
+                    hangUpButton.prop("disabled", true);
+                });
                 answerButton.prop("disabled", false);
+                hangUpButton.prop("disabled", false);
             });
-        };
+
+
+            //reconnect
+            device.on('offline', function(device) {
+                setupClient();
+            });
+
+        }
 
         function setupClient() {
 
             $.post("/twilio-token", {
-                forPage: window.location.pathname,
+                // forPage: window.location.pathname,
                 _token: $('meta[name="csrf-token"]').attr('content')
             }).done(function (data) {
                 // Set up the Twilio Client device with the token
@@ -225,22 +245,15 @@
                 updateCallStatus("Could not get a token from server!");
             });
 
-        };
+        }
 
         /* Call a customer from a support ticket */
         window.callCustomer = function(phoneNumber) {
             updateCallStatus("Calling " + phoneNumber + "...");
 
             var params = {"phoneNumber": phoneNumber};
+
             device.connect(params);
-        };
-
-        /* Call the support_agent from the home page */
-        window.callSupport = function() {
-            updateCallStatus("Calling support...");
-
-            // Our backend will assume that no params means a call to support_agent
-            device.connect();
         };
 
         /* End a call */
