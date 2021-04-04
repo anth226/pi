@@ -87,8 +87,8 @@ class TestController extends BaseController
 //		dd($this->findOwnerOnPipedrive());
 //		dd(LevelsSalespeople::getSalespersonInfo(5));
 
-		$tt = new Pipedrive();
-		$tt->findOwnersOnPipedrive();
+//		$tt = new Pipedrive();
+//		$tt->findOwnersOnPipedrive();
 	}
 
 	public function getPersonsSources(){
