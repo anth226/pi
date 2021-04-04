@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\ActionsLog;
+use App\KmClasses\Pipedrive;
 use Illuminate\Http\Request;
 use App\User;
 
@@ -82,6 +83,11 @@ class UserController extends Controller
 		$user->assignRole($request->input('roles'));
 
 		$user->sendEmailVerificationNotification();
+
+		if(!empty($user) && !empty($user->id)) {
+			$pipedrive = new Pipedrive();
+			$pipedrive->findOwnerOnPipedrive($user->id);
+		}
 
 		return redirect()->route('users.index')
 		                 ->with('success','User created successfully');

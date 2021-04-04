@@ -14,6 +14,7 @@ use App\KmClasses\Pipedrive;
 
 use App\SecondarySalesPeople;
 use App\SentData;
+use App\User;
 use Exception;
 use DB;
 use Klaviyo\Klaviyo as Klaviyo;
@@ -85,6 +86,9 @@ class TestController extends BaseController
 
 //		dd($this->findOwnerOnPipedrive());
 //		dd(LevelsSalespeople::getSalespersonInfo(5));
+
+//		$tt = new Pipedrive();
+//		$tt->findOwnersOnPipedrive();
 	}
 
 	public function getPersonsSources(){
@@ -370,45 +374,6 @@ class TestController extends BaseController
 		catch (Exception $ex){
 			$error = $ex->getMessage();
 			dd($error);
-		}
-	}
-
-	public function findOwnerOnPipedrive(){
-		try {
-			$key = config( 'pipedrive.api_key' );
-//			$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
-			$salespeople = Salespeople::withTrashed()->get();
-			$allUsers    = Pipedrive::executeCommand( $key, new Pipedrive\Commands\getAllUsers() );
-//			dd($allUsers);
-			if (
-				! empty( $salespeople ) &&
-				$salespeople->count() &&
-				! empty( $allUsers ) &&
-				! empty( $allUsers->data ) &&
-				! empty( count($allUsers->data) )
-			) {
-				foreach ( $salespeople as $s ) {
-					if ( ! empty( $s->email ) ) {
-						foreach ( $allUsers->data as $u ) {
-							if (
-								!empty($u) &&
-								!empty($u->id) &&
-								!empty($u->email) &&
-								trim( strtolower( $u->email ) ) == trim( strtolower( $s->email ) )
-							) {
-								Salespeople::where( 'id', $s->id )->update( [ 'pipedrive_user_id' => $u->id ] );
-								echo "<pre>";
-								var_export($u->id);
-								echo "</pre>";
-							}
-						}
-					}
-				}
-				return true;
-			}
-		}
-		catch(Exception $ex){
-			return $ex->getMessage();
 		}
 	}
 

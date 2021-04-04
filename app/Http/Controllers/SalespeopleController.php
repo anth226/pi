@@ -311,6 +311,11 @@ class SalespeopleController extends InvoicesController
 				             ->withInput();
 			}
 
+			if(!empty($salespeople) && !empty($salespeople->id)) {
+				$pipedrive = new Pipedrive();
+				$pipedrive->findOwnerOnPipedrive(0, $salespeople->id);
+			}
+
 			return redirect()->route( 'salespeople.index' )
 			                 ->with( 'success', 'Salesperson created successfully' );
 		}
