@@ -86,7 +86,7 @@ class Pipedrive
 			Errors::create([
 				'error' => $ex->getMessage(),
 				'controller' => 'Pipedrive calss',
-				'function' => 'findOwnerOnPipedrive'
+				'function' => 'findOwnersOnPipedrive'
 			]);
 			return false;
 		}
