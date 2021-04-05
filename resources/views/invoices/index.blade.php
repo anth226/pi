@@ -109,7 +109,7 @@
             </table>
                 @if( $user->id == 1 || $user->id == 2)
                     <div class="mt-4">
-                        <label><input id="sens_info" type="checkbox"><span class="ml-2 text-info">Show Sensitive Information</span></label>
+                        <label><input id="sens_info" checked type="checkbox"><span class="ml-2 text-info">Show Sensitive Information</span></label>
                     </div>
                 @endif
         </div>
