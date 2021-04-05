@@ -103,7 +103,7 @@ class InvoicesController extends BaseController
 			if ( $lastReportDate ) {
 				$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
 			}
-			return view( 'invoices.index', compact( 'firstDate', 'lastDate' ) );
+			return view( 'invoices.index', compact( 'firstDate', 'lastDate', 'user' ) );
 		}
 
 	}

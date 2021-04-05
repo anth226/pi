@@ -107,7 +107,11 @@
 
                 </tbody>
             </table>
-
+                @if( $user->id == 1 || $user->id == 2)
+                    <div class="mt-4">
+                        <label><input id="sens_info" checked type="checkbox"><span class="ml-2 text-info">Show Sensitive Information</span></label>
+                    </div>
+                @endif
         </div>
         </div>
     </div>
@@ -116,6 +120,20 @@
     <script>
         $(document).ready(function() {
             var show_sansitive_info = false;
+
+            var sens_info_box = $( "#sens_info" );
+            if(sens_info_box.length) {
+                show_sansitive_info = sens_info_box.prop("checked");
+                sens_info_box.change(function () {
+                    if (this.checked) {
+                        show_sansitive_info = true;
+                    }
+                    else {
+                        show_sansitive_info = false;
+                    }
+                    getReportData();
+                });
+            }
 
             const dateRangeField = document.querySelector("#reportRange");
 
