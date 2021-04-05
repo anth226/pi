@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use App\Console\Commands\ProcessingPiLeads;
 use App\Customers;
 use App\Http\Controllers\API\BaseController;
 use App\Invoices;
@@ -45,11 +46,11 @@ class TestController extends BaseController
 //		$res = $c->refundSequence($invoice);
 //		dd($res);
 //		$userProperties = [
-//			'email'         => 'velayomarilyn@gmail.com',
-//			'phone'         => '(903) 641-5553',
-//			'first_name' => 'Jason',
-//			'last_name' => 'Clayton',
-//			'full_name' => 'Jason Clayton',
+//			'email'         => 'jaigaur@optionline.net',
+//			'phone'         => '203-762-2662',
+//			'first_name' => 'Gaur',
+//			'last_name' => 'Gaur',
+//			'full_name' => 'Jai Gaur',
 //			'source' => 'portfolio-insider-prime',
 //			'tags' => 'portfolio-insider-prime',
 //		];
@@ -89,6 +90,9 @@ class TestController extends BaseController
 
 //		$tt = new Pipedrive();
 //		$tt->findOwnersOnPipedrive();
+		$pl = new ProcessingPiLeads();
+		dd($pl->getLeadsByOwner(11778811));
+//		dd($pl->getLeadsByOwnerOnePage(11778811,0,500));
 	}
 
 	public function getPersonsSources(){
