@@ -76,7 +76,7 @@ class TestController extends BaseController
 //		$i = new InvoicesController();
 //		$invoice = Invoices::find(1361);
 //		dd($i->calcEarning($invoice));
-		dd($this->recalcAll());
+//		dd($this->recalcAll());
 
 
 //		$searchPerson = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\CreateDeal( 33, 11916517, 1200, 'Test Person', 'lll' ) );
