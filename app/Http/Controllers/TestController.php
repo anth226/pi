@@ -75,7 +75,7 @@ class TestController extends BaseController
 //		dd(Invoices::with('customer')->with('salespeople.salespersone')->get()->toArray());
 
 //		$i = new InvoicesController();
-//		$invoice = Invoices::find(734);
+//		$invoice = Invoices::find(1361);
 //		dd($i->calcEarning($invoice));
 //		dd($this->recalcAll());
 
@@ -108,7 +108,7 @@ class TestController extends BaseController
 	public function recalcAll(){
 		try {
 			$errors   = [];
-			$invoices = Invoices::withTrashed()->get();
+			$invoices = Invoices::where('access_date', '>','2021-03-29')->withTrashed()->get();
 			if ( $invoices && $invoices->count() ) {
 				$i = new InvoicesController();
 				foreach ( $invoices as $invoice ) {

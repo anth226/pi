@@ -684,9 +684,11 @@ class InvoicesController extends BaseController
 
 	public function calcEarning(Invoices $invoice){
 		try{
-			$max_percentage = 30;
+			$max_percentage = 40;
+			$max_percentage_for_one_salesperson = 30;
 			if(strtotime($invoice->access_date.' 00:00:01') <  strtotime('2021-03-30 00:00:01')){
 				$max_percentage = 50;
+				$max_percentage_for_one_salesperson = 50;
 			}
 			$sales_price = $invoice->paid;
 			$max_earning  = $sales_price*$max_percentage/100;
@@ -700,6 +702,9 @@ class InvoicesController extends BaseController
 					$level_id = $percentages[ $salespeople_id ]['level_id'];
 					$percentage = $percentages[ $salespeople_id ]['percentage'];
 					if($percentage > 0) { //remove 0 pecentages level
+						if($percentage > $max_percentage_for_one_salesperson){
+							$percentage = $max_percentage_for_one_salesperson;
+						}
 						$levels[ $level_id ]['salespeople'][ $salespeople_id ] = $percentage;
 					}
 					else{
