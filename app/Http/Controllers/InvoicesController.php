@@ -87,7 +87,7 @@ class InvoicesController extends BaseController
 		$user = Auth::user();
 		if($user->hasRole('Generated Invoices Only') || $user->hasRole('Salesperson')) {
 			if ( $user->hasRole( 'Salesperson' ) ) {
-				$salesperson_id = Salespeople::where( 'email', $user->email )->value( 'id' );
+				$salesperson_id = Salespeople::withTrashed()->where( 'email', $user->email )->value( 'id' );
 				if ( $salesperson_id ) {
 					$salespeopleController = new SalespeopleController();
 					return $salespeopleController->show( $salesperson_id );

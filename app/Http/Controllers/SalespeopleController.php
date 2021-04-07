@@ -49,7 +49,7 @@ class SalespeopleController extends InvoicesController
 	public function anyData(Request $request){
 		$user = Auth::user();
 		if( $user->hasRole('Salesperson')) {
-			$salesperson_id = Salespeople::where( 'email', $user->email )->value( 'id' );
+			$salesperson_id = Salespeople::withTrashed()->where( 'email', $user->email )->value( 'id' );
 		}
 		else{
 			$salesperson_id = !empty($request['salesperson_id']) ? $request['salesperson_id'] : 0;
@@ -370,9 +370,9 @@ class SalespeopleController extends InvoicesController
 
 		$user = Auth::user();
 		if( $user->hasRole('Salesperson')){
-			$salesperson_id = Salespeople::where('email', $user->email)->value('id');
+			$salesperson_id = Salespeople::withTrashed()->where('email', $user->email)->value('id');
 			if($salesperson_id && $id == $salesperson_id) {
-				$salespeople = Salespeople::with( 'level.level' )->find( $salesperson_id );
+				$salespeople = Salespeople::with( 'level.level' )->withTrashed()->find( $salesperson_id );
 				if ( $salespeople ) {
 //					$firstDate = date("F j, Y");
 //					$lastDate = date("F j, Y");
