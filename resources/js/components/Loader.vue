@@ -10,8 +10,8 @@
         name: "Loader",
         props: {
             isVisible: {type: Boolean, required: true},
-            text: {type: String, required: false, default: ""},
-        },
+            text: {type: String, required: false, default: "Loading..."}
+        }
     }
 </script>
 

@@ -36,37 +36,42 @@ Vue.config.devtools = true;
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
-const apppp = new Vue({
-    el: '#apppp',
-    mounted() {
-        this.enableInterceptor()
-    },
-    data: {
-        isLoading: false,
-        axiosInterceptor: null,
-    },
-    methods: {
-        enableInterceptor() {
-            this.axiosInterceptor = window.axios.interceptors.request.use((config) => {
-                this.isLoading = true;
-                return config
-            }, (error) => {
-                this.isLoading = false;
-                return Promise.reject(error)
-            });
+import Vuex from 'vuex'
 
-            window.axios.interceptors.response.use((response) => {
-                this.isLoading = false;
-                return response
-            }, function(error) {
-                this.isLoading = false;
-                return Promise.reject(error)
-            })
-        },
+Vue.use(Vuex);
 
-        disableInterceptor() {
-            window.axios.interceptors.request.eject(this.axiosInterceptor)
-        },
+const store = new Vuex.Store({
+    state: {
+        persons: [],
+        owner_id: ''
     },
+    mutations: {
+        setPersons (state, persons) {
+            state.persons = persons;
+
+        },
+        setOwner(state, owner_id){
+            state.owner_id = owner_id;
+        }
+    },
+    actions: {
+        setPersons (context, owner_id) {
+            context.commit('setOwner', owner_id);
+            axios.post('/pi-persons',{owner_id: owner_id})
+                .then((response) => {
+                    context.commit('setPersons', response.data.data);
+                    // context.commit('setLoaderStatus', false);
+                })
+                .catch(err => {
+                    if(err.message == 'CSRF token mismatch.'){
+                        alert('Your session has expired. Please refresh the page.')
+                    }
+                })
+        }
+    }
 });
 
+const apppp = new Vue({
+    el: '#apppp',
+    store: store
+});

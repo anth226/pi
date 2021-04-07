@@ -1,11 +1,15 @@
 <template>
     <div class="call-app">
-        <PersonsList :persons="persons"  />
+        <loader :isVisible="isLoading" />
+        <PersonsList   />
+        <Conversation :contact="selectedContact" :messages="messages" @new="saveNewMessage"/>
     </div>
 </template>
 
 <script>
     import PersonsList from './PersonsList';
+    import Loader from './Loader';
+    import Conversation from './Conversation';
 
     export default {
         props: {
@@ -14,31 +18,43 @@
                 required: true
             }
         },
-        data() {
-            return {
-                selectedPerson: null,
-                persons: []
-            };
-        },
         mounted() {
+            this.enableInterceptor();
             this.fetchPersons();
         },
         methods: {
             fetchPersons(){
-                this.persons = [];
-                axios.post('/pi-persons',{owner_id: this.owner_id})
-                    .then((response) => {
-                        this.persons = response.data;
-                    })
-                    .catch(err => {
-                        if(err.message == 'CSRF token mismatch.'){
-                            alert('Your session has expired. Please refresh the page.')
-                        }
-                    })
-                ;
+                this.$store.dispatch('setPersons', this.owner_id);
+            },
+            enableInterceptor() {
+                this.axiosInterceptor = window.axios.interceptors.request.use((config) => {
+                    this.isLoading = true;
+                    return config
+                }, (error) => {
+                    this.isLoading = false;
+                    return Promise.reject(error)
+                });
+
+                window.axios.interceptors.response.use((response) => {
+                    this.isLoading = false;
+                    return response
+                }, function(error) {
+                    this.isLoading = false;
+                    return Promise.reject(error)
+                })
+            },
+            disableInterceptor() {
+                window.axios.interceptors.request.eject(this.axiosInterceptor)
             },
         },
-        components: {PersonsList}
+        data() {
+            return {
+                isLoading: false,
+                axiosInterceptor: null,
+            };
+        },
+
+        components: {PersonsList, Loader, Conversation}
     }
 </script>
 
