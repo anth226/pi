@@ -62,14 +62,21 @@
             <div class="row">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
-                        <h2> {{ $salespeople->name_for_invoice }}</h2>
+                        @if(empty($salespeople->deleted_at))
+                            <h2> {{ $salespeople->name_for_invoice }}</h2>
+                            @else
+                            <h2><span class="text-danger">Deleted salesperson</span></h2>
+                            <h2><small>{{ $salespeople->name_for_invoice }}</small></h2>
+                        @endif
                     </div>
                     <div class="pull-right mb-4">
                         @if( Gate::check('salespeople-list') || Gate::check('salespeople-edit') || Gate::check('salespeople-delete'))
                             <a class="btn btn-primary mt-2" href="{{ route('salespeople.index') }}"> All Salespeople</a>
                         @endif
                         @can('salespeople-edit')
-                            <a class="btn btn-info mt-2" href="{{ route('salespeople.edit',$salespeople->id) }}"> Edit</a>
+                            @if(empty($salespeople->deleted_at))
+                                <a class="btn btn-info mt-2" href="{{ route('salespeople.edit',$salespeople->id) }}"> Edit</a>
+                            @endif
                         @endcan
                         {{--@can('salespeople-delete')--}}
                             {{--{!! Form::open(['method' => 'DELETE','route' => ['salespeople.destroy', $salespeople->id],'style'=>'display:inline']) !!}--}}
@@ -99,6 +106,14 @@
                             </div>
                         </div>
                     @endcan
+                    @if(!empty($salespeople->deleted_at))
+                        <div class="p-2 mb-2 bg-danger text-white">
+                            <small>
+                                <strong>Deleted at:</strong>
+                                {{ $salespeople->deleted_at }}
+                            </small>
+                        </div>
+                    @endif
                     <div>
                         <strong>Name for Invoice:</strong>
                         {{ $salespeople->name_for_invoice }}
