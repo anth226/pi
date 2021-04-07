@@ -92,10 +92,14 @@ Route::get('/pdfdownloads/{title}','InvoiceGeneratorController@showFile');
 Route::get('/testview/{id}','InvoicesController@testview');
 
 
+Route::get('/salespeople/{salespeople_id}/calls/', 'CallsController@index');
+Route::post('/pi-persons', 'TwilioCallController@getPersonsByOwner');
+
 Route::get('/test-kevin-call', 'TwillioController@index');
 Route::post('/twilio-token', 'TwilioTokenController@newToken');
 Route::post('/support/zang', 'TwilioCallController@newCall');
 Route::post('/support/zang-vichak', 'TwilioCallController@callStats');
+
 
 
 

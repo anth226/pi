@@ -9,8 +9,8 @@
                     <div>
                         <div class="row">
                             <div class="col-12">
-                                <input type="file" v-model="file" @change='upload_image' name="image" accept="image/*" >
-                                <button v-if="file.length > 0" class="btn btn-danger" title="remove image" @click="removeImage">x</button>
+                                <!--<input type="file" v-model="file" @change='upload_image' name="image" accept="image/*" >-->
+                                <!--<button v-if="file.length > 0" class="btn btn-danger" title="remove image" @click="removeImage">x</button>-->
                             </div>
                         </div>
                         <div class="row">
