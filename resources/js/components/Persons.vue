@@ -1,7 +1,7 @@
 <template>
     <div class="persons" ref="feed">
         <ul>
-            <li v-for="person in persons" :key="person.id" :class="{ 'selected': person.selected == 1 }">
+            <li v-for="person in persons" :key="person.personId" :class="{ 'selected': person.selected == 1 }">
                 <div class="all-data" @click="selectPerson(person)">
                     <div class="person">
                         <p class="h6">{{ person.name }}</p>
@@ -14,17 +14,19 @@
 
 <script>
     export default {
-        props: {
-            persons: {
-                type: Array,
-                default: []
+        computed: {
+            persons: function () {
+                return this.$store.state.persons;
+            },
+            selected: function () {
+                return this.persons.length ? this.persons[0] : null
             }
         },
-        data() {
-            return {
-                selected: this.persons.length ? this.persons[0] : null
-            };
-        }
+        methods: {
+            selectContact(person) {
+                this.selected = person;
+            }
+        },
     }
 </script>
 

@@ -10,7 +10,6 @@
                             {{ $salesperson->name_for_invoice }}
                         </div>
                         <div class="card-body" id="apppp">
-                            <loader :is-visible="isLoading"></loader>
                             @if(!empty($salesperson->pipedrive_user_id))
                                 <call-app :owner_id="{{ $salesperson->pipedrive_user_id }}"></call-app>
                             @endif

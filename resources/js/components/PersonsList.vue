@@ -1,6 +1,6 @@
 <template>
     <div class="persons-list">
-        <Persons  :persons="persons" @selected="selectPerson" />
+        <Persons  @selected="selectPerson" />
     </div>
 </template>
 
@@ -8,12 +8,6 @@
     import Persons from './Persons';
 
     export default {
-        props: {
-            persons: {
-                type: Array,
-                default: []
-            }
-        },
         methods: {
             selectPerson(selected) {
                 this.$emit('selected', selected);
