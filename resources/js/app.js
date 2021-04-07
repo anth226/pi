@@ -48,18 +48,18 @@ const apppp = new Vue({
     methods: {
         enableInterceptor() {
             this.axiosInterceptor = window.axios.interceptors.request.use((config) => {
-                this.isLoading = true
+                this.isLoading = true;
                 return config
             }, (error) => {
-                this.isLoading = false
+                this.isLoading = false;
                 return Promise.reject(error)
             });
 
             window.axios.interceptors.response.use((response) => {
-                this.isLoading = false
+                this.isLoading = false;
                 return response
             }, function(error) {
-                this.isLoading = false
+                this.isLoading = false;
                 return Promise.reject(error)
             })
         },

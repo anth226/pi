@@ -5,13 +5,15 @@
         <div class="row justify-content-center">
             <div class="col-md-12">
                 <div class="card">
-                    @if(!empty($support))
+                    @if(!empty($salesperson))
                         <div class="card-header">
-                            {{ $support->support_number }} {{ $support->description }}
+                            {{ $salesperson->name_for_invoice }}
                         </div>
                         <div class="card-body" id="apppp">
                             <loader :is-visible="isLoading"></loader>
-                            <chat-app :support="{{ $support }}"></chat-app>
+                            @if(!empty($salesperson->pipedrive_user_id))
+                                <call-app :owner_id="{{ $salesperson->pipedrive_user_id }}"></call-app>
+                            @endif
                         </div>
                     @else
                         <div class="card-header">Support</div>
