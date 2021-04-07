@@ -232,7 +232,7 @@
                         <div dir="ltr"><i>Portfolio Insider Customer Support</i><br></div>
                         <div dir="ltr">
                             <div>
-                                <div><i><b>(866) 980-2909</b></i></div>
+                                <div><i><b>(323) 483-4014</b></i></div>
                                 <div><i><a href="mailto:support@portfolioinsider.com" style="color:rgb(17,85,204)"
                                            target="_blank">support@portfolioinsider.com</a></i></div>
                             </div>

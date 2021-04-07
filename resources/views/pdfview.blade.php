@@ -10,7 +10,7 @@
                 <div>9465 Wilshire Boulevard</div>
                 <div>Office # 300</div>
                 <div>Beverly Hills, CA 90212</div><br>
-                <div><strong>1-866-980-2909</strong></div>
+                <div><strong>{{ $support_phone_number }}</strong></div>
                 <div>support@portfolioinsider.com</div>
             </td>
         </tr>

@@ -31,7 +31,7 @@ class InvoicesController extends BaseController
 {
 	protected $full_path, $app_url;
 	public $pdf_path;
-	public $pdf_footer, $pdf_footer2;
+	public $pdf_footer, $pdf_footer2, $support_phone_number;
 
 	function __construct()
 	{
@@ -45,19 +45,22 @@ class InvoicesController extends BaseController
 		$this->pdf_path = base_path().'/resources/views/invoicesPdf/';
 		$this->full_path =  config('app.url').'/pdfview/';
 		$this->app_url =  config('app.url');
+
+		$this->support_phone_number = '(323) 483-4014';
+
 		$this->pdf_footer2 =  "
 		<div style=\"text-align: center;margin-top: 30px;width: 100%\">
 	        <div>
 	            <small>
 	                Thanks for becoming a valued customer at PortfolioInsider.com.<br>
 	                If you are not entirely satisfied with your purchase, we're here to help you with world-class support. You are entitled to cancel your order within 6 months without giving any given reason. To exercise your right of refund, you must inform us of your decision. <br>
-	                You can contact us via email: support@portfolioinsider.com, phone number: (866) 980-2909, or mail: 9465 Wilshire Boulevard Office #300. Beverly Hills, CA 90212. We will reimburse you no later than 14 days from the day of which we receive the notification.<br>
+	                You can contact us via email: support@portfolioinsider.com, phone number: ".$this->support_phone_number.", or mail: 9465 Wilshire Boulevard Office #300. Beverly Hills, CA 90212. We will reimburse you no later than 14 days from the day of which we receive the notification.<br>
 	                Refunds are issued to the same form of payment that was used for the order with no additional fees. If you have any further questions or there is any other information you require from us, please don’t hesitate to contact us.  We remain committed to providing excellent customer service and a positive experience for all customers. 
 	            </small>
 	        </div>
 	        <div>
 	            <small>
-	                <strong>Our phone service operates 24/7. Call (866) 980-2909</strong>
+	                <strong>Our phone service operates 24/7. Call ".$this->support_phone_number."</strong>
 	            </small>
 	        </div>
     	</div>
@@ -67,11 +70,11 @@ class InvoicesController extends BaseController
 	        <div>	            
 	                <p style=\"margin: 5px 0;font-size:13px;\"><small>Thanks for becoming a valued customer at PortfolioInsider.com.</small></p>
 	                <p style=\"margin: 5px 0;font-size:13px;\"><small>If you are not entirely satisfied with your purchase, we're here to help you with world-class support. You are entitled to cancel your order within 6 months without giving any given reason. To exercise your right of refund, you must inform us of your decision.</small></p>
-	                <p style=\"margin: 5px 0;font-size:13px;\"><small>You can contact us via email: support@portfolioinsider.com, phone number: (866) 980-2909, or mail: 9465 Wilshire Boulevard Office #300. Beverly Hills, CA 90212. We will reimburse you no later than 14 days from the day of which we receive the notification.</small></p>
+	                <p style=\"margin: 5px 0;font-size:13px;\"><small>You can contact us via email: support@portfolioinsider.com, phone number: ".$this->support_phone_number.", or mail: 9465 Wilshire Boulevard Office #300. Beverly Hills, CA 90212. We will reimburse you no later than 14 days from the day of which we receive the notification.</small></p>
 	                <p style=\"margin: 5px 0;font-size:13px;\"><small>Refunds are issued to the same form of payment that was used for the order with no additional fees. If you have any further questions or there is any other information you require from us, please don’t hesitate to contact us.  We remain committed to providing excellent customer service and a positive experience for all customers.</small></p> 	       
 	        </div>
 	        <div>	           
-	                <p style=\"margin: 5px 0;font-size:13px;\"><strong><small>Our phone service operates 24/7. Call (866) 980-2909</small></strong></p>	           
+	                <p style=\"margin: 5px 0;font-size:13px;\"><strong><small>Our phone service operates 24/7. Call ".$this->support_phone_number."</small></strong></p>	           
 	        </div>
     	</div>
 		";
@@ -591,8 +594,9 @@ class InvoicesController extends BaseController
 			$full_path =  $this->full_path;
 			$app_url =  $this->app_url;
 			$pdf_footer = $this->pdf_footer;
+			$support_phone_number = $this->support_phone_number;
 			PDF::setOptions(['dpi' => 400]);
-			$pdf = PDF::loadView($pdftemplate, compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'price_before_discount', 'total_before_discount', 'discount', 'pdf_footer' ));
+			$pdf = PDF::loadView($pdftemplate, compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'price_before_discount', 'total_before_discount', 'discount', 'pdf_footer', 'support_phone_number' ));
 			$pdf->save($this->pdf_path.$file_name);
 			$invoice->save();
 			return true;

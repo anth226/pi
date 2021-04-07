@@ -10,7 +10,7 @@
                 <div>9465 Wilshire Boulevard</div>
                 <div>Office # 300</div>
                 <div>Beverly Hills, CA 90212</div><br>
-                <div><strong>1-866-980-2909</strong></div>
+                <div><strong>{{ $support_phone_number }}</strong></div>
                 <div>support@portfolioinsider.com</div>
             </td>
         </tr>
@@ -145,7 +145,7 @@
                 If you are not entirely satisfied with your purchase, we're here to help you with world class support. We guarantee ACCESS
                 and support for 6 months. You are entitled to cancel your order within 30 days without giving any reason for doing so. In
                 order to exercise your right of refund, you must inform us of your decision.<br>
-                You can inform us of your decision by email: support@portfolioinsider.com, by phone number: (866) 980-2909 or by mail:
+                You can inform us of your decision by email: support@portfolioinsider.com, by phone number: {{ $support_phone_number }} or by mail:
                 9465 Wilshire Boulevard Office #300. Beverly Hills, CA 90212<br>
                 We will reimburse you no later than 14 days from the day on which we receive the notification.<br>
                 We will use the same means of payment as you used for the order, and you will not incur any fees for such reimbursement.
@@ -154,7 +154,7 @@
         </div>
         <div>
             <small>
-                <strong>We love our customers and our phone service operates 24/7 to make you happy! Call (866) 980-2909</strong>
+                <strong>We love our customers and our phone service operates 24/7 to make you happy! Call {{ $support_phone_number }}</strong>
             </small>
         </div>
     </div>
