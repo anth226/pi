@@ -391,7 +391,7 @@ class SalespeopleController extends InvoicesController
 			return abort(403);
 		}
 		else {
-			$salespeople = Salespeople::with( 'level.level' )->find( $id );
+			$salespeople = Salespeople::with( 'level.level' )->withTrashed()->find( $id );
 			if ( $salespeople ) {
 				return view( 'salespeople.show', compact( 'salespeople', 'firstDate', 'lastDate', 'to_pay' ) );
 			}
