@@ -106,14 +106,16 @@
                             </div>
                         </div>
                     @endcan
-                    @if(!empty($salespeople->deleted_at))
-                        <div class="p-2 mb-2 bg-danger text-white">
-                            <small>
-                                <strong>Deleted at:</strong>
-                                {{ $salespeople->deleted_at }}
-                            </small>
-                        </div>
-                    @endif
+                    @can('salespeople-edit')
+                        @if(!empty($salespeople->deleted_at))
+                            <div class="p-2 mb-2 bg-danger text-white">
+                                <small>
+                                    <strong>Deleted at:</strong>
+                                    {{ $salespeople->deleted_at }}
+                                </small>
+                            </div>
+                        @endif
+                    @endcan
                     <div>
                         <strong>Name for Invoice:</strong>
                         {{ $salespeople->name_for_invoice }}
