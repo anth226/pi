@@ -21,7 +21,7 @@ class SendEmailController extends BaseController
 
 	public function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:invoice-create|send-email-test');
 		$this->emailFromAddress =  config('mail.from.address');
 		$this->emailFromName =  config('mail.from.name');

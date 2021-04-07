@@ -11,7 +11,7 @@ class MailablesController extends Controller
 {
 	public function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:edit-email-templates|create-email-template' , ['only' => ['parseTemplate']]);
 
 		abort_unless(

@@ -18,7 +18,7 @@ class PayController extends BaseController
 {
 	function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:payments-manage');
 	}
 

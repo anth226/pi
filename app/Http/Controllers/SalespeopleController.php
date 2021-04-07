@@ -24,7 +24,7 @@ class SalespeopleController extends InvoicesController
 {
 	function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:payments-manage', ['only' => ['setPaid']]);
 		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete|salespeople-reports-view-all|salespeople-reports-view-own', ['only' => ['show', 'anyData']]);
 		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete', ['only' => ['index']]);
