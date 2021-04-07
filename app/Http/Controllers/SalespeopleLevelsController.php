@@ -14,7 +14,7 @@ class SalespeopleLevelsController extends Controller
 {
 	function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:salespeople-list|salespeople-create|salespeople-edit|salespeople-delete', ['only' => ['index','show']]);
 		$this->middleware('permission:salespeople-create', ['only' => ['create','store']]);
 		$this->middleware('permission:salespeople-edit', ['only' => ['edit','update']]);

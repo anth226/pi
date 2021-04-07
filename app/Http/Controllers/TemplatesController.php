@@ -13,7 +13,7 @@ class TemplatesController extends Controller
 {
 	public function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:view-email-templates|create-email-template' , ['only' => ['index', 'view', 'previewTemplateMarkdownView']]);
 		$this->middleware('permission:create-email-template' , ['only' => ['edit-email-templates','create', 'new','select']]);
 		abort_unless(
