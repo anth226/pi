@@ -35,7 +35,7 @@ class InvoicesController extends BaseController
 
 	function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete|generated-invoice-list|generated-invoice-create|generated-invoice-edit|generated-invoice-delete|salespeople-reports-view-own', ['only' => ['index']]);
 		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['show', 'showPdf']]);
 		$this->middleware('permission:invoice-create', ['only' => ['create','store']]);

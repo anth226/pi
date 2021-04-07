@@ -26,7 +26,7 @@ class CustomerInvoiceController extends CustomersController
 {
 	function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:customer-list|customer-create|customer-edit|customer-delete', ['only' => ['index','show']]);
 		$this->middleware('permission:customer-create|invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:customer-edit', ['only' => ['edit','update']]);

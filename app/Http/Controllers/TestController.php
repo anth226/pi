@@ -25,7 +25,7 @@ class TestController extends BaseController
 {
 	public function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 	}
 
 	/**

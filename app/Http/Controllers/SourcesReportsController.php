@@ -9,7 +9,7 @@ class SourcesReportsController extends InvoicesController
 {
 	function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:sources-reports-view');
 	}
 

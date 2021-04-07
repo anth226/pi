@@ -9,7 +9,7 @@ class TwillioController extends Controller
 
 	public function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:salespeople-reports-view-all');
 	}
 
