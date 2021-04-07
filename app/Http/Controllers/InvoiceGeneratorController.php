@@ -23,7 +23,7 @@ class InvoiceGeneratorController extends InvoicesController
 	function __construct()
 	{
 //		parent::__construct();
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:generated-invoice-list|generated-invoice-create|generated-invoice-edit|generated-invoice-delete', ['only' => ['index','show', 'showPdf']]);
 		$this->middleware('permission:generated-invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:generated-invoice-edit', ['only' => ['edit','update']]);

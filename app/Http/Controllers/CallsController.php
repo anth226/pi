@@ -19,7 +19,7 @@ class CallsController extends Controller
 
 	public function __construct(Request $request)
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:view-support');
 		$this->support_number_id = $request->input('support_id');
 		$this->img_folder = 'sms_support_images';

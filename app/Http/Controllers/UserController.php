@@ -22,7 +22,7 @@ class UserController extends Controller
 	 */
 	public function __construct()
 	{
-		$this->middleware(['auth','verified']);
+		$this->middleware(['auth']);
 		$this->middleware('permission:user-list|user-create|user-edit|user-delete' , ['only' => ['index','show']]);
 		$this->middleware('permission:user-create' , ['only' => ['store','create']]);
 		$this->middleware('permission:user-edit' , ['only' => ['edit','update']]);
@@ -82,7 +82,7 @@ class UserController extends Controller
 
 		$user->assignRole($request->input('roles'));
 
-		$user->sendEmailVerificationNotification();
+//		$user->sendEmailVerificationNotification();
 
 		if(!empty($user) && !empty($user->id)) {
 			$pipedrive = new Pipedrive();

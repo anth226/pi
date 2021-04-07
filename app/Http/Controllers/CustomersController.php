@@ -27,7 +27,7 @@ class CustomersController extends BaseController
 	protected $stripe, $firebase, $klaviyo, $klaviyo_listId, $smssystem;
 	function __construct()
 	{
-		$this->middleware( [ 'auth', 'verified' ] );
+		$this->middleware(['auth']);
 		$this->middleware( 'permission:customer-list|customer-create|customer-edit|customer-delete', [
 			'only' => [
 				'index',
