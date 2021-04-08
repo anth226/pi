@@ -8483,11 +8483,11 @@ __webpack_require__.r(__webpack_exports__);
       }).then(function (response) {
         _this.device = new Twilio.Device();
 
-        _this.device.setup(response.token);
+        _this.device.setup(response.data.token);
 
         _this.setupHandlers(_this.device);
       })["catch"](function (err) {
-        _this.statusText = err + "Could not get a token from server!";
+        _this.statusText = err + " Could not get a token from server!";
       });
     },
     setupHandlers: function setupHandlers(device) {
