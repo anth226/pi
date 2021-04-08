@@ -8430,7 +8430,9 @@ __webpack_require__.r(__webpack_exports__);
     return {
       statusText: "Connecting...",
       disabledHangUp: true,
-      disabledAnswerButton: true
+      disabledAnswerButton: true,
+      device: null,
+      connection: null
     };
   },
   mounted: function mounted() {
@@ -8467,6 +8469,7 @@ __webpack_require__.r(__webpack_exports__);
 
       device.on('connect', function (connection) {
         // Enable the hang up button and disable the call buttons
+        _this2.connection = connection;
         _this2.disabledHangUp = false;
         _this2.disabledAnswerButton = true; // If phoneNumber is part of the connection, this is a call from a
         // support agent to a customer's phone
@@ -8482,6 +8485,7 @@ __webpack_require__.r(__webpack_exports__);
 
       device.on('disconnect', function (connection) {
         // Disable the hangup button and enable the call buttons
+        _this2.connection = connection;
         _this2.disabledHangUp = true;
         _this2.disabledAnswerButton = true;
         _this2.statusText = "Ready";
@@ -8490,6 +8494,7 @@ __webpack_require__.r(__webpack_exports__);
 
       device.on('cancel', function (connection) {
         // Disable the hangup button and enable the call buttons
+        _this2.connection = connection;
         _this2.disabledHangUp = true;
         _this2.disabledAnswerButton = true;
         _this2.statusText = "Ready";
@@ -8497,6 +8502,7 @@ __webpack_require__.r(__webpack_exports__);
       /* Callback for when Twilio Client receives a new incoming call */
 
       device.on('incoming', function (connection) {
+        _this2.connection = connection;
         _this2.disabledHangUp = false;
         _this2.disabledAnswerButton = false;
         _this2.statusText = "Incoming call from " + connection.parameters.From; // Set a callback to be executed when the connection is accepted
