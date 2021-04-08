@@ -103,11 +103,11 @@
                 axios.post('/twilio-token', {_token: $('meta[name="csrf-token"]').attr('content')})
                     .then((response) => {
                         this.device = new Twilio.Device();
-                        this.device.setup(response.token);
+                        this.device.setup(response.data.token);
                         this.setupHandlers(this.device);
                     })
                     .catch(err => {
-                        this.statusText = err + "Could not get a token from server!";
+                        this.statusText = err + " Could not get a token from server!";
                     })
             },
             setupHandlers(device) {
