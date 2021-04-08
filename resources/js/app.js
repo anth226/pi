@@ -9,7 +9,7 @@ require('./bootstrap');
 // require('./daterangepicker');
 // require('./pusher');
 window.Twilio = require('twilio-client');
-require('./script');
+//require('./script');
 
 window.Vue = require('vue');
 
