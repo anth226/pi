@@ -98,11 +98,6 @@
         mounted(){
             this.setupClient()
         },
-        created() {
-            this.device.$on('ready', (data) => {
-                console.log('ready');
-            });
-        },
         methods: {
             setupClient(){
                 axios.post('/twilio-token', {_token: $('meta[name="csrf-token"]').attr('content')})
@@ -116,42 +111,41 @@
                     })
             },
             setupHandlers(device) {
-                device.on('ready', function () {
+                device.$on('ready', function () {
                     this.deviceReady = true;
-                    this.$emit('ready', true);
                 });
 
                 /* Report any errors to the call status display */
-                device.on('error', function (error) {
+                device.$on('error', function (error) {
                     this.deviceError = error;
                 });
 
                 /* Callback for when Twilio Client initiates a new connection */
-                device.on('connect', function (connection) {
+                device.$on('connect', function (connection) {
                     // Enable the hang up button and disable the call buttons
                     this.connection = connection;
                     this.deviceConnected = true;
                 });
 
                 /* Callback for when a call ends */
-                device.on('disconnect', function(connection) {
+                device.$on('disconnect', function(connection) {
                     // Disable the hangup button and enable the call buttons
                     this.deviceDisconnected = true;
                 });
 
                 /* Callback for when a call canceled */
-                device.on('cancel', function(connection) {
+                device.$on('cancel', function(connection) {
                     // Disable the hangup button and enable the call buttons
                     this.deviceCanceled = true;
                 });
 
                 /* Callback for when Twilio Client receives a new incoming call */
-                device.on('incoming', function(connection) {
+                device.$on('incoming', function(connection) {
                     this.deviceIncoming = true;
                 });
 
                 //reconnect
-                device.on('offline', function() {
+                device.$on('offline', function() {
                     this.deviceOffline = true;
                 });
 
