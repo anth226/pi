@@ -8248,6 +8248,8 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _StatusBox__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./StatusBox */ "./resources/js/components/StatusBox.vue");
+/* harmony import */ var _PersonDetails__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./PersonDetails */ "./resources/js/components/PersonDetails.vue");
+//
 //
 //
 //
@@ -8255,9 +8257,11 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 
+
 /* harmony default export */ __webpack_exports__["default"] = ({
   components: {
-    StatusBox: _StatusBox__WEBPACK_IMPORTED_MODULE_0__["default"]
+    StatusBox: _StatusBox__WEBPACK_IMPORTED_MODULE_0__["default"],
+    PersonDetails: _PersonDetails__WEBPACK_IMPORTED_MODULE_1__["default"]
   }
 });
 
@@ -8293,6 +8297,27 @@ __webpack_require__.r(__webpack_exports__);
     }
   }
 });
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PersonDetails.vue?vue&type=script&lang=js&":
+/*!************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/PersonDetails.vue?vue&type=script&lang=js& ***!
+  \************************************************************************************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+//
+//
+//
+//
+//
+//
+//
+//
+/* harmony default export */ __webpack_exports__["default"] = ({});
 
 /***/ }),
 
@@ -8401,74 +8426,11 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 /* harmony default export */ __webpack_exports__["default"] = ({
-  watch: {
-    deviceReady: function deviceReady(val) {
-      if (val) {
-        this.statusText = "Ready";
-      }
-    },
-    deviceError: function deviceError(error) {
-      if (error) {
-        this.statusText = "ERROR: " + error.message;
-      }
-    },
-    deviceConnected: function deviceConnected(val) {
-      if (val) {
-        this.disabledHangUp = false;
-        this.disabledAnswerButton = true; // If phoneNumber is part of the connection, this is a call from a
-        // support agent to a customer's phone
-
-        if ("phoneNumber" in this.connection.message) {
-          this.statusText = "In call with " + this.connection.message.phoneNumber;
-        } else {
-          // This is a call from a website user to a support agent
-          this.statusText = "In call";
-        }
-      }
-    },
-    deviceDisconnected: function deviceDisconnected(val) {
-      if (val) {
-        this.disabledHangUp = true;
-        this.disabledAnswerButton = true;
-        this.statusText = "Ready";
-      }
-    },
-    deviceCanceled: function deviceCanceled(val) {
-      if (val) {
-        this.disabledHangUp = true;
-        this.disabledAnswerButton = true;
-        this.statusText = "Ready";
-      }
-    },
-    deviceIncoming: function deviceIncoming(val) {
-      if (val) {
-        this.disabledHangUp = false;
-        this.disabledAnswerButton = false;
-        this.statusText = "Incoming call from " + this.connection.parameters.From; // Set a callback to be executed when the connection is accepted
-
-        this.connection.accept(this.acceptedCallback());
-      }
-    },
-    deviceOffline: function deviceOffline(val) {
-      if (val) {
-        this.setupClient();
-      }
-    }
-  },
   data: function data() {
     return {
-      statusText: 'Connecting...',
-      device: null,
-      connection: null,
+      statusText: "Connecting...",
       disabledHangUp: true,
-      disabledAnswerButton: true,
-      deviceConnected: false,
-      deviceReady: false,
-      deviceError: false,
-      deviceDisconnected: false,
-      deviceCanceled: false,
-      deviceIncoming: false,
-      deviceOffline: false
+      disabledAnswerButton: true
     };
   },
   mounted: function mounted() {
@@ -8494,41 +8456,58 @@ __webpack_require__.r(__webpack_exports__);
       var _this2 = this;
 
       device.on('ready', function () {
-        console.log('ready');
-        _this2.deviceReady = true;
+        _this2.statusText = "Ready";
       });
       /* Report any errors to the call status display */
 
       device.on('error', function (error) {
-        this.deviceError = error;
+        _this2.statusText = "ERROR: " + error.message;
       });
       /* Callback for when Twilio Client initiates a new connection */
 
       device.on('connect', function (connection) {
         // Enable the hang up button and disable the call buttons
-        this.connection = connection;
-        this.deviceConnected = true;
+        _this2.disabledHangUp = false;
+        _this2.disabledAnswerButton = true; // If phoneNumber is part of the connection, this is a call from a
+        // support agent to a customer's phone
+
+        if ("phoneNumber" in connection.message) {
+          _this2.statusText = "In call with " + connection.message.phoneNumber;
+        } else {
+          // This is a call from a website user to a support agent
+          _this2.statusText = "In call";
+        }
       });
       /* Callback for when a call ends */
 
       device.on('disconnect', function (connection) {
         // Disable the hangup button and enable the call buttons
-        this.deviceDisconnected = true;
+        _this2.disabledHangUp = true;
+        _this2.disabledAnswerButton = true;
+        _this2.statusText = "Ready";
       });
       /* Callback for when a call canceled */
 
       device.on('cancel', function (connection) {
         // Disable the hangup button and enable the call buttons
-        this.deviceCanceled = true;
+        _this2.disabledHangUp = true;
+        _this2.disabledAnswerButton = true;
+        _this2.statusText = "Ready";
       });
       /* Callback for when Twilio Client receives a new incoming call */
 
       device.on('incoming', function (connection) {
-        this.deviceIncoming = true;
+        _this2.disabledHangUp = false;
+        _this2.disabledAnswerButton = false;
+        _this2.statusText = "Incoming call from " + connection.parameters.From; // Set a callback to be executed when the connection is accepted
+
+        connection.accept(function () {
+          _this2.statusText = "In call with customer";
+        });
       }); //reconnect
 
       device.on('offline', function () {
-        this.deviceOffline = true;
+        _this2.setupClient();
       });
     },
     hangUp: function hangUp() {
@@ -8540,9 +8519,6 @@ __webpack_require__.r(__webpack_exports__);
     },
     answerCall: function answerCall() {
       this.connection.accept();
-    },
-    acceptedCallback: function acceptedCallback() {
-      this.statusText = "In call with customer";
     }
   }
 });
@@ -65427,7 +65403,12 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", { staticClass: "conversation" }, [_c("StatusBox")], 1)
+  return _c(
+    "div",
+    { staticClass: "conversation" },
+    [_c("StatusBox"), _vm._v(" "), _c("PersonDetails")],
+    1
+  )
 }
 var staticRenderFns = []
 render._withStripped = true
@@ -65463,6 +65444,39 @@ var render = function() {
     : _vm._e()
 }
 var staticRenderFns = []
+render._withStripped = true
+
+
+
+/***/ }),
+
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PersonDetails.vue?vue&type=template&id=57473252&scoped=true&":
+/*!****************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/PersonDetails.vue?vue&type=template&id=57473252&scoped=true& ***!
+  \****************************************************************************************************************************************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _vm._m(0)
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "person-details" }, [
+      _c("div", { staticClass: "m-1" })
+    ])
+  }
+]
 render._withStripped = true
 
 
@@ -79071,6 +79085,7 @@ var map = {
 	"./components/CallApp.vue": "./resources/js/components/CallApp.vue",
 	"./components/Conversation.vue": "./resources/js/components/Conversation.vue",
 	"./components/Loader.vue": "./resources/js/components/Loader.vue",
+	"./components/PersonDetails.vue": "./resources/js/components/PersonDetails.vue",
 	"./components/Persons.vue": "./resources/js/components/Persons.vue",
 	"./components/PersonsList.vue": "./resources/js/components/PersonsList.vue",
 	"./components/StatusBox.vue": "./resources/js/components/StatusBox.vue"
@@ -79150,7 +79165,9 @@ Vue.use(vuex__WEBPACK_IMPORTED_MODULE_0__["default"]);
 var store = new vuex__WEBPACK_IMPORTED_MODULE_0__["default"].Store({
   state: {
     persons: [],
-    owner_id: ''
+    owner_id: '',
+    device: null,
+    connection: null
   },
   mutations: {
     setPersons: function setPersons(state, persons) {
@@ -79158,6 +79175,12 @@ var store = new vuex__WEBPACK_IMPORTED_MODULE_0__["default"].Store({
     },
     setOwner: function setOwner(state, owner_id) {
       state.owner_id = owner_id;
+    },
+    setDevice: function setDevice(state, device) {
+      state.device = device;
+    },
+    setConnection: function setConnection(state, connection) {
+      state.connection = connection;
     }
   },
   actions: {
@@ -79489,6 +79512,75 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Loader_vue_vue_type_template_id_e79ec684___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Loader_vue_vue_type_template_id_e79ec684___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+
+
+
+/***/ }),
+
+/***/ "./resources/js/components/PersonDetails.vue":
+/*!***************************************************!*\
+  !*** ./resources/js/components/PersonDetails.vue ***!
+  \***************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _PersonDetails_vue_vue_type_template_id_57473252_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./PersonDetails.vue?vue&type=template&id=57473252&scoped=true& */ "./resources/js/components/PersonDetails.vue?vue&type=template&id=57473252&scoped=true&");
+/* harmony import */ var _PersonDetails_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./PersonDetails.vue?vue&type=script&lang=js& */ "./resources/js/components/PersonDetails.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport *//* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+
+
+
+
+
+/* normalize component */
+
+var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__["default"])(
+  _PersonDetails_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
+  _PersonDetails_vue_vue_type_template_id_57473252_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _PersonDetails_vue_vue_type_template_id_57473252_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  false,
+  null,
+  "57473252",
+  null
+  
+)
+
+/* hot reload */
+if (false) { var api; }
+component.options.__file = "resources/js/components/PersonDetails.vue"
+/* harmony default export */ __webpack_exports__["default"] = (component.exports);
+
+/***/ }),
+
+/***/ "./resources/js/components/PersonDetails.vue?vue&type=script&lang=js&":
+/*!****************************************************************************!*\
+  !*** ./resources/js/components/PersonDetails.vue?vue&type=script&lang=js& ***!
+  \****************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_PersonDetails_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./PersonDetails.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PersonDetails.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_PersonDetails_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
+
+/***/ }),
+
+/***/ "./resources/js/components/PersonDetails.vue?vue&type=template&id=57473252&scoped=true&":
+/*!**********************************************************************************************!*\
+  !*** ./resources/js/components/PersonDetails.vue?vue&type=template&id=57473252&scoped=true& ***!
+  \**********************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_PersonDetails_vue_vue_type_template_id_57473252_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./PersonDetails.vue?vue&type=template&id=57473252&scoped=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PersonDetails.vue?vue&type=template&id=57473252&scoped=true&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_PersonDetails_vue_vue_type_template_id_57473252_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_PersonDetails_vue_vue_type_template_id_57473252_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 

@@ -1,14 +1,16 @@
 <template>
     <div class="conversation">
         <StatusBox />
+        <PersonDetails />
     </div>
 </template>
 
 <script>
     import StatusBox from './StatusBox';
+    import PersonDetails from './PersonDetails';
 
     export default {
-        components: {StatusBox}
+        components: {StatusBox, PersonDetails}
     }
 </script>
 
