@@ -28,7 +28,9 @@
             return {
                 statusText: "Connecting...",
                 disabledHangUp: true,
-                disabledAnswerButton:true
+                disabledAnswerButton:true,
+                device:null,
+                connection:null
             }
         },
         mounted(){
@@ -59,6 +61,7 @@
                 /* Callback for when Twilio Client initiates a new connection */
                 device.on('connect', (connection) => {
                     // Enable the hang up button and disable the call buttons
+                    this.connection = connection;
                     this.disabledHangUp = false;
                     this.disabledAnswerButton = true;
                     // If phoneNumber is part of the connection, this is a call from a
@@ -74,6 +77,7 @@
                 /* Callback for when a call ends */
                 device.on('disconnect', (connection) => {
                     // Disable the hangup button and enable the call buttons
+                    this.connection = connection;
                     this.disabledHangUp = true;
                     this.disabledAnswerButton = true;
                     this.statusText = "Ready" ;
@@ -82,6 +86,7 @@
                 /* Callback for when a call canceled */
                 device.on('cancel', (connection) => {
                     // Disable the hangup button and enable the call buttons
+                    this.connection = connection;
                     this.disabledHangUp = true;
                     this.disabledAnswerButton = true;
                     this.statusText = "Ready" ;
@@ -89,6 +94,7 @@
 
                 /* Callback for when Twilio Client receives a new incoming call */
                 device.on('incoming', (connection) => {
+                    this.connection = connection;
                     this.disabledHangUp = false;
                     this.disabledAnswerButton = false;
                     this.statusText = "Incoming call from " +  connection.parameters.From;
