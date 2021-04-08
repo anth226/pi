@@ -44,9 +44,10 @@
  */
 
 /*!
- DataTables Bootstrap 4 integration
- ©2011-2017 SpryMedia Ltd - datatables.net/license
-*/
+ * vuex v3.6.2
+ * (c) 2021 Evan You
+ * @license MIT
+ */
 
 /*! DataTables 1.10.21
  * ©2008-2020 SpryMedia Ltd - datatables.net/license
