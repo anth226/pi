@@ -1,6 +1,7 @@
 <template>
     <div class="conversation">
         <StatusBox />
+        <Dialer />
         <PersonDetails />
     </div>
 </template>
@@ -8,9 +9,10 @@
 <script>
     import StatusBox from './StatusBox';
     import PersonDetails from './PersonDetails';
+    import Dialer from './Dialer';
 
     export default {
-        components: {StatusBox, PersonDetails}
+        components: {StatusBox, PersonDetails, Dialer}
     }
 </script>
 
@@ -19,7 +21,7 @@
     flex: 5;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    /*justify-content: space-between;*/
     background-color: aliceblue;
     border: 1px solid #aaa;
 

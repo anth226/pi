@@ -1,6 +1,6 @@
 <template>
     <div class="status-box">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-lg-12 m-auto">
                 <div class="card">
                     <div class="card-body">
