@@ -8491,15 +8491,16 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     setupHandlers: function setupHandlers(device) {
+      var _this2 = this;
+
       device.on('ready', function () {
-        this.deviceReady = true;
-        this.statusText = "Ready";
+        console.log('ready');
+        _this2.deviceReady = true;
       });
       /* Report any errors to the call status display */
 
       device.on('error', function (error) {
         this.deviceError = error;
-        this.statusText = "ERROR: " + error.message;
       });
       /* Callback for when Twilio Client initiates a new connection */
 
@@ -8507,49 +8508,27 @@ __webpack_require__.r(__webpack_exports__);
         // Enable the hang up button and disable the call buttons
         this.connection = connection;
         this.deviceConnected = true;
-        this.disabledHangUp = false;
-        this.disabledAnswerButton = true; // If phoneNumber is part of the connection, this is a call from a
-        // support agent to a customer's phone
-
-        if ("phoneNumber" in connection.message) {
-          this.statusText = "In call with " + connection.message.phoneNumber;
-        } else {
-          // This is a call from a website user to a support agent
-          this.statusText = "In call";
-        }
       });
       /* Callback for when a call ends */
 
       device.on('disconnect', function (connection) {
         // Disable the hangup button and enable the call buttons
         this.deviceDisconnected = true;
-        this.disabledHangUp = true;
-        this.disabledAnswerButton = true;
-        this.statusText = "Ready";
       });
       /* Callback for when a call canceled */
 
       device.on('cancel', function (connection) {
         // Disable the hangup button and enable the call buttons
         this.deviceCanceled = true;
-        this.disabledHangUp = true;
-        this.disabledAnswerButton = true;
-        this.statusText = "Ready";
       });
       /* Callback for when Twilio Client receives a new incoming call */
 
       device.on('incoming', function (connection) {
         this.deviceIncoming = true;
-        this.disabledHangUp = false;
-        this.disabledAnswerButton = false;
-        this.statusText = "Incoming call from " + connection.parameters.From; // Set a callback to be executed when the connection is accepted
-
-        this.connection.accept(this.acceptedCallback());
       }); //reconnect
 
       device.on('offline', function () {
         this.deviceOffline = true;
-        this.setupClient();
       });
     },
     hangUp: function hangUp() {
