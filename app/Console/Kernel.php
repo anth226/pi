@@ -2,7 +2,6 @@
 
 namespace App\Console;
 
-use App\Console\Commands\ProcessingPiLeads;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -14,7 +13,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-		ProcessingPiLeads::class
+
     ];
 
     /**
@@ -25,7 +24,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-//	    $schedule->command('processing:pileads')->dailyAt("00:10")->runInBackground()->withoutOverlapping(5);
+
     }
 
     /**
