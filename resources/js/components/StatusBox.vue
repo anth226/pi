@@ -98,6 +98,11 @@
         mounted(){
             this.setupClient()
         },
+        created() {
+            this.device.$on('ready', (data) => {
+                console.log('ready');
+            });
+        },
         methods: {
             setupClient(){
                 axios.post('/twilio-token', {_token: $('meta[name="csrf-token"]').attr('content')})
@@ -113,6 +118,7 @@
             setupHandlers(device) {
                 device.on('ready', function () {
                     this.deviceReady = true;
+                    this.$emit('ready', true);
                 });
 
                 /* Report any errors to the call status display */
