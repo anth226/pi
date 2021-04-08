@@ -7,7 +7,8 @@
 require('./bootstrap');
 // require('./select2');
 // require('./daterangepicker');
-require('./pusher');
+// require('./pusher');
+window.Twilio = require('twilio-client');
 require('./script');
 
 window.Vue = require('vue');

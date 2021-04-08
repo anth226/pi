@@ -2,7 +2,7 @@
     <div class="call-app">
         <loader :isVisible="isLoading" />
         <PersonsList   />
-        <Conversation :contact="selectedContact" :messages="messages" @new="saveNewMessage"/>
+        <Conversation />
     </div>
 </template>
 

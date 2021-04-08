@@ -14,8 +14,6 @@
                                 <call-app :owner_id="{{ $salesperson->pipedrive_user_id }}"></call-app>
                             @endif
                         </div>
-                    @else
-                        <div class="card-header">Support</div>
                     @endif
 
                 </div>
@@ -23,4 +21,11 @@
         </div>
     </div>
 
+@endsection
+
+@section('script')
+    <script>
+
+
+    </script>
 @endsection
