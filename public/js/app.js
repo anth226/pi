@@ -8474,6 +8474,11 @@ __webpack_require__.r(__webpack_exports__);
   mounted: function mounted() {
     this.setupClient();
   },
+  created: function created() {
+    this.device.$on('ready', function (data) {
+      console.log('ready');
+    });
+  },
   methods: {
     setupClient: function setupClient() {
       var _this = this;
@@ -8493,6 +8498,7 @@ __webpack_require__.r(__webpack_exports__);
     setupHandlers: function setupHandlers(device) {
       device.on('ready', function () {
         this.deviceReady = true;
+        this.$emit('ready', true);
       });
       /* Report any errors to the call status display */
 
