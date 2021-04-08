@@ -24,75 +24,11 @@
 
 <script>
     export default {
-
-        watch: {
-            deviceReady: function(val) {
-                if (val) {
-                    this.statusText = "Ready";
-                }
-            },
-            deviceError: function(error) {
-                if (error) {
-                    this.statusText = "ERROR: " + error.message;
-                }
-            },
-            deviceConnected: function(val) {
-                if (val) {
-                    this.disabledHangUp = false;
-                    this.disabledAnswerButton = true;
-                    // If phoneNumber is part of the connection, this is a call from a
-                    // support agent to a customer's phone
-                    if ("phoneNumber" in this.connection.message) {
-                        this.statusText = "In call with " + this.connection.message.phoneNumber;
-                    } else {
-                        // This is a call from a website user to a support agent
-                        this.statusText = "In call";
-                    }
-                }
-            },
-            deviceDisconnected: function(val) {
-                if (val) {
-                    this.disabledHangUp = true;
-                    this.disabledAnswerButton = true;
-                    this.statusText = "Ready" ;
-                }
-            },
-            deviceCanceled: function(val) {
-                if (val) {
-                    this.disabledHangUp = true;
-                    this.disabledAnswerButton = true;
-                    this.statusText = "Ready" ;
-                }
-            },
-            deviceIncoming: function(val) {
-                if (val) {
-                    this.disabledHangUp = false;
-                    this.disabledAnswerButton = false;
-                    this.statusText = "Incoming call from " +  this.connection.parameters.From;
-                    // Set a callback to be executed when the connection is accepted
-                    this.connection.accept(this.acceptedCallback());
-                }
-            },
-            deviceOffline: function(val) {
-                if (val) {
-                    this.setupClient();
-                }
-            }
-        },
-        data() {
+        data(){
             return {
-                statusText: 'Connecting...',
-                device: null,
-                connection:null,
-                disabledHangUp:true,
-                disabledAnswerButton:true,
-                deviceConnected:false,
-                deviceReady:false,
-                deviceError:false,
-                deviceDisconnected:false,
-                deviceCanceled:false,
-                deviceIncoming:false,
-                deviceOffline:false,
+                statusText: "Connecting...",
+                disabledHangUp: true,
+                disabledAnswerButton:true
             }
         },
         mounted(){
@@ -112,42 +48,59 @@
             },
             setupHandlers(device) {
                 device.on('ready', () => {
-                    console.log('ready');
-                    this.deviceReady = true;
+                    this.statusText = "Ready";
                 });
 
                 /* Report any errors to the call status display */
-                device.on('error', function (error) {
-                    this.deviceError = error;
+                device.on('error', (error) => {
+                    this.statusText = "ERROR: " + error.message;
                 });
 
                 /* Callback for when Twilio Client initiates a new connection */
-                device.on('connect', function (connection) {
+                device.on('connect', (connection) => {
                     // Enable the hang up button and disable the call buttons
-                    this.connection = connection;
-                    this.deviceConnected = true;
+                    this.disabledHangUp = false;
+                    this.disabledAnswerButton = true;
+                    // If phoneNumber is part of the connection, this is a call from a
+                    // support agent to a customer's phone
+                    if ("phoneNumber" in connection.message) {
+                        this.statusText = "In call with " + connection.message.phoneNumber;
+                    } else {
+                        // This is a call from a website user to a support agent
+                        this.statusText = "In call";
+                    }
                 });
 
                 /* Callback for when a call ends */
-                device.on('disconnect', function(connection) {
+                device.on('disconnect', (connection) => {
                     // Disable the hangup button and enable the call buttons
-                    this.deviceDisconnected = true;
+                    this.disabledHangUp = true;
+                    this.disabledAnswerButton = true;
+                    this.statusText = "Ready" ;
                 });
 
                 /* Callback for when a call canceled */
-                device.on('cancel', function(connection) {
+                device.on('cancel', (connection) => {
                     // Disable the hangup button and enable the call buttons
-                    this.deviceCanceled = true;
+                    this.disabledHangUp = true;
+                    this.disabledAnswerButton = true;
+                    this.statusText = "Ready" ;
                 });
 
                 /* Callback for when Twilio Client receives a new incoming call */
-                device.on('incoming', function(connection) {
-                    this.deviceIncoming = true;
+                device.on('incoming', (connection) => {
+                    this.disabledHangUp = false;
+                    this.disabledAnswerButton = false;
+                    this.statusText = "Incoming call from " +  connection.parameters.From;
+                    // Set a callback to be executed when the connection is accepted
+                    connection.accept(() => {
+                        this.statusText = "In call with customer";
+                    });
                 });
 
                 //reconnect
-                device.on('offline', function() {
-                    this.deviceOffline = true;
+                device.on('offline', () => {
+                    this.setupClient();
                 });
 
             },
@@ -160,9 +113,6 @@
             },
             answerCall() {
                 this.connection.accept();
-            },
-            acceptedCallback(){
-                this.statusText = "In call with customer";
             }
         }
 

@@ -44,7 +44,9 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
     state: {
         persons: [],
-        owner_id: ''
+        owner_id: '',
+        device: null,
+        connection: null
     },
     mutations: {
         setPersons (state, persons) {
@@ -53,6 +55,12 @@ const store = new Vuex.Store({
         },
         setOwner(state, owner_id){
             state.owner_id = owner_id;
+        },
+        setDevice(state, device){
+            state.device = device;
+        },
+        setConnection(state, connection){
+            state.connection = connection;
         }
     },
     actions: {
