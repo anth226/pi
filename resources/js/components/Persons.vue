@@ -1,5 +1,10 @@
 <template>
     <div class="persons" ref="feed">
+        <div v-if="totalPersons" class="card">
+            <div class="card-body">
+                <h5>Total: {{totalPersons}}</h5>
+            </div>
+        </div>
         <ul>
             <li v-for="person in persons" :key="person.personId" :class="{ 'selected': person.selected == 1 }">
                 <div class="all-data" @click="selectPerson(person)">
@@ -15,6 +20,9 @@
 <script>
     export default {
         computed: {
+            totalPersons: function () {
+                return this.$store.state.persons.length;
+            },
             persons: function () {
                 return this.$store.state.persons;
             },

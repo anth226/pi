@@ -90,9 +90,9 @@ class TestController extends BaseController
 
 //		$tt = new Pipedrive();
 //		$tt->findOwnersOnPipedrive();
-//		$pl = new TwilioCallController();
-//		dd($pl->getLeadsByOwner(12165079));
-//		dd($pl->getLeadsByOwner(12165079));
+		$pl = new TwillioController();
+//		dd($pl->findLeads('ELIZABETH ASHER'));
+		dd($pl->getLeadsByOwner(12165079));
 //		dd($pl->getLeadsByOwnerOnePage(11778811,0,500));
 	}
 
