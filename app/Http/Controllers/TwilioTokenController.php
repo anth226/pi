@@ -14,7 +14,7 @@ class TwilioTokenController extends Controller
 	public function __construct()
 	{
 		$this->middleware(['auth']);
-		$this->middleware('permission:salespeople-reports-view-all');
+		$this->middleware('permission:make-calls');
 		$this->accessToken = new AccessToken(config('twilio.twilio.twilio_sid'), config('twilio.twilio.twilio_key'), config('twilio.twilio.twilio_secret'));
 		$this->applicationSid = config('twilio.twilio.twilio_app_sid');
 	}

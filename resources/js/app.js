@@ -51,7 +51,6 @@ const store = new Vuex.Store({
     mutations: {
         setPersons (state, persons) {
             state.persons = persons;
-
         },
         setOwner(state, owner_id){
             state.owner_id = owner_id;
@@ -63,13 +62,17 @@ const store = new Vuex.Store({
             state.connection = connection;
         }
     },
+    getters: {
+        getOwnerId: state => {
+            return state.owner_id
+        }
+    },
     actions: {
         setPersons (context, owner_id) {
             context.commit('setOwner', owner_id);
             axios.post('/pi-persons',{owner_id: owner_id})
                 .then((response) => {
                     context.commit('setPersons', response.data.data);
-                    // context.commit('setLoaderStatus', false);
                 })
                 .catch(err => {
                     if(err.message == 'CSRF token mismatch.'){

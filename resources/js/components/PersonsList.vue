@@ -1,11 +1,13 @@
 <template>
     <div class="persons-list">
+        <SearchPerson />
         <Persons  @selected="selectPerson" />
     </div>
 </template>
 
 <script>
     import Persons from './Persons';
+    import SearchPerson from './SearchPerson';
 
     export default {
         methods: {
@@ -13,7 +15,7 @@
                 this.$emit('selected', selected);
             }
         },
-        components: {Persons}
+        components: {Persons, SearchPerson}
     }
 </script>
 
