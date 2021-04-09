@@ -522,6 +522,7 @@ class mailEclipse
         }
 
 	    $user_logged = Auth::user();
+        dd($viewPath);
         $slug = str_replace(['/app/resources/views/vendor/maileclipse/templates/','.blade.php'], ['',''], $viewPath);
         $template_id = EmailTemplates::where('template_slug', $slug)->value('id');
 	    ActionsLog::create( [
