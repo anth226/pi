@@ -14,6 +14,14 @@
                 </div>
             </li>
         </ul>
+        <div class="row">
+            <div class="col-6">
+                <button v-if="start > 0" v-on:click="prev">Previous</button>
+            </div>
+            <div class="col-6">
+                <button v-if="next_start > 0" v-on:click="next">Next</button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -28,11 +36,43 @@
             },
             selected: function () {
                 return this.persons.length ? this.persons[0] : null
+            },
+            start: function () {
+                return this.$store.getters.getStart
+            },
+            next_start: function () {
+                return this.$store.getters.getNextStart
+            },
+            page_size: function () {
+                return this.$store.getters.getPageSize
+            },
+            owner_id: function() {
+                return this.$store.getters.getOwnerId
+            },
+            text: function() {
+                return this.$store.getters.getText
             }
+
         },
         methods: {
             selectContact(person) {
                 this.selected = person;
+            },
+            next(){
+                let options = {
+                    owner_id: this.owner_id,
+                    text: this.text,
+                    start: this.next_start
+                };
+                this.$store.dispatch('showPersons', options);
+            },
+            prev(){
+                let options = {
+                    owner_id: this.owner_id,
+                    text: this.text,
+                    start: this.start - this.page_size
+                };
+                this.$store.dispatch('showPersons', options);
             }
         },
     }

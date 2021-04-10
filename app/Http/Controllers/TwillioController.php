@@ -45,7 +45,8 @@ class TwillioController extends BaseController
 			!empty( $input['owner_id'] )
 		) {
 			$find = !empty( $input['text'] ) ?  $input['text'] : '';
-			$res  = $this->getLeadsByOwner($input['owner_id'], $find);
+			$start = !empty( $input['start'] ) ?  $input['start'] : 0;
+			$res  = $this->getLeadsByOwner($input['owner_id'], $find, $start);
 			if($res){
 				return $this->sendResponse($res);
 			}
@@ -57,14 +58,32 @@ class TwillioController extends BaseController
 
 	}
 
-	public function getLeadsByOwner($owner_id, $find = '', $first_page_only = true){
+	public function getLeadsByOwner($owner_id, $find = '',$start = 0, $paginated = true){
 		try{
-			$res = [];
-			$next_start = 0;
-			while ($next_start >= 0){
-				$result = $this->getLeadsByOwnerOnePage($owner_id, $find, $next_start, $limit = 100);
-				$res = array_merge($res, $result['data']);
-				$next_start = $first_page_only ? -1 : $result['next_start'];
+			$res = [
+				'data' => [],
+				'start' => 0,
+				'next_start' => 0,
+				'page_size' => 500
+			];
+			$limit = $res['page_size'];
+			if($find){
+				$limit = 100;
+				$res['page_size'] = $limit;
+			}
+			if(!$paginated) {
+				$next_start = 0;
+				while ( $next_start >= 0 ) {
+					$result     = $this->getLeadsByOwnerOnePage( $owner_id, $find, $next_start, $limit );
+					$res['data']        = array_merge( $res['data'], $result['data'] );
+					$next_start = $result['next_start'];
+				}
+			}
+			else{
+				$result     = $this->getLeadsByOwnerOnePage( $owner_id, $find, $start, $limit );
+				$res['data']        = array_merge( $res['data'], $result['data'] );
+				$res['start'] = $start;
+				$res['next_start'] = $result['next_start'];
 			}
 			return $res;
 		}
@@ -90,7 +109,7 @@ class TwillioController extends BaseController
 				$persons = Pipedrive::executeCommand( $key, new Pipedrive\Commands\FindPerson( $find, $start, $limit ) );
 			}
 			else {
-				$persons = Pipedrive::executeCommand( $key, new Pipedrive\Commands\GetPersons( $owner_id, $start, $limit ) );
+				$persons = Pipedrive::executeCommand( $key, new Pipedrive\Commands\GetPersons( $owner_id,0, $start, $limit ) );
 			}
 			if(!empty($persons)){
 				if(!empty($persons->data)) {

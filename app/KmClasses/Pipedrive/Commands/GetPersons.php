@@ -14,17 +14,18 @@ class GetPersons implements CommandInterface
     /**
      * @var
      */
-    private $owner_id, $start, $limit;
+    private $owner_id, $start, $limit, $filterId;
 
     /**
      * @var
      */
 
-    public function __construct($owner_id, $start = 0, $limit = 500)
+    public function __construct($owner_id,$filterId =0, $start = 0, $limit = 500)
     {
         $this->owner_id = $owner_id;
         $this->start = $start;
         $this->limit = $limit;
+        $this->filterId = $filterId;
     }
 
     /**
@@ -37,6 +38,9 @@ class GetPersons implements CommandInterface
 		    'start'      => $this->start,
 		    'limit'      => $this->limit
 		];
+    	if($this->filterId){
+    		$options['filterId'] = $this->filterId;
+	    }
         $data = $client->getInstance()->getPersons()->getAllPersons($options);
         return $data;
     }

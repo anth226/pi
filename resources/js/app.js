@@ -45,6 +45,10 @@ const store = new Vuex.Store({
     state: {
         persons: [],
         owner_id: '',
+        start: 0,
+        next_start: 0,
+        text: '',
+        page_size: 100,
         device: null,
         connection: null
     },
@@ -54,6 +58,18 @@ const store = new Vuex.Store({
         },
         setOwner(state, owner_id){
             state.owner_id = owner_id;
+        },
+        setStart(state, start){
+            state.start = start;
+        },
+        setNextStart(state, next_start){
+            state.next_start = next_start;
+        },
+        setText(state, text){
+            state.text = text;
+        },
+        setPageSize(state, page_size){
+            state.page_size = page_size;
         },
         setDevice(state, device){
             state.device = device;
@@ -65,14 +81,30 @@ const store = new Vuex.Store({
     getters: {
         getOwnerId: state => {
             return state.owner_id
+        },
+        getStart: state => {
+            return state.start
+        },
+        getNextStart: state => {
+            return state.next_start
+        },
+        getText: state => {
+            return state.text
+        },
+        getPageSize: state => {
+            return state.page_size
         }
     },
     actions: {
-        setPersons (context, owner_id) {
-            context.commit('setOwner', owner_id);
-            axios.post('/pi-persons',{owner_id: owner_id})
+        showPersons (context, options) {
+            context.commit('setOwner', options.owner_id);
+            axios.post('/pi-persons',{owner_id: options.owner_id, text:options.text, start:options.start})
                 .then((response) => {
-                    context.commit('setPersons', response.data.data);
+                    context.commit('setPersons', response.data.data.data);
+                    context.commit('setStart', response.data.data.start);
+                    context.commit('setNextStart', response.data.data.next_start);
+                    context.commit('setPageSize', response.data.data.page_size);
+                    context.commit('setText', options.text);
                 })
                 .catch(err => {
                     if(err.message == 'CSRF token mismatch.'){
