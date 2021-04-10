@@ -8199,7 +8199,12 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     fetchPersons: function fetchPersons() {
-      this.$store.dispatch('setPersons', this.owner_id);
+      var options = {
+        owner_id: this.owner_id,
+        text: '',
+        start: 0
+      };
+      this.$store.dispatch('showPersons', options);
     },
     enableInterceptor: function enableInterceptor() {
       var _this = this;
@@ -8395,6 +8400,14 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   computed: {
     totalPersons: function totalPersons() {
@@ -8405,11 +8418,42 @@ __webpack_require__.r(__webpack_exports__);
     },
     selected: function selected() {
       return this.persons.length ? this.persons[0] : null;
+    },
+    start: function start() {
+      return this.$store.getters.getStart;
+    },
+    next_start: function next_start() {
+      return this.$store.getters.getNextStart;
+    },
+    page_size: function page_size() {
+      return this.$store.getters.getPageSize;
+    },
+    owner_id: function owner_id() {
+      return this.$store.getters.getOwnerId;
+    },
+    text: function text() {
+      return this.$store.getters.getText;
     }
   },
   methods: {
     selectContact: function selectContact(person) {
       this.selected = person;
+    },
+    next: function next() {
+      var options = {
+        owner_id: this.owner_id,
+        text: this.text,
+        start: this.next_start
+      };
+      this.$store.dispatch('showPersons', options);
+    },
+    prev: function prev() {
+      var options = {
+        owner_id: this.owner_id,
+        text: this.text,
+        start: this.start - this.page_size
+      };
+      this.$store.dispatch('showPersons', options);
     }
   }
 });
@@ -8473,7 +8517,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
-      search_person: ''
+      search_person: '',
+      start: 0,
+      next_start: 0
     };
   },
   computed: {
@@ -8483,24 +8529,22 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     search: function search(e) {
-      var _this = this;
-
       e.preventDefault();
+      var options = {
+        owner_id: this.owner_id,
+        text: '',
+        start: 0
+      };
 
-      if (this.search_person == '') {
-        this.$store.dispatch('setPersons', this.owner_id);
-      } else {
-        axios.post('/pi-persons', {
+      if (this.search_person.length > 1) {
+        options = {
           owner_id: this.owner_id,
-          text: this.search_person
-        }).then(function (response) {
-          _this.$store.commit('setPersons', response.data.data);
-        })["catch"](function (err) {
-          if (err.message == 'CSRF token mismatch.') {
-            alert('Your session has expired. Please refresh the page.');
-          }
-        });
+          text: this.search_person,
+          start: 0
+        };
       }
+
+      this.$store.dispatch('showPersons', options);
     }
   }
 });
@@ -65901,7 +65945,21 @@ var render = function() {
         )
       }),
       0
-    )
+    ),
+    _vm._v(" "),
+    _c("div", { staticClass: "row" }, [
+      _c("div", { staticClass: "col-6" }, [
+        _vm.start > 0
+          ? _c("button", { on: { click: _vm.prev } }, [_vm._v("Previous")])
+          : _vm._e()
+      ]),
+      _vm._v(" "),
+      _c("div", { staticClass: "col-6" }, [
+        _vm.next_start > 0
+          ? _c("button", { on: { click: _vm.next } }, [_vm._v("Next")])
+          : _vm._e()
+      ])
+    ])
   ])
 }
 var staticRenderFns = []
@@ -94357,6 +94415,10 @@ var store = new vuex__WEBPACK_IMPORTED_MODULE_0__["default"].Store({
   state: {
     persons: [],
     owner_id: '',
+    start: 0,
+    next_start: 0,
+    text: '',
+    page_size: 100,
     device: null,
     connection: null
   },
@@ -94366,6 +94428,18 @@ var store = new vuex__WEBPACK_IMPORTED_MODULE_0__["default"].Store({
     },
     setOwner: function setOwner(state, owner_id) {
       state.owner_id = owner_id;
+    },
+    setStart: function setStart(state, start) {
+      state.start = start;
+    },
+    setNextStart: function setNextStart(state, next_start) {
+      state.next_start = next_start;
+    },
+    setText: function setText(state, text) {
+      state.text = text;
+    },
+    setPageSize: function setPageSize(state, page_size) {
+      state.page_size = page_size;
     },
     setDevice: function setDevice(state, device) {
       state.device = device;
@@ -94377,15 +94451,33 @@ var store = new vuex__WEBPACK_IMPORTED_MODULE_0__["default"].Store({
   getters: {
     getOwnerId: function getOwnerId(state) {
       return state.owner_id;
+    },
+    getStart: function getStart(state) {
+      return state.start;
+    },
+    getNextStart: function getNextStart(state) {
+      return state.next_start;
+    },
+    getText: function getText(state) {
+      return state.text;
+    },
+    getPageSize: function getPageSize(state) {
+      return state.page_size;
     }
   },
   actions: {
-    setPersons: function setPersons(context, owner_id) {
-      context.commit('setOwner', owner_id);
+    showPersons: function showPersons(context, options) {
+      context.commit('setOwner', options.owner_id);
       axios.post('/pi-persons', {
-        owner_id: owner_id
+        owner_id: options.owner_id,
+        text: options.text,
+        start: options.start
       }).then(function (response) {
-        context.commit('setPersons', response.data.data);
+        context.commit('setPersons', response.data.data.data);
+        context.commit('setStart', response.data.data.start);
+        context.commit('setNextStart', response.data.data.next_start);
+        context.commit('setPageSize', response.data.data.page_size);
+        context.commit('setText', options.text);
       })["catch"](function (err) {
         if (err.message == 'CSRF token mismatch.') {
           alert('Your session has expired. Please refresh the page.');

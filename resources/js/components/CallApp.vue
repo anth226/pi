@@ -24,7 +24,12 @@
         },
         methods: {
             fetchPersons(){
-                this.$store.dispatch('setPersons', this.owner_id);
+                let options = {
+                    owner_id: this.owner_id,
+                    text: '',
+                    start: 0
+                };
+                this.$store.dispatch('showPersons', options);
             },
             enableInterceptor() {
                 this.axiosInterceptor = window.axios.interceptors.request.use((config) => {

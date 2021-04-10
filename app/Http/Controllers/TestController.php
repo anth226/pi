@@ -90,10 +90,13 @@ class TestController extends BaseController
 
 //		$tt = new Pipedrive();
 //		$tt->findOwnersOnPipedrive();
-		$pl = new TwillioController();
+//		$pl = new TwillioController();
 //		dd($pl->findLeads('ELIZABETH ASHER'));
-		dd($pl->getLeadsByOwner(12165079));
+//		dd($pl->getLeadsByOwner(12165079));
 //		dd($pl->getLeadsByOwnerOnePage(11778811,0,500));
+//		dd($res  = $pl->getLeadsByOwner(12120214, '(561) 625-8632', 0));
+//		$persons = Pipedrive::executeCommand( 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864', new Pipedrive\Commands\FindPerson( 'angefl99@aol.com', 0, 100 ) );
+//		dd($persons);
 	}
 
 	public function getPersonsSources(){

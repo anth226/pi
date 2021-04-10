@@ -13,7 +13,9 @@
     export default {
         data() {
             return {
-                search_person: ''
+                search_person: '',
+                start: 0,
+                next_start: 0
             };
         },
         computed: {
@@ -24,20 +26,19 @@
         methods: {
             search(e) {
                 e.preventDefault();
-                if (this.search_person == '') {
-                    this.$store.dispatch('setPersons', this.owner_id);
+                let options = {
+                    owner_id: this.owner_id,
+                    text: '',
+                    start: 0
+                };
+                if (this.search_person.length > 1) {
+                    options = {
+                        owner_id: this.owner_id,
+                        text: this.search_person,
+                        start: 0
+                    };
                 }
-                else {
-                    axios.post('/pi-persons', {owner_id: this.owner_id, text: this.search_person})
-                        .then((response) => {
-                            this.$store.commit('setPersons', response.data.data);
-                         })
-                        .catch(err => {
-                            if (err.message == 'CSRF token mismatch.') {
-                                alert('Your session has expired. Please refresh the page.')
-                            }
-                        })
-                }
+                this.$store.dispatch('showPersons', options);
             }
         }
     }
