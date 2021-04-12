@@ -594,6 +594,9 @@
                                 customer_html = row.customer.first_name + ' ' + row.customer.last_name;
                             @endif
                                 customer_html += '<div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>';
+                                if(row.status == 2){
+                                    customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refund requested</div>'
+                                }
                             return customer_html;
                         }},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
@@ -701,6 +704,9 @@
                                 customer_html = row.customer.first_name + ' ' + row.customer.last_name;
                             @endif
                             customer_html += '<div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>';
+                            if(row.status == 2){
+                                customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refund requested</div>'
+                            }
                             return customer_html;
                         }},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){

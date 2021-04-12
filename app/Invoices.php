@@ -25,7 +25,13 @@ class Invoices extends Model
 		'own',
 		'paid_at',
 		'refunded_at',
-		'pdftemplate_id'
+		'pdftemplate_id',
+		'status'
+	];
+
+	public const STATUS = [
+		1 => 'Active',
+		2 => 'Refund requested'
 	];
 
 	public function customer()

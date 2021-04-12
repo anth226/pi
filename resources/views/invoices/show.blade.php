@@ -50,6 +50,9 @@
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
                         <h2> {{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }} [{{ $invoice->invoice_number }}]</h2>
+                        @if($invoice->status == 2)
+                            <div class="h5 text-danger mb-4">Refund requested <span class="small"><button class="btn btn-outline-primary btn-sm" id="unset_refund_requested">Unset</button></span></div>
+                        @endif
                         <div class="text-muted mb-4">
                             <div  class="details_bgcolor p-2">
                                 <div>
@@ -116,6 +119,9 @@
                             <button class="btn btn-info mt-2" data-toggle="modal" data-target="#editinvoice">Edit Invoice</button>
                             @if($invoice->sales_price > 0)
                                 <button class="btn btn-info mt-2" id="refunded">Set as Refunded</button>
+                                @if($invoice->status != 2)
+                                    <button class="btn btn-outline-primary mt-2" id="refund_requested">Set as Refund Requested</button>
+                                @endif
                             @endif
                         @endcan
                         {{--@can('invoice-delete')--}}
@@ -168,13 +174,13 @@
                                         {{ $sp->salespersone->name_for_invoice }}
                                     </a>
                                     @can('invoice-create')
-                                        @if($sp->earnings > 0)
+                                        {{--@if($sp->earnings > 0)--}}
                                             <span>
                                                 <small>
                                                  Earning: {{ $inv->moneyFormat($sp->earnings) }} ({{ $sp->level->title }} / {{ $sp->percentage }}%)
                                                 </small>
                                             </span>
-                                        @endif
+                                        {{--@endif--}}
                                     @endcan
                                 </div>
                             @endif
@@ -190,11 +196,11 @@
                                     {{ $sp->salespersone->name_for_invoice }}
                                 </a>
                                 @can('invoice-create')
-                                    @if($sp->earnings > 0)
+                                    {{--@if($sp->earnings > 0)--}}
                                         <span>
                                              Earning: {{ $inv->moneyFormat($sp->earnings) }} ({{ $sp->level->title }} / {{ $sp->percentage }}%)
                                         </span>
-                                    @endif
+                                    {{--@endif--}}
                                 @endcan
                             </div>
                             @endif
@@ -229,7 +235,7 @@
                         <strong>Paid:</strong>
                         {{ $inv->moneyFormat($invoice->paid) }}
                         @can('invoice-create')
-                            @if($commission)
+                            {{--@if($commission)--}}
                                 <small> (
                                     @php
                                         $profit = ($invoice->paid)*1 - (($commission)*1);
@@ -238,7 +244,7 @@
                                     @endphp
                                     <span class="text-success">Net Revenue: {{ $inv->moneyFormat($profit) }}</span> / Commission: {{$inv->moneyFormat($commission) }} | {{$percent}}% )
                                 </small>
-                            @endif
+                            {{--@endif--}}
                         @endcan
                     </div>
 
@@ -604,6 +610,50 @@
                 $('input[name="paid"]').val('$0.00');
                 $('input[name="own"]').val('$0.00');
                 $('#invoiceEdit').submit();
+            });
+
+            $(document).on('click', '#refund_requested', function (event) {
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                $(this).append(ajax_img);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/invoices/update-status/',
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                       invoice_id:{{$invoice->id}},
+                       refundRequested:2
+                    },
+                    success: function (response) {
+                        location.reload();
+                    }
+                });
+            });
+
+            $(document).on('click', '#unset_refund_requested', function (event) {
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                $(this).append(ajax_img);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/invoices/update-status/',
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        invoice_id:{{$invoice->id}},
+                        refundRequested: 1
+                    },
+                    success: function (response) {
+                        location.reload();
+                    }
+                });
             });
 
             $(document).on('submit', '#invoiceEdit', function (event) {

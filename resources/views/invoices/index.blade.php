@@ -277,7 +277,11 @@
                     { data: 'id', name: 'id', "searchable": false,  "visible": false },
 
                     { data: 'customer.first_name', name: 'customer.first_name',"sortable": false,  render: function ( data, type, row ){
-                            return '<div><a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a></div>';
+                            let nameStr = '<div><a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a></div>';
+                            if(row.status == 2){
+                                nameStr += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refund requested</div>'
+                            }
+                            return nameStr;
                         }},
 
                     { data: 'salespersone', name: 'salespersone',"sortable": false,"searchable": false, className:"text-nowrap", render: function ( data, type, row ){
