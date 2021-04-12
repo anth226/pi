@@ -667,8 +667,12 @@ class InvoicesController extends BaseController
 			$sp_percentages = [];
 			foreach($salespeople as $sp){
 				$salespeople_id = $sp->salespeople_id;
+				$percentage = $sp->percentage;
+				if($invoice->status == 2){
+					$percentage = 0;
+				}
 				$res = [
-					'percentage' => $sp->percentage,
+					'percentage' => $percentage,
 					'level_id' => $sp->level_id,
 				];
 				$sp_percentages[$salespeople_id] = $res;
@@ -817,125 +821,6 @@ class InvoicesController extends BaseController
 		}
 	}
 
-	public function calcEarning_v1(Invoices $invoice){
-		try{
-			$max_percentage = 50;
-			$sales_price = $invoice->paid;
-			$max_earning  = $sales_price*$max_percentage/100;
-			$earnings = [];
-			$percentages = $this->getInvoiceCurrentPercentage($invoice);
-			if($percentages && count($percentages)) {
-				$salespeople = $invoice->salespeople;
-				$salespeople_count = $salespeople->count();
-				if ($salespeople_count == 1 ) { // only one salesperson
-					foreach ($percentages as $salespeople_id => $p) {
-						$percentage = $percentages[ $salespeople_id ]['percentage'];
-						$earning    = $sales_price / 100 * $percentage;
-						if ( $earning > $max_earning ) {
-							$earning = $max_earning;
-						}
-						$earnings[ $salespeople_id ] = [
-							'earnings'   => $earning
-						];
-					}
-				} else {// multiple salespeople
-					//find minimal and max percentages
-					$minPercentage = $max_percentage;
-					$maxPercentage = 0;
-					foreach ($percentages as $salespeople_id => $p) {
-						if($p['percentage'] < $minPercentage){
-							$minPercentage =  $p['percentage'];
-						}
-						if($p['percentage'] > $maxPercentage){
-							$maxPercentage = $p['percentage'];
-						}
-					}
-
-					if($minPercentage > $max_percentage){
-						$minPercentage = $max_percentage;
-					}
-					if($maxPercentage > $max_percentage){
-						$maxPercentage = $max_percentage;
-					}
-
-					if($minPercentage == $maxPercentage){ // all percentages are the same
-						$earning = $sales_price/100*$minPercentage;
-						if($earning*$salespeople_count > $max_earning){
-							$earning = $max_earning/$salespeople_count;
-						}
-						foreach ($percentages as $salespeople_id => $p){
-							$earnings[ $salespeople_id ] = [
-								'earnings'   => $earning
-							];
-						}
-					}
-					else{
-						$all_earnings = 0;
-						foreach ($percentages as $salespeople_id => $p){
-							$percentage = $p['percentage'];
-							$earning = $earning = $sales_price/100*$percentage;
-							$all_earnings += $earning;
-							$earnings[ $salespeople_id ] = [
-								'earnings'   => $earning
-							];
-						}
-						if($all_earnings > $max_earning){
-							$all_earnings = 0;
-							$salespeople_with_maxPercentage = [];
-							foreach ($percentages as $salespeople_id => $p){
-								if($p['percentage'] < $maxPercentage) { //excluding salespeople with max percentage
-									$percentage                  = $p['percentage'];
-									$earning                     = $earning = $sales_price / 100 * $percentage;
-									$all_earnings                += $earning;
-									$earnings[ $salespeople_id ] = [
-										'earnings'   => $earning
-									];
-								}
-								else{
-									$salespeople_with_maxPercentage[] = $salespeople_id;
-								}
-							}
-							if($all_earnings < $max_earning){  // checking again
-								$remaining_earning = $max_earning-$all_earnings;
-								$sp_maxPercentage_earning = $sales_price/100*$maxPercentage;
-								$sp_maxPercentage_total = count($salespeople_with_maxPercentage);
-								if($sp_maxPercentage_earning*$sp_maxPercentage_total >= $remaining_earning) {// check if all salespeople with max percentage earnings more then max earning allowed
-									$earning_for_each = $remaining_earning / count( $salespeople_with_maxPercentage );
-								}
-								else{
-									$earning_for_each = $sp_maxPercentage_earning;
-								}
-								foreach($salespeople_with_maxPercentage as $sp_max) {
-									// adding remaining earning to excluded salesperson
-									$earnings[ $sp_max ] = [
-										'earnings'   => $earning_for_each
-									];
-								}
-							}
-							else{ // earning will be same for all
-								$earning = $max_earning/$salespeople_count;
-								foreach ($percentages as $salespeople_id => $p){
-									$earnings[ $salespeople_id ] = [
-										'earnings'   => $earning
-									];
-								}
-							}
-						}
-					}
-				}
-			}
-			return $earnings;
-		}
-		catch (Exception $ex){
-			Errors::create([
-				'error' => $ex->getMessage(),
-				'controller' => 'InvoicesController',
-				'function' => 'calcEarning'
-			]);
-			return false;
-		}
-	}
-
 	public function getCurrentPercentage($report_date, $salespeople_id, $report_time = '23:59:59'){
 		try{
 			$percentage = SalespeoplePecentageLog::where('salespeople_id', $salespeople_id)
@@ -978,6 +863,52 @@ class InvoicesController extends BaseController
 				'function' => 'savePercentages'
 			]);
 			return false;
+		}
+	}
+
+	public function updateStatus(Request $request){
+		try {
+			$this->validate( $request, [
+				'invoice_id' => 'required',
+				'refundRequested' => 'required',
+			] );
+
+			$status_before = Invoices::where('id', $request->input( 'invoice_id' ))->value('status');
+
+			Invoices::where('id', $request->input( 'invoice_id' ))->update(['status' => $request->input( 'refundRequested' )]);
+
+			$invoice_percentages = $this->calcEarning(Invoices::find($request->input( 'invoice_id' )));
+
+			$all_salespeople = SecondarySalesPeople::where( 'invoice_id',$request->input( 'invoice_id' ) )->get();
+			foreach($all_salespeople as $salesperson){
+				if($salesperson->paid_at){
+					$invoice_percentages[$salesperson->salespeople_id]['discrepancy'] = $invoice_percentages[$salesperson->salespeople_id]['earnings'] * 1 - $salesperson->paid_amount * 1;
+				}
+			}
+			$this->savePercentages($invoice_percentages, $request->input( 'invoice_id' ));
+
+			$status_after = Invoices::where('id', $request->input( 'invoice_id' ))->value('status');
+
+			$user_logged = Auth::user();
+			ActionsLog::create( [
+				'user_id'    => $user_logged->id,
+				'model'      => 1,
+				'field_name' => 'status',
+				'old_value' => Invoices::STATUS[$status_before],
+				'new_value' => Invoices::STATUS[$status_after],
+				'action'     => 1,
+				'related_id' => $request->input( 'invoice_id' )
+			] );
+
+			return $this->sendResponse('done');
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'InvoicesController',
+				'function' => 'updateStatus'
+			]);
+			return $this->sendError($ex->getMessage());
 		}
 	}
 
