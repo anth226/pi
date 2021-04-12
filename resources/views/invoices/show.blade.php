@@ -235,16 +235,19 @@
                         <strong>Paid:</strong>
                         {{ $inv->moneyFormat($invoice->paid) }}
                         @can('invoice-create')
-                            {{--@if($commission)--}}
+{{--                            @if($commission)--}}
                                 <small> (
                                     @php
                                         $profit = ($invoice->paid)*1 - (($commission)*1);
-                                        $percent =  $commission * 100/$invoice->paid;
+                                        $percent = 0;
+                                        if($invoice->paid > 0){
+                                            $percent =  $commission * 100/$invoice->paid;
+                                        }
                                         $percent =  number_format($percent, 2, '.', '');
                                     @endphp
                                     <span class="text-success">Net Revenue: {{ $inv->moneyFormat($profit) }}</span> / Commission: {{$inv->moneyFormat($commission) }} | {{$percent}}% )
                                 </small>
-                            {{--@endif--}}
+                                {{--@endif--}}
                         @endcan
                     </div>
 

@@ -668,7 +668,7 @@ class InvoicesController extends BaseController
 			foreach($salespeople as $sp){
 				$salespeople_id = $sp->salespeople_id;
 				$percentage = $sp->percentage;
-				if($invoice->status == 2){
+				if($invoice->status == 2 || $invoice->status == 3){
 					$percentage = 0;
 				}
 				$res = [
