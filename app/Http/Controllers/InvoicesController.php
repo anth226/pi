@@ -747,63 +747,28 @@ class InvoicesController extends BaseController
 					// in case if all salespeople earnings are more the max earning for deal
 					if ( $levels_earnings_sum > $max_earning ) {
 						$earnings     = [];
-						$levels_count = count( $levels );
 
-						$min_level_earnings = [ // min level earnings
-							'earning'  => 0,
-							'level_id' => 0
-						];
-
-						//minimal level earning
-						$minEarn = $max_earning;
-						foreach ( $levels as $lev_id => $lp ) {
-							if ( $lp['earnings'] <= $minEarn ) {
-								$minEarn            = $lp['earnings'];
-								$min_level_earnings = [ // min level earnings
-									'earning'  => $minEarn,
-									'level_id' => $lev_id
-								];
+						// we need to sort array by earning asc
+						$sortedLevels = [];
+						foreach ($levels as $k => $v){
+							if(!isset($sortedLevels[$v['earnings']])){
+								$sortedLevels[$v['earnings']] = $v;
 							}
 						}
+						ksort($sortedLevels);
 
-						$remain_earnings = $max_earning - $min_level_earnings['earning'];
-						if ( $remain_earnings < $min_level_earnings['earning'] ) {
-							// all levels earnings should be the same
-							$level_earnings = $max_earning / $levels_count;
-							foreach ( $levels as $l_id => $l ) {
-								$earning = $level_earnings / count( $levels[ $l_id ]['salespeople'] ); // earning for every salesperson from that level
-								foreach ( $l['salespeople'] as $sid => $p ) {
-									$earnings[ $sid ] = [
-										'earnings' => $earning
-									];
-								}
+						$possible_earnings = $max_earning;
+						foreach ( $sortedLevels as $l_id => $l ) {
+							$level_earning = $l['earnings'];
+							if ( $possible_earnings <= $level_earning ) {
+								$level_earning = $possible_earnings;
 							}
-						} else {
-							$possible_earnings = $remain_earnings;
-							if ( $levels_count > 1 ) {
-								$possible_earnings = $remain_earnings / ( $levels_count - 1 );
-							}
-
-							foreach ( $levels as $l_id => $l ) {
-								if ( $l_id == $min_level_earnings['level_id'] ) { //if min percentage level
-									$earning = $min_level_earnings['earning'] / count( $levels[ $l_id ]['salespeople'] );
-									foreach ( $l['salespeople'] as $sid => $p ) {
-										$earnings[ $sid ] = [
-											'earnings' => $earning
-										];
-									}
-								} else {
-									$level_earning = $l['earnings'];
-									if ( $possible_earnings <= $level_earning ) {
-										$level_earning = $possible_earnings;
-									}
-									$earning = $level_earning / count( $levels[ $l_id ]['salespeople'] );
-									foreach ( $l['salespeople'] as $sid => $p ) {
-										$earnings[ $sid ] = [
-											'earnings' => $earning
-										];
-									}
-								}
+							$earning = $level_earning / count( $sortedLevels[ $l_id ]['salespeople'] );
+							$possible_earnings = $possible_earnings - $level_earning;
+							foreach ( $l['salespeople'] as $sid => $p ) {
+								$earnings[ $sid ] = [
+									'earnings' => $earning
+								];
 							}
 						}
 					}
