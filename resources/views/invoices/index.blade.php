@@ -59,7 +59,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6 col-lg-3 px-1 mb-1 d-none commission">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1 commission">
                         <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="commissions">0</span></h3>
@@ -68,7 +68,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6 col-lg-3 px-1 mb-1 d-none profit">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1 profit">
                         <div class="card order-card bg-success">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="profit">0</span></h3>
@@ -203,19 +203,13 @@
                                $('#revenue').html(moneyFormat(response.data.revenue));
 
                                var commission = response.data.commission;
-                               if(commission) {
-                                   $('.commission').removeClass('d-none');
-                                   $('.profit').removeClass('d-none');
-                                   var percent_commission = commission*100/response.data.revenue;
-                                   $('#commissions').html(moneyFormat(commission) + '<span class="small text-muted" style="font-size: 1rem;"> '+percent_commission.toFixed(2)+'%</span>');
-                               }
-                               else{
-                                   $('.commission').addClass('d-none');
-                                   $('.profit').addClass('d-none');
-                               }
+
+                               var percent_commission = commission*100/response.data.revenue;
+                               $('#commissions').html(moneyFormat(commission) + '<span class="small text-muted" style="font-size: 1rem;"> '+percent_commission.toFixed(2)+'%</span>');
+
 
                                var profit = response.data.profit;
-                               if(commission && profit) {
+                               if(profit) {
                                    var percent_profit = profit*100/response.data.revenue;
                                    $('#profit').html(moneyFormat(profit) + '<span class="small text-muted" style="font-size: 1rem;"> '+percent_profit.toFixed(2)+'%</span>');
                                }
@@ -245,7 +239,7 @@
                     if ( data.own > 0 ) {
                         $(row).addClass('bg_to_pay');
                     }
-                    if ( data.sales_price <= 0 ) {
+                    if ( data.sales_price <= 0 || data.status == 3) {
                         $(row).addClass('bg_refunded');
                     }
                 },
@@ -280,6 +274,9 @@
                             let nameStr = '<div><a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a></div>';
                             if(row.status == 2){
                                 nameStr += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refund requested</div>'
+                            }
+                            if(row.status == 3){
+                                nameStr += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refunded</div>'
                             }
                             return nameStr;
                         }},

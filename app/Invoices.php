@@ -31,7 +31,8 @@ class Invoices extends Model
 
 	public const STATUS = [
 		1 => 'Active',
-		2 => 'Refund requested'
+		2 => 'Refund requested',
+		3 => 'Refunded'
 	];
 
 	public function customer()
