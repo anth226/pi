@@ -540,7 +540,7 @@
                     if ( data.own > 0 ) {
                         $(row).addClass('bg_to_pay');
                     }
-                    if ( data.sales_price <= 0 ) {
+                    if ( data.sales_price <= 0 || data.status == 3) {
                         $(row).addClass('bg_refunded');
                     }
                     $.each(data.salespeople, function( index, value ) {
@@ -593,10 +593,13 @@
                             @else
                                 customer_html = row.customer.first_name + ' ' + row.customer.last_name;
                             @endif
-                                customer_html += '<div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>';
-                                if(row.status == 2){
-                                    customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refund requested</div>'
-                                }
+                            customer_html += '<div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>';
+                            if(row.status == 2){
+                                customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refund requested</div>'
+                            }
+                            if(row.status == 3){
+                                customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refunded</div>'
+                            }
                             return customer_html;
                         }},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
@@ -657,7 +660,7 @@
                     if ( data.own > 0 ) {
                         $(row).addClass('bg_to_pay');
                     }
-                    if ( data.sales_price <= 0 ) {
+                    if ( data.sales_price <= 0 || data.status == 3) {
                         $(row).addClass('bg_refunded');
                     }
                     $.each(data.salespeople, function( index, value ) {
@@ -706,6 +709,9 @@
                             customer_html += '<div>'+row.customer.email+'</div><div>'+row.customer.phone_number+'</div>';
                             if(row.status == 2){
                                 customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refund requested</div>'
+                            }
+                            if(row.status == 3){
+                                customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refunded</div>'
                             }
                             return customer_html;
                         }},

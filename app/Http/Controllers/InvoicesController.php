@@ -873,9 +873,21 @@ class InvoicesController extends BaseController
 				'refundRequested' => 'required',
 			] );
 
-			$status_before = Invoices::where('id', $request->input( 'invoice_id' ))->value('status');
+			$user_logged = Auth::user();
 
-			Invoices::where('id', $request->input( 'invoice_id' ))->update(['status' => $request->input( 'refundRequested' )]);
+			$status_before = Invoices::with('customer')->where('id', $request->input( 'invoice_id' ))->first();
+
+			$dataToUpdate = [
+				'status' => $request->input( 'refundRequested' )
+			];
+
+			if($request->input( 'refundRequested' ) == 3){ // refunded
+				$dataToUpdate['paid'] = 0;
+				$dataToUpdate['own'] = 0;
+				$dataToUpdate['sales_price'] = 0;
+			}
+
+			Invoices::where('id', $request->input( 'invoice_id' ))->update($dataToUpdate);
 
 			$invoice_percentages = $this->calcEarning(Invoices::find($request->input( 'invoice_id' )));
 
@@ -887,18 +899,76 @@ class InvoicesController extends BaseController
 			}
 			$this->savePercentages($invoice_percentages, $request->input( 'invoice_id' ));
 
-			$status_after = Invoices::where('id', $request->input( 'invoice_id' ))->value('status');
+			$status_after = Invoices::with('customer')->where('id', $request->input( 'invoice_id' ))->first();
 
-			$user_logged = Auth::user();
-			ActionsLog::create( [
-				'user_id'    => $user_logged->id,
-				'model'      => 1,
-				'field_name' => 'status',
-				'old_value' => Invoices::STATUS[$status_before],
-				'new_value' => Invoices::STATUS[$status_after],
-				'action'     => 1,
-				'related_id' => $request->input( 'invoice_id' )
-			] );
+			if($status_before->status != $status_after->status) {
+				ActionsLog::create( [
+					'user_id'    => $user_logged->id,
+					'model'      => 1,
+					'field_name' => 'status',
+					'old_value'  => Invoices::STATUS[ $status_before->status ],
+					'new_value'  => Invoices::STATUS[ $status_after->status ],
+					'action'     => 1,
+					'related_id' => $request->input( 'invoice_id' )
+				] );
+			}
+
+			if($status_before->paid != $status_after->paid){
+				ActionsLog::create( [
+					'user_id'    => $user_logged->id,
+					'model'      => 1,
+					'field_name' => 'paid',
+					'old_value' => $status_before->paid,
+					'new_value' => $status_after->paid,
+					'action'     => 1,
+					'related_id' => $request->input( 'invoice_id' )
+				] );
+			}
+
+			if($status_before->own != $status_after->own){
+				ActionsLog::create( [
+					'user_id'    => $user_logged->id,
+					'model'      => 1,
+					'field_name' => 'own',
+					'old_value' => $status_before->own,
+					'new_value' => $status_after->own,
+					'action'     => 1,
+					'related_id' => $request->input( 'invoice_id' )
+				] );
+			}
+
+			if($status_before->sales_price != $status_after->sales_price){
+				ActionsLog::create( [
+					'user_id'    => $user_logged->id,
+					'model'      => 1,
+					'field_name' => 'sales_price',
+					'old_value' => $status_before->sales_price,
+					'new_value' => $status_after->sales_price,
+					'action'     => 1,
+					'related_id' => $request->input( 'invoice_id' )
+				] );
+			}
+
+			if($status_before && $status_before->paid && $status_before->customer->id && $status_before->paid != $status_after->paid) {
+				$deal_id = SentData::where('service_type', 5)
+				                   ->where('customer_id', $status_before->customer->id)
+				                   ->where('field', 'deal_id')
+				                   ->orderBy('id', 'desc')
+				                   ->value('value')
+				;
+				if($deal_id) {
+					$customersController = new CustomersController();
+					$pipedrive_res = $customersController->updatePipedriveDeal( $deal_id, $status_after->paid );
+					if ( $pipedrive_res['success'] ) {
+						SentData::create( [
+							'customer_id'  => $status_before->customer->id,
+							'value'        => $pipedrive_res['data'],
+							'field'        => 'deal_id',
+							'service_type' => 5 // pipedrive,
+						] );
+					}
+				}
+			}
 
 			return $this->sendResponse('done');
 		}
