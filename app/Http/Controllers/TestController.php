@@ -98,8 +98,8 @@ class TestController extends BaseController
 //		$persons = Pipedrive::executeCommand( 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864', new Pipedrive\Commands\FindPerson( 'angefl99@aol.com', 0, 100 ) );
 //		dd($persons);
 
-		$tt = new TwilioNumbersController();
-		dd($tt->getNumber(818));
+//		$tt = new TwilioNumbersController();
+//		dd($tt->getNumber(818));
 //		dd($tt->getAvailibleNumber(818));
 //		dd($tt->buyNumber('+18188623918'));
 	}
