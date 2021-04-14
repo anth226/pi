@@ -477,7 +477,7 @@ class InvoicesController extends BaseController
 				                   ->value('value')
 				;
 				if($note_id) {
-//					Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\UpdateNote( $note_id, implode( ', ', $invoice_salespeople ) ) );
+					Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\UpdateNote( $note_id, implode( ', ', $invoice_salespeople ) ) );
 				}
 
 				$sp_after = SecondarySalesPeople::where( 'invoice_id', $id )->with('salespersone')->with('level')->get();
