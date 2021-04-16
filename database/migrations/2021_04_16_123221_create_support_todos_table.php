@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateInvoiceSupportsTable extends Migration
+class CreateSupportTodosTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,15 @@ class CreateInvoiceSupportsTable extends Migration
      */
     public function up()
     {
-        Schema::create('invoice_supports', function (Blueprint $table) {
+        Schema::create('support_todos', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->timestamps();
-            $table->unsignedBigInteger('invoice_id')->nullable();
-            $table->unsignedBigInteger('user_id')->nullable();
+	        $table->unsignedBigInteger('invoice_id')->nullable();
+	        $table->unsignedBigInteger('done_by_user_id')->nullable();
+	        $table->unsignedInteger('task_type')->default(0);
+	        $table->unsignedTinyInteger('task_status')->default(0);
 	        $table->foreign('invoice_id')->references('id')->on('invoices')->onUpdate('CASCADE');
-	        $table->foreign('user_id')->references('id')->on('users')->onUpdate('CASCADE');
+	        $table->foreign('done_by_user_id')->references('id')->on('users')->onUpdate('CASCADE');
         });
     }
 
@@ -30,6 +32,6 @@ class CreateInvoiceSupportsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('invoice_supports');
+        Schema::dropIfExists('support_todos');
     }
 }
