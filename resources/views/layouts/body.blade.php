@@ -37,6 +37,15 @@
 
 
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                @php
+                                    $current_user = Auth::user();
+                                @endphp
+                                @if( Gate::check('support-user-view-own') && !empty($current_user) && $current_user->hasRole('Support Rep'))
+                                    <a class="dropdown-item" href="/support-reps/{{$user->id}}" >
+                                        {{ __('Support Dashboard') }}
+                                    </a>
+                                @endif
+
                                 @if( Gate::check('customer-create') || Gate::check('customer-edit') || Gate::check('customer-delete') || Gate::check('customer-list'))
                                     <a class="dropdown-item" href="/dashboard" >
                                         {{ __('Dashboard') }}
@@ -52,6 +61,12 @@
                                 @if( Gate::check('generated-invoice-create'))
                                     <a class="dropdown-item" href="{{ route('invoice-generator.create') }}" >
                                         {{ __('Invoice Generator') }}
+                                    </a>
+                                @endif
+
+                                @if( Gate::check('support-user-view-all'))
+                                    <a class="dropdown-item" href="/support-reps" >
+                                        {{ __('Support Representatives') }}
                                     </a>
                                 @endif
 

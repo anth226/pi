@@ -27,6 +27,9 @@ Auth::routes(['register' => false, 'verify' => true]);
 Route::get('/test', 'TestController@index')->name('test');
 //
 
+Route::get('/support-reps', 'SupportRepController@index');
+Route::get('/support-reps/{id}', 'SupportRepController@show');
+
 
 //Ajax
 
