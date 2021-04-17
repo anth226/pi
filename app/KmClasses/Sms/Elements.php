@@ -38,8 +38,7 @@ class Elements {
 
 	public static function pdfTemplatesSelect($name, $params = [], $value = 0, $invoice_type = 0){
 		$res = '';
-//		$templates = PdfTemplates::where('invoice_type', $invoice_type)->get();
-		$templates = PdfTemplates::get();
+		$templates = PdfTemplates::where('invoice_type', $invoice_type)->get();
 		if($templates && $templates->count()) {
 			foreach ( $templates as $ss ) {
 					$option_title = $ss->title;
