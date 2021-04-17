@@ -11,6 +11,7 @@ use App\InvoiceGenerator;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
+use App\PdfTemplates;
 use Illuminate\Http\Request;
 use Exception;
 use PDF;
@@ -98,7 +99,7 @@ class InvoiceGeneratorController extends InvoicesController
 	public function create(Request $request)
 	{
 		$states = UsStates::statesUS();
-		$pdftemplates_select = Elements::pdfTemplatesSelect( 'pdftemplate_id', [ 'class' => 'form-control' ]);
+		$pdftemplates_select = Elements::pdfTemplatesSelect( 'pdftemplate_id', [ 'class' => 'form-control' ], 0, 1);
 		return view('invoicesGenerated.create', compact('states', 'pdftemplates_select'));
 	}
 
@@ -178,8 +179,15 @@ class InvoiceGeneratorController extends InvoicesController
 				'discounts'             => $discounts
 			];
 
+			$pdftemplate = 'pdfgeneratedviewmain';
+			$pdftemplate_id = 5;
+			if(!empty($request->input('pdftemplate_id'))){
+				$pdftemplate_id = $request->input('pdftemplate_id');
+				$pdftemplate = PdfTemplates::where('id', $pdftemplate_id)->value('slug');
+			}
+
 			$invoice = InvoiceGenerator::create( $dataToSend );
-			$this->generatePDF( $invoice );
+			$this->generatePDF( $invoice, $pdftemplate );
 
 			$user = Auth::user();
 			ActionsLog::create([
@@ -267,7 +275,7 @@ class InvoiceGeneratorController extends InvoicesController
 	}
 
 
-	public function generatePDF($invoice, $pdfTemplate = 'pdfgeneratedviewmainannual'){
+	public function generatePDF($invoice, $pdfTemplate = 'pdfgeneratedviewmain'){
 		try {
 			if ( $invoice && $invoice->count() ) {
 				$invoice->invoice_number = $this->generateInvoiceNumber( $invoice->id, '00746-' );
