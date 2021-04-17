@@ -98,7 +98,8 @@ class InvoiceGeneratorController extends InvoicesController
 	public function create(Request $request)
 	{
 		$states = UsStates::statesUS();
-		return view('invoicesGenerated.create', compact('states'));
+		$pdftemplates_select = Elements::pdfTemplatesSelect( 'pdftemplate_id', [ 'class' => 'form-control' ]);
+		return view('invoicesGenerated.create', compact('states', 'pdftemplates_select'));
 	}
 
 	/**

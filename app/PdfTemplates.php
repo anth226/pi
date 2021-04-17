@@ -13,6 +13,7 @@ class PdfTemplates extends Model
 
 	protected $fillable = [
 		'title',
-		'slug'
+		'slug',
+		'invoice_type' // 0 - regular, 1 - generated
 	];
 }
