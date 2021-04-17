@@ -142,6 +142,12 @@
                         {!! Form::text('sales_price', null, array('class' => 'form-control price_data','pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$"', 'data-type="currency"', 'placeholder="Sales Price"', 'required="required"', 'value=9995')) !!}
                     </div>
                 </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <strong>PDF Template:</strong>
+                        {!! $pdftemplates_select !!}
+                    </div>
+                </div>
             </div>
             <div id="all_discounts" class="mb-1">
                 <div class="one_discount bg-info border p-1" id="discount_1">
