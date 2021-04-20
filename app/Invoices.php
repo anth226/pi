@@ -69,4 +69,14 @@ class Invoices extends Model
 	{
 		return $this->hasOne('App\PdfTemplates', 'id','pdftemplate_id')->withTrashed();
 	}
+
+	public function supportReps()
+	{
+		return $this->hasMany('App\InvoiceSupport', 'invoice_id');
+	}
+
+	public function supportTodo()
+	{
+		return $this->hasMany('App\SupportTodo', 'invoice_id');
+	}
 }

@@ -246,6 +246,8 @@ class InvoicesController extends BaseController
 		                   ->with('salespeople.salespersone')
 		                   ->with('salespeople.level')
 		                   ->with('product')
+		                   ->with('supportReps.user')
+		                   ->with('supportTodo')
 		                   ->find($id);
 		if($invoice) {
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
@@ -264,6 +266,11 @@ class InvoicesController extends BaseController
 			$show_selects = true;
 			$pr_salespeople = [];
 			$sec_salespeople = [];
+			$invoiceArray = $invoice->toArray();
+
+			$supportReps = $invoiceArray['support_reps'];
+			$support_todo = $invoiceArray['support_todo'];
+
 			if(!empty($invoice->salespeople)){
 				foreach($invoice->salespeople as $sp){
 					if(!empty($sp->salespeople_id)){
@@ -301,8 +308,8 @@ class InvoicesController extends BaseController
 			}
 
 			$pdftemplates_select = Elements::pdfTemplatesSelect( 'pdftemplate_id', [ 'class' => 'form-control' ], $invoice->pdftemplate_id );
-
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select') );
+			$supportReps_select = Elements::supportRepsSelect('supportRep_id', [ 'class' => 'form-control' ], $supportReps);
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'support_todo') );
 		}
 		return abort(404);
 	}

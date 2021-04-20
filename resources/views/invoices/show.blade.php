@@ -309,14 +309,67 @@
                     </div>
                 </div>
             </div>
-            <a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a><br>
-            <a  href="/pdfdownload/{{$invoice->id }}" title="Download a PDF file">Download</a><br>
-            <div class="mt-2 d-none d-md-block" style="width:900px;height:1250px;">
-                <object style="width:100%;height:100%;" data="{{ $full_path.$invoice->id.'&v='.rand() }}">{{$file_name}}" type="application/pdf">
-                    <iframe style="width:100%;height:100%;" src="https://docs.google.com/viewer?url={{ $full_path.$invoice->id }}&embedded=true"></iframe>
-                </object>
-            </div>
+            @if($supportReps_select )
+                <div class="row mb-4 mt-4">
+                    <div class="col-lg-8">
+                        <strong>Support Representative:</strong>
+                        <div class="row">
+                            <div class="col-md-8 pr-md-1">
+                                <div class="form-group mb-1">
+                                    {!! $supportReps_select !!}
+                                </div>
+                            </div>
+                            <div class="col-md-4 pl-md-1">
+                                <div class="form-group mb-1">
+                                    <button class="w-100 btn btn-info">Update</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+            @if($support_todo && count($support_todo) )
+                @php
+                    $invoiceController = new \App\Http\Controllers\InvoicesController();
+                @endphp
+                <div class="row mb-4">
+                    <div class="col-lg-8">
+                    @foreach($support_todo as $todo)
+                        <div class="row mb-2">
+                            <div class="col-lg-8">
+                                <strong>{!! $invoiceController::TASK_STATUS[$todo['task_status']] !!}</strong>
+                                <div class="row mb-2">
+                                    <div class="col-md-8 pr-md-1">
+                                        <div class="form-group mb-1">
+                                            {!! $invoiceController::TASK_TYPE[$todo['task_type']] !!}
+                                        </div>
+                                    </div>
+                                    @if($todo['task_status'] == 1)
+                                    <div class="col-md-4 pl-md-1">
+                                        <div class="form-group mb-1">
+                                            <button id="todo_{!! $todo['id'] !!}}" class="w-100 btn btn-info">Remove</button>
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                    </div>
+                </div>
+            @endif
 
+            <div class="row">
+                <div class="col-12"><a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a></div>
+                <div class="col-12"><a  href="/pdfdownload/{{$invoice->id }}" title="Download a PDF file">Download</a></div>
+                <div class="col-12">
+                    <div class="mt-2 d-none d-md-block" style="width:900px;height:1250px;">
+                        <object style="width:100%;height:100%;" data="{{ $full_path.$invoice->id.'&v='.rand() }}">{{$file_name}}" type="application/pdf">
+                            <iframe style="width:100%;height:100%;" src="https://docs.google.com/viewer?url={{ $full_path.$invoice->id }}&embedded=true"></iframe>
+                        </object>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
