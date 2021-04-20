@@ -309,55 +309,91 @@
                     </div>
                 </div>
             </div>
-            @if($supportReps_select )
-                <div class="row mb-4 mt-4">
-                    <div class="col-lg-8">
-                        <strong>Support Representative:</strong>
-                        <div class="row">
-                            <div class="col-md-8 pr-md-1">
-                                <div class="form-group mb-1">
-                                    {!! $supportReps_select !!}
+
+
+            <div class="card w-100 mt-4 mb-4">
+                <div class="card-body">
+
+                        @if($supportReps_select )
+                            <div class="row mb-4">
+                                <div class="col-lg-8">
+                                    <strong>Support Representative:</strong>
+                                    <div class="row">
+                                        <div class="col-md-8 pr-md-1">
+                                            <div class="form-group mb-1">
+                                                {!! $supportReps_select !!}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 pl-md-1">
+                                            <div class="form-group mb-1">
+                                                <button id="edit_support_rep" class="w-100 btn btn-info">Update</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-4 pl-md-1">
-                                <div class="form-group mb-1">
-                                    <button class="w-100 btn btn-info">Update</button>
+                        @endif
+                        @if($support_todo && count($support_todo) )
+                            <div class="row mt-2">
+                                <div class="col-lg-8">
+                                    <strong>Tasks</strong>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
-            @if($support_todo && count($support_todo) )
-                @php
-                    $invoiceController = new \App\Http\Controllers\InvoicesController();
-                @endphp
-                <div class="row mb-4">
-                    <div class="col-lg-8">
-                    @foreach($support_todo as $todo)
-                        <div class="row mb-2">
+                            <div class="row mb-4">
+                                @foreach($support_todo as $todo)
+                                    @php
+                                        $class = '';
+                                        if($todo['task_status'] == 1){
+                                            $class = ' bg-warning ';
+                                        }
+                                        if($todo['task_status'] == 2){
+                                            $class = ' bg-success ';
+                                        }
+                                    @endphp
+                                    <div class="col-lg-4 mb-4">
+                                        <div class="card h-100">
+                                            <div class="card-header  {!! $class !!}">
+                                                {!! \App\SupportTodo::TASK_STATUS[$todo['task_status']] !!}
+                                            </div>
+                                            <div class="card-body">
+                                                <h5 class="card-title">{!! \App\SupportTodo::TASK_TYPE[$todo['task_type']] !!}</h5>
+                                                <p class="card-text">
+                                                    <div>Added at: {!! $todo['created_at'] !!}</div>
+                                                    @if(isset($todo['done_at']))
+                                                        <div>Completed at: {!! $todo['done_at'] !!}</div>
+                                                        <div>Completed by: <strong>{!! $todo['done_byuser']['name'] !!}</strong></div>
+                                                    @endif
+                                                </p>
+                                                @if($todo['task_status'] == 1)
+                                                    <button data-todo_id="{!! $todo['id'] !!}" class="w-100 btn btn-info remove_todo">Remove</button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <div class="row mt-4">
                             <div class="col-lg-8">
-                                <strong>{!! $invoiceController::TASK_STATUS[$todo['task_status']] !!}</strong>
-                                <div class="row mb-2">
+                                <strong>Add Task</strong>
+                                <div class="row">
                                     <div class="col-md-8 pr-md-1">
                                         <div class="form-group mb-1">
-                                            {!! $invoiceController::TASK_TYPE[$todo['task_type']] !!}
+                                            {!! $tasks_select !!}
                                         </div>
                                     </div>
-                                    @if($todo['task_status'] == 1)
                                     <div class="col-md-4 pl-md-1">
                                         <div class="form-group mb-1">
-                                            <button id="todo_{!! $todo['id'] !!}}" class="w-100 btn btn-info">Remove</button>
+                                            <button id="add_todo" class="w-100 btn btn-info">Add</button>
                                         </div>
                                     </div>
-                                    @endif
                                 </div>
                             </div>
                         </div>
-                    @endforeach
-                    </div>
+
                 </div>
-            @endif
+            </div>
 
             <div class="row">
                 <div class="col-12"><a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a></div>
@@ -668,16 +704,6 @@
                 input[0].setSelectionRange(caret_pos, caret_pos);
             }
 
-
-            {{--$(document).on('click', '#refunded', function (event) {--}}
-                {{--var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';--}}
-                {{--$(this).append(ajax_img);--}}
-                {{--$('input[name="sales_price"]').val('$0.00');--}}
-                {{--$('input[name="paid"]').val('$0.00');--}}
-                {{--$('input[name="own"]').val('$0.00');--}}
-                {{--$('#invoiceEdit').submit();--}}
-            {{--});--}}
-
             $(document).on('click', '#refund_requested', function (event) {
                 var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
                 $(this).append(ajax_img);
@@ -821,6 +847,82 @@
                     }
                 });
 
+            });
+
+            //support rep and tasks
+
+            $(document).on('click', '#edit_support_rep', function (event) {
+                var support_rep_user_id = $('select[name="supportRep_id[]"]').val();
+                if(support_rep_user_id) {
+                    var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                    $(this).append(ajax_img);
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
+                    $.ajax({
+                        url: '/invoices/edit-support-rep/',
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            invoice_id:{{$invoice->id}},
+                            support_rep_user_id: support_rep_user_id
+                        },
+                        success: function (response) {
+                            location.reload();
+                        }
+                    });
+                }
+            });
+
+            $(document).on('click', '#add_todo', function (event) {
+                var task_id = $('select[name="tasks_select"]').val();
+                if(task_id) {
+                    var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                    $(this).append(ajax_img);
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
+                    $.ajax({
+                        url: '/support/add-task',
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            invoice_id:{{$invoice->id}},
+                            task_id: task_id
+                        },
+                        success: function (response) {
+                            location.reload();
+                        }
+                    });
+                }
+            });
+
+            $(document).on('click', '.remove_todo', function (event) {
+                var todo_id = $(this).data('todo_id');
+                if(todo_id) {
+                    var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                    $(this).append(ajax_img);
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
+                    $.ajax({
+                        url: '/support/remove-task',
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            todo_id: todo_id
+                        },
+                        success: function (response) {
+                            location.reload();
+                        }
+                    });
+                }
             });
 
         });

@@ -38,6 +38,10 @@ Route::post('/send-generatedinvoice-email', 'SendEmailController@sendGeneratedIn
 Route::post('/invoices/update/{id}', 'InvoicesController@update' ,  ['middleware' => 'csrf']);
 Route::post('/invoices/update-status', 'InvoicesController@updateStatus',  ['middleware' => 'csrf']);
 Route::post('/generate-invoice', 'InvoiceGeneratorController@store' ,  ['middleware' => 'csrf']);
+
+Route::post('/invoices/edit-support-rep', 'SupportTasksController@addSupportRep' ,  ['middleware' => 'csrf']);
+Route::post('/support/add-task', 'SupportTasksController@addTask' ,  ['middleware' => 'csrf']);
+Route::post('/support/remove-task', 'SupportTasksController@deleteTask' ,  ['middleware' => 'csrf']);
 //
 
 

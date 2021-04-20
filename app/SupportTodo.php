@@ -21,7 +21,7 @@ class SupportTodo extends Model
 	public const TASK_TYPE = [
 		0 => 'Demo Needed',
 		1 => 'Follow up Call',
-		2 => 'Refund Requested'
+//		2 => 'Refund Requested'
 	];
 
 	public const TASK_STATUS = [

@@ -32,6 +32,8 @@ class ActionsLog extends Model
 		0 => 'Created',
 		1 => 'Updated',
 		2 => 'Deleted',
-		3 => 'EmailSent'
+		3 => 'Email Sent',
+		4 => 'Task Added',
+		5 => 'Task Removed'
 	];
 }
