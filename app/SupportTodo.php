@@ -19,13 +19,24 @@ class SupportTodo extends Model
 	];
 
 	public const TASK_TYPE = [
-		0 => 'Source',
-		1 => 'EXTRA FIELD'
+		0 => 'Demo Needed',
+		1 => 'Follow up Call',
+		2 => 'Refund Requested'
 	];
 
 	public const TASK_STATUS = [
 		0 => 'disabled',
 		1 => 'active',
-		2 => 'done'
+		2 => 'completed'
 	];
+
+	public function addedByuser()
+	{
+		return $this->hasOne('App\User', 'id','added_by_user_id')->withTrashed();
+	}
+
+	public function doneByuser()
+	{
+		return $this->hasOne('App\User', 'id','done_by_user_id')->withTrashed();
+	}
 }

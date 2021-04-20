@@ -10,6 +10,7 @@ namespace App\KmClasses\Sms;
 
 use App\LevelsSalespeople;
 use App\PdfTemplates;
+use App\User;
 use Carbon\Carbon;
 
 class Elements {
@@ -80,6 +81,45 @@ class Elements {
 						}
 					}
 					$res .= '<option value="' . $ss->id . '" ' . $selected . ' data-salesperson_id="' . $ss->salespeople_id . '" data-level_id="' . $ss->level_id . '" >' . $option_title . '</option>';
+				}
+			}
+			if($res) {
+				$added_params = '';
+				if(count($params)){
+					foreach($params as $n=>$val){
+						if($n == 'multiple'){
+							$added_params .= ' ' . $n . ' ';
+						}
+						else {
+							$added_params .= ' ' . $n . '="' . $val . '" ';
+						}
+					}
+				}
+				$res = '<select
+						 name="' . $name . '"
+                         ' .$added_params. '
+                        >' . $res . '</select>';
+			}
+		}
+		return $res;
+	}
+
+	public static function supportRepsSelect($name, $params = [], $values = []){
+		$res = '<option value="">Please Select</option>';
+		$supportReps = User::whereHas("roles", function($q){ $q->where("name", "Support Rep"); })->orderBy('id','DESC')->get();
+		if($supportReps && $supportReps->count()){
+			foreach($supportReps as $ss){
+				if(!$ss->deleted_at) {
+					$option_title = $ss->name;
+					$selected     = '';
+					if ( count( $values ) ) {
+						foreach ( $values as $v ) {
+							if ( $v == $ss->id ) {
+								$selected = ' selected ';
+							}
+						}
+					}
+					$res .= '<option value="' . $ss->id . '" ' . $selected . ' >' . $option_title . '</option>';
 				}
 			}
 			if($res) {
