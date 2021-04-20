@@ -10,6 +10,7 @@ namespace App\KmClasses\Sms;
 
 use App\LevelsSalespeople;
 use App\PdfTemplates;
+use App\SupportTodo;
 use App\User;
 use Carbon\Carbon;
 
@@ -121,6 +122,43 @@ class Elements {
 					}
 					$res .= '<option value="' . $ss->id . '" ' . $selected . ' >' . $option_title . '</option>';
 				}
+			}
+			if($res) {
+				$added_params = '';
+				if(count($params)){
+					foreach($params as $n=>$val){
+						if($n == 'multiple'){
+							$added_params .= ' ' . $n . ' ';
+						}
+						else {
+							$added_params .= ' ' . $n . '="' . $val . '" ';
+						}
+					}
+				}
+				$res = '<select
+						 name="' . $name . '"
+                         ' .$added_params. '
+                        >' . $res . '</select>';
+			}
+		}
+		return $res;
+	}
+
+	public static function taskSelect($name, $params = [], $values = []){
+		$res = '<option value="">Please Select</option>';
+		$tasks = SupportTodo::TASK_TYPE;
+		if($tasks && count($tasks)){
+			foreach($tasks as $id => $title){
+					$selected     = '';
+					if ( count( $values ) ) {
+						foreach ( $values as $v ) {
+							if ( $v == $id ) {
+								$selected = ' selected ';
+							}
+						}
+					}
+					$res .= '<option value="' . $id . '" ' . $selected . ' >' . $title . '</option>';
+
 			}
 			if($res) {
 				$added_params = '';

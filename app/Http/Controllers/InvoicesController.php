@@ -247,7 +247,7 @@ class InvoicesController extends BaseController
 		                   ->with('salespeople.level')
 		                   ->with('product')
 		                   ->with('supportReps.user')
-		                   ->with('supportTodo')
+		                   ->with('supportTodo.doneByuser')
 		                   ->find($id);
 		if($invoice) {
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
@@ -270,6 +270,15 @@ class InvoicesController extends BaseController
 
 			$supportReps = $invoiceArray['support_reps'];
 			$support_todo = $invoiceArray['support_todo'];
+
+			$supportRepsVals = [];
+			if($supportReps && count($supportReps)){
+				foreach($supportReps as $sr){
+					if(!empty($sr['user_id'])) {
+						$supportRepsVals[] = $sr['user_id'];
+					}
+				}
+			}
 
 			if(!empty($invoice->salespeople)){
 				foreach($invoice->salespeople as $sp){
@@ -308,8 +317,9 @@ class InvoicesController extends BaseController
 			}
 
 			$pdftemplates_select = Elements::pdfTemplatesSelect( 'pdftemplate_id', [ 'class' => 'form-control' ], $invoice->pdftemplate_id );
-			$supportReps_select = Elements::supportRepsSelect('supportRep_id', [ 'class' => 'form-control' ], $supportReps);
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'support_todo') );
+			$supportReps_select = Elements::supportRepsSelect('supportRep_id[]', [ 'class' => 'form-control', /*'multiple' => 'multiple'*/ ], $supportRepsVals);
+			$tasks_select = Elements::taskSelect('tasks_select', [ 'class' => 'form-control' ], []);
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'support_todo', 'tasks_select') );
 		}
 		return abort(404);
 	}
