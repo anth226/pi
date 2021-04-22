@@ -165,6 +165,10 @@
                         <strong>Address:</strong>
                         {{ $invoice->customer->address_1 }} {{ $invoice->customer->address_2 }}, {{ $invoice->customer->city }}, {{ $invoice->customer->state }}, {{ $invoice->customer->zip }}
                     </div>
+                    <div>
+                        <strong>Phone #:</strong>
+                        {{ $invoice->customer->phone_number }}
+                    </div>
                     @php
                         $salespeople = [];
                         $cc = '';
@@ -228,10 +232,10 @@
                         <strong>Product:</strong>
                         {{ $invoice->product->title }}
                     </div>
-                    <div>
-                        <strong>Quantity:</strong>
-                        {{ $invoice->qty }}
-                    </div>
+                    {{--<div>--}}
+                        {{--<strong>Quantity:</strong>--}}
+                        {{--{{ $invoice->qty }}--}}
+                    {{--</div>--}}
                     <div>
                         <strong>CC last 4 digits:</strong>
                         {{ $invoice->cc_number }}
