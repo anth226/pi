@@ -27,7 +27,7 @@
                     <table class="table table-striped table-bordered table-responsive-sm w-100" id="invoices_table">
                         <thead>
                         <tr>
-                            <th>Created At</th>
+                            <th>Tasks</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -61,8 +61,7 @@
                     [ 0, "desc" ]
                 ],
                 ajax: {
-                    url: "/support/show-tasks",
-
+                    url: "/users/{{ $user->id }}/support/show-tasks",
                 },
                 pageLength: 100,
 
@@ -107,7 +106,7 @@
                                                             '</div>';
                                                  res_html += '<div class="col-md-6 mb-2">' +
                                                      // '<div>Invoice #: <strong>'+row.invoice.invoice_number+'</strong></div><hr class="mt-1 mb-1">'+
-                                                     '<div>Invoice: <a target="_blank" href="'+full_path+row.invoice.id+'" title="Open a PDF file in a new tab">'+row.invoice.invoice_number+'</a></div><hr class="mt-1 mb-1">'+
+                                                     '<div><a target="_blank" href="/invoices/'+row.invoice.id+'" title="Open a PDF file in a new tab">Show Invoice</a></div><hr class="mt-1 mb-1">'+
                                                      '<div>Customer Name: <strong>'+row.invoice.customer.first_name+' '+row.invoice.customer.last_name+'</strong></div>'+
                                                      '<div>Customer Email: <strong>'+row.invoice.customer.email+'</strong></div>'+
                                                      '<div>Customer Phone#: <strong>'+row.invoice.customer.phone_number+'</strong></div><hr class="mt-1 mb-1">'+
@@ -116,7 +115,7 @@
                                                      '</div>';
 
                                                 if(row.task_status == 1){
-                                                     res_html += '<div class="col-12"><button data-todo_id="'+row.id+'" class="btn btn-info set_complete">Completed</button></div>';
+                                                     res_html += '<div class="col-12"><button data-todo_id="'+row.id+'" class="btn btn-info complete_todo">Completed</button></div>';
                                                  }
                                             res_html += '</div>';
                                             res_html +=  '</div>' +
@@ -125,7 +124,11 @@
                                     '</div>';
                             return res_html;
                         } },
-
+                    { data: 'invoice.customer.email', name: 'invoice.customer.email', "sortable": false ,  "visible": false},
+                    { data: 'invoice.customer.first_name', name: 'invoice.customer.first_name', "sortable": false ,  "visible": false},
+                    { data: 'invoice.customer.last_name', name: 'invoice.customer.last_name', "sortable": false ,  "visible": false},
+                    { data: 'invoice.customer.phone_number', name: 'invoice.customer.phone_number', "sortable": false ,  "visible": false},
+                    { data: 'invoice.customer.formated_phone_number', name: 'invoice.customer.formated_phone_number', "sortable": false ,  "visible": false},
                 ]
             });
 
@@ -145,6 +148,30 @@
                 }
                 return false;
             }
+
+            $(document).on('click', '.complete_todo', function (event) {
+                var todo_id = $(this).data('todo_id');
+                if(todo_id) {
+                    var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                    $(this).append(ajax_img);
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
+                    $.ajax({
+                        url: '/support/complete-task',
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            todo_id: todo_id
+                        },
+                        success: function (response) {
+                            table_dt.draw();
+                        }
+                    });
+                }
+            });
         })
     </script>
 @endsection

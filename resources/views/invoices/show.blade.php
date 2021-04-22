@@ -312,9 +312,11 @@
             </div>
 
 
+            @if( Gate::check('support-tasks-create') || Gate::check('support-user-view-all'))
+
             <div class="card w-100 mt-4 mb-4">
                 <div class="card-body">
-
+                    @if( Gate::check('support-tasks-create'))
                         @if($supportReps_select )
                             <div class="row mb-4">
                                 <div class="col-lg-8">
@@ -334,6 +336,7 @@
                                 </div>
                             </div>
                         @endif
+                    @endif
                         @if($support_todo && count($support_todo) )
                             <div class="row mt-2">
                                 <div class="col-lg-8">
@@ -361,7 +364,7 @@
                                                 <p class="card-text">
                                                     <div>Added at: {!! $todo['created_at'] !!}</div>
                                                     <div>Added by: <strong>{!! $todo['added_byuser']['name'] !!}</strong></div>
-                                                    <div>Task for: <strong>{!! $todo['support_rep']['name'] !!}</strong></div>
+                                                    <div>Task for: <strong><a href="/support-reps/{!! $todo['support_rep']['id'] !!}">{!! $todo['support_rep']['name'] !!}</a></strong></div>
                                                     @if(isset($todo['done_at']))
                                                         <hr class="mt-1 mb-1">
                                                         <div>Completed at: {!! $todo['done_at'] !!}</div>
@@ -369,7 +372,9 @@
                                                     @endif
                                                 </p>
                                                 @if($todo['task_status'] == 1)
-                                                    <button data-todo_id="{!! $todo['id'] !!}" class="w-100 btn btn-info remove_todo">Remove</button>
+                                                    @if( Gate::check('support-tasks-create'))
+                                                        <button data-todo_id="{!! $todo['id'] !!}" class="w-100 btn btn-info remove_todo">Remove</button>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </div>
@@ -377,15 +382,17 @@
                                 @endforeach
                             </div>
                         @endif
-
+                        @if( Gate::check('support-tasks-create'))
                         <div class="row mt-4">
                             <div class="col-lg-8">
                                 <button class="btn btn-info mt-2" data-toggle="modal" data-target="#createtask">Add Task</button>
                             </div>
                         </div>
-
+                        @endif
                 </div>
             </div>
+
+            @endif
 
             <div class="row">
                 <div class="col-12"><a target="_blank" href="{{ $full_path.$invoice->id }}" title="Open a PDF file in a new tab">{{$file_name}}</a></div>

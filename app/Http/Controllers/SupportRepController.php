@@ -14,8 +14,8 @@ class SupportRepController extends Controller
 	function __construct()
 	{
 		$this->middleware(['auth']);
-		$this->middleware('permission:support-user-view-own|support-user-view-all', ['only' => ['show']]);
-		$this->middleware('permission:support-user-view-all',['only' => ['index']]);
+		$this->middleware('permission:support-user-view-own|support-user-view-all|support-tasks-create', ['only' => ['show']]);
+		$this->middleware('permission:support-user-view-all|support-tasks-create',['only' => ['index']]);
 	}
 
 	public function show($id){

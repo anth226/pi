@@ -720,7 +720,7 @@
                                 customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">'+refundRequestedStr+'</div>'
                             }
                             if(row.status == 3 || row.sales_price <= 0){
-                                customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">invoice_status[3]</div>'
+                                customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">'+invoice_status[3]+'</div>'
                             }
                             return customer_html;ranch
 
