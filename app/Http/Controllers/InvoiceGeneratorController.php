@@ -42,13 +42,13 @@ class InvoiceGeneratorController extends InvoicesController
 		if(config('app.env') == 'local'){
 			$title1 = 'qqq.pdf';
 		}
-		$this->attachments = [
-			[
-				'title' => $title1,
-				'filename' => $this->pdf_path.$title1,
-				'mime' => $mime1
-			]
-		];
+//		$this->attachments = [
+//			[
+//				'title' => $title1,
+//				'filename' => $this->pdf_path.$title1,
+//				'mime' => $mime1
+//			]
+//		];
 
 		$this->support_phone_number = '(323) 483-4014';
 
