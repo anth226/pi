@@ -119,6 +119,10 @@
 @section('script')
     <script>
         $(document).ready(function() {
+            var task_type = jQuery.parseJSON('{!! $task_type !!}');
+            var task_status = jQuery.parseJSON('{!! $task_status !!}');
+            var invoice_status = jQuery.parseJSON('{!! $invoice_status !!}');
+
             var show_sansitive_info = false;
 
             var sens_info_box = $( "#sens_info" );
@@ -272,11 +276,8 @@
 
                     { data: 'customer.first_name', name: 'customer.first_name',"sortable": false,  render: function ( data, type, row ){
                             let nameStr = '<div><a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a></div>';
-                            if(row.status == 2){
-                                nameStr += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refund requested</div>'
-                            }
-                            if(row.status == 3){
-                                nameStr += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refunded</div>'
+                            if(row.status == 2 || row.status == 3){
+                                nameStr += '<div style="line-height: 1.1;" class="mt-2 text-danger small">'+invoice_status[row.status]+'</div>'
                             }
                             return nameStr;
                         }},

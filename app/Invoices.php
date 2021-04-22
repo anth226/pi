@@ -31,7 +31,7 @@ class Invoices extends Model
 
 	public const STATUS = [
 		1 => 'Active',
-		2 => 'Refund requested',
+		2 => 'High Risk',
 		3 => 'Refunded'
 	];
 
@@ -78,5 +78,15 @@ class Invoices extends Model
 	public function supportTodo()
 	{
 		return $this->hasMany('App\SupportTodo', 'invoice_id');
+	}
+
+	public function supportTodoActive()
+	{
+		return $this->hasMany('App\SupportTodo', 'invoice_id')->where('task_status', 1);
+	}
+
+	public function supportTodoCompleted()
+	{
+		return $this->hasMany('App\SupportTodo', 'invoice_id')->where('task_status', 2);
 	}
 }
