@@ -41,7 +41,7 @@
                                     $current_user = Auth::user();
                                 @endphp
                                 @if( Gate::check('support-user-view-own') && !empty($current_user) && $current_user->hasRole('Support Rep'))
-                                    <a class="dropdown-item" href="/support-reps/{{$user->id}}" >
+                                    <a class="dropdown-item" href="/support-reps/{{$current_user->id}}" >
                                         {{ __('Support Dashboard') }}
                                     </a>
                                 @endif

@@ -17,8 +17,8 @@ class SupportTasksController extends BaseController
 {
 	function __construct() {
 		$this->middleware( [ 'auth' ] );
-		$this->middleware( 'permission:invoice-create|invoice-edit|invoice-delete' );
-		$this->middleware('permission:support-user-view-own|support-user-view-all', ['only' => ['showTasks']]);
+		$this->middleware( 'permission:support-tasks-create', ['only' => ['addSupportRep','addTask','deleteTask']] );
+		$this->middleware('permission:support-user-view-own|support-user-view-all|support-tasks-create', ['only' => ['showTasks','completeTask']]);
 
 	}
 
@@ -170,36 +170,78 @@ class SupportTasksController extends BaseController
 		}
 	}
 
-	function showTasks(){
+	function showTasks(Request $request, $user_id){
 		try {
-//			$for_user_id = !empty($request->input( 'for_user_id' )) ? $request->input( 'for_user_id' ) : 0;
+			$for_user_id = !empty($user_id) ? $user_id : 0;
 //			$status = !empty($request->input( 'status' )) ? $request->input( 'stats' ) : 0;
-
-			$query =  SupportTodo::with('invoice.customer')
-			                  ->with('addedByuser')
-			                  ->with('doneByuser')
-			                  ->with('invoice.salespeople.salespersone')
-			                  ->with('invoice.salespeople.level')
-			                  ->with('invoice.supportReps')
-							  ->where('support_rep_user_id', 23)
+			if($for_user_id) {
+				$query = SupportTodo::with( 'invoice.customer' )
+				                    ->with( 'addedByuser' )
+				                    ->with( 'doneByuser' )
+				                    ->with( 'invoice.salespeople.salespersone' )
+				                    ->with( 'invoice.salespeople.level' )
+				                    ->with( 'invoice.supportReps' )
+				                    ->where( 'support_rep_user_id', $for_user_id )
 
 //							  ->whereHas('invoice.supportReps', function ($query) {
 //									$query->where('user_id', 23);
 //							  })
 
-			;
+				;
 //			if($for_user_id){
 //				$query->whereHas('invoice.supportReps', function ($query) {
 //					$query->where('user_id', 23);
 //				});
 //			}
-			return datatables()->eloquent($query)->toJson();
+				return datatables()->eloquent( $query )->toJson();
+			}
 		}
 		catch (Exception $ex){
 			Errors::create([
 				'error' => $ex->getMessage(),
 				'controller' => 'SupportTasksController',
 				'function' => 'showTasks'
+			]);
+			return $this->sendError($ex->getMessage());
+		}
+	}
+
+	function completeTask(Request $request){
+		try {
+			$this->validate( $request, [
+				'todo_id' => 'required',
+			] );
+
+			$user_logged = Auth::user();
+
+			$todo = SupportTodo::find($request->input( 'todo_id' ));
+
+			if($todo && $todo->id) {
+
+				$data_to_update = [
+					'done_by_user_id' => $user_logged->id,
+					'task_status' => 2,
+					'done_at' => now()
+				];
+
+				SupportTodo::where('id', $request->input( 'todo_id' ))->update($data_to_update);
+
+				ActionsLog::create( [
+					'user_id'    => $user_logged->id,
+					'model'      => 1,
+					'field_name' => 'Tasks',
+					'action'     => 6,
+					'related_id' => $todo->invoice_id
+				] );
+			}
+
+			return $this->sendResponse('done');
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'SupportTasksController',
+				'function' => 'completeTasks'
 			]);
 			return $this->sendError($ex->getMessage());
 		}
