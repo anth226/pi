@@ -722,8 +722,7 @@
                             if(row.status == 3 || row.sales_price <= 0){
                                 customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">'+invoice_status[3]+'</div>'
                             }
-                            return customer_html;ranch
-
+                            return customer_html;
                         }},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
