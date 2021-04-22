@@ -343,6 +343,12 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="row mt-4">
+                                <div class="col-lg-8">
+                                    <button class="btn btn-info mt-2" data-toggle="modal" data-target="#createtask">Add Task</button>
+                                </div>
+                            </div>
                         @endif
                     @endif
                         @if($support_todo && count($support_todo) )
@@ -390,13 +396,7 @@
                                 @endforeach
                             </div>
                         @endif
-                        @if( Gate::check('support-tasks-create'))
-                        <div class="row mt-4">
-                            <div class="col-lg-8">
-                                <button class="btn btn-info mt-2" data-toggle="modal" data-target="#createtask">Add Task</button>
-                            </div>
-                        </div>
-                        @endif
+
                 </div>
             </div>
 
