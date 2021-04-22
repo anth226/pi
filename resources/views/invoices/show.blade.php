@@ -41,6 +41,7 @@
 
 @section('popup')
     @include('popups.editinvoice')
+    @include('popups.createtask')
 @endsection
 
 @section('content')
@@ -51,13 +52,13 @@
                     <div class="pull-left">
                         <h2> {{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }} [{{ $invoice->invoice_number }}]</h2>
                         @if($invoice->status <= 1)
-                                <div class="h5 text-success mb-4">Active</div>
+                                <div class="h5 text-success mb-4">{{ \App\Invoices::STATUS[$invoice->status] }}</div>
                             @else
                             @if($invoice->status == 2)
-                                <div class="h5 text-danger mb-4">Refund requested <span class="small"><button class="btn btn-outline-primary btn-sm" id="unset_refund_requested">Unset</button></span></div>
+                                <div class="h5 text-danger mb-4">{{ \App\Invoices::STATUS[$invoice->status] }} <span class="small"><button class="btn btn-outline-primary btn-sm" id="unset_refund_requested">Unset</button></span></div>
                             @else
                                 @if($invoice->status == 3)
-                                    <div class="h5 text-danger mb-4">Refunded <span class="small"><button class="btn btn-outline-primary btn-sm" id="unset_refunded">Unset</button></span></div>
+                                    <div class="h5 text-danger mb-4">{{ \App\Invoices::STATUS[$invoice->status] }} <span class="small"><button class="btn btn-outline-primary btn-sm" id="unset_refunded">Unset</button></span></div>
                                 @endif
                             @endif
                         @endif
@@ -128,10 +129,10 @@
                                 <button class="btn btn-info mt-2" data-toggle="modal" data-target="#editinvoice">Edit Invoice</button>
                             @endif
                             @if($invoice->status != 3)
-                                <button class="btn btn-info mt-2" id="refunded">Set as Refunded</button>
+                                <button class="btn btn-info mt-2" id="refunded">Set as {{ \App\Invoices::STATUS[3] }}</button>
                             @endif
                             @if($invoice->status != 2 && $invoice->status != 3)
-                                <button class="btn btn-outline-primary mt-2" id="refund_requested">Set as Refund Requested</button>
+                                <button class="btn btn-outline-primary mt-2" id="refund_requested">Set as {{ \App\Invoices::STATUS[2] }}</button>
                             @endif
                         @endcan
                         {{--@can('invoice-delete')--}}
@@ -317,7 +318,7 @@
                         @if($supportReps_select )
                             <div class="row mb-4">
                                 <div class="col-lg-8">
-                                    <strong>Support Representative:</strong>
+                                    <strong>Default Support Representative:</strong>
                                     <div class="row">
                                         <div class="col-md-8 pr-md-1">
                                             <div class="form-group mb-1">
@@ -359,7 +360,10 @@
                                                 <h5 class="card-title">{!! \App\SupportTodo::TASK_TYPE[$todo['task_type']] !!}</h5>
                                                 <p class="card-text">
                                                     <div>Added at: {!! $todo['created_at'] !!}</div>
+                                                    <div>Added by: <strong>{!! $todo['added_byuser']['name'] !!}</strong></div>
+                                                    <div>Task for: <strong>{!! $todo['support_rep']['name'] !!}</strong></div>
                                                     @if(isset($todo['done_at']))
+                                                        <hr class="mt-1 mb-1">
                                                         <div>Completed at: {!! $todo['done_at'] !!}</div>
                                                         <div>Completed by: <strong>{!! $todo['done_byuser']['name'] !!}</strong></div>
                                                     @endif
@@ -376,19 +380,7 @@
 
                         <div class="row mt-4">
                             <div class="col-lg-8">
-                                <strong>Add Task</strong>
-                                <div class="row">
-                                    <div class="col-md-8 pr-md-1">
-                                        <div class="form-group mb-1">
-                                            {!! $tasks_select !!}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 pl-md-1">
-                                        <div class="form-group mb-1">
-                                            <button id="add_todo" class="w-100 btn btn-info">Add</button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <button class="btn btn-info mt-2" data-toggle="modal" data-target="#createtask">Add Task</button>
                             </div>
                         </div>
 
@@ -878,6 +870,7 @@
 
             $(document).on('click', '#add_todo', function (event) {
                 var task_id = $('select[name="tasks_select"]').val();
+                var support_rep_user_id = $('select[name="supportTaskRep_id[]"]').val();
                 if(task_id) {
                     var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
                     $(this).append(ajax_img);
@@ -892,7 +885,8 @@
                         dataType: "json",
                         data: {
                             invoice_id:{{$invoice->id}},
-                            task_id: task_id
+                            task_id: task_id,
+                            support_rep_user_id: support_rep_user_id
                         },
                         success: function (response) {
                             location.reload();

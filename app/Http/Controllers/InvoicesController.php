@@ -20,6 +20,7 @@ use App\Salespeople;
 use App\SalespeoplePecentageLog;
 use App\SecondarySalesPeople;
 use App\SentData;
+use App\SupportTodo;
 use Aws\imagebuilder\imagebuilderClient;
 use Carbon\Carbon;
 use Exception;
@@ -29,7 +30,7 @@ use PDF, DB;
 
 class InvoicesController extends BaseController
 {
-	protected $full_path, $app_url;
+	public $full_path, $app_url;
 	public $pdf_path;
 	public $pdf_footer, $pdf_footer2, $pdf_footer_annual, $support_phone_number;
 
@@ -126,7 +127,10 @@ class InvoicesController extends BaseController
 			if ( $lastReportDate ) {
 				$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
 			}
-			return view( 'invoices.index', compact( 'firstDate', 'lastDate', 'user' ) );
+			$task_type = json_encode(SupportTodo::TASK_TYPE);
+			$task_status = json_encode(SupportTodo::TASK_STATUS);
+			$invoice_status = json_encode(Invoices::STATUS);
+			return view( 'invoices.index', compact( 'firstDate', 'lastDate', 'user', 'task_status', 'task_type', 'invoice_status' ) );
 		}
 
 	}
@@ -248,6 +252,8 @@ class InvoicesController extends BaseController
 		                   ->with('product')
 		                   ->with('supportReps.user')
 		                   ->with('supportTodo.doneByuser')
+		                   ->with('supportTodo.addedByuser')
+		                   ->with('supportTodo.supportRep')
 		                   ->find($id);
 		if($invoice) {
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
@@ -318,8 +324,14 @@ class InvoicesController extends BaseController
 
 			$pdftemplates_select = Elements::pdfTemplatesSelect( 'pdftemplate_id', [ 'class' => 'form-control' ], $invoice->pdftemplate_id );
 			$supportReps_select = Elements::supportRepsSelect('supportRep_id[]', [ 'class' => 'form-control', /*'multiple' => 'multiple'*/ ], $supportRepsVals);
+			$supportTaskRep_select = Elements::supportRepsSelect('supportTaskRep_id[]', [ 'class' => 'form-control', /*'multiple' => 'multiple'*/ ], $supportRepsVals);
 			$tasks_select = Elements::taskSelect('tasks_select', [ 'class' => 'form-control' ], []);
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'support_todo', 'tasks_select') );
+
+			$task_type = json_encode(SupportTodo::TASK_TYPE);
+			$task_status = json_encode(SupportTodo::TASK_STATUS);
+			$invoice_status = json_encode(Invoices::STATUS);
+
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'support_todo', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status') );
 		}
 		return abort(404);
 	}

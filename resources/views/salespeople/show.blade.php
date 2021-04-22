@@ -301,11 +301,14 @@
     <script>
 
         $(document).ready(function() {
+            var task_type = jQuery.parseJSON('{!! $task_type !!}');
+            var task_status = jQuery.parseJSON('{!! $task_status !!}');
+            var invoice_status = jQuery.parseJSON('{!! $invoice_status !!}');
 
             @if( Gate::check('payments-manage'))
-                 var refundRequestedStr = 'Refund requested';
+                 var refundRequestedStr = invoice_status[2];
             @else
-                var refundRequestedStr = 'Refunded';
+                var refundRequestedStr = invoice_status[3];
             @endif
 
             var payments = {
@@ -604,7 +607,7 @@
                                 customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">'+refundRequestedStr+'</div>'
                             }
                             if(row.status == 3 || row.sales_price <= 0){
-                                customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refunded</div>'
+                                customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">'+invoice_status[3]+'</div>'
                             }
                             return customer_html;
                         }},
@@ -717,7 +720,7 @@
                                 customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">'+refundRequestedStr+'</div>'
                             }
                             if(row.status == 3 || row.sales_price <= 0){
-                                customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">Refunded</div>'
+                                customer_html += '<div style="line-height: 1.1;" class="mt-2 text-danger small">invoice_status[3]</div>'
                             }
                             return customer_html;
                         }},

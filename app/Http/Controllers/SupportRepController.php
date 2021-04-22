@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Invoices;
+use App\SupportTodo;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,8 +21,16 @@ class SupportRepController extends Controller
 	public function show($id){
 		$user = User::find($id);
 		$current_user = Auth::user();
+		$invoicescontroller = new InvoicesController();
+
+		$task_type = json_encode(SupportTodo::TASK_TYPE);
+		$task_status = json_encode(SupportTodo::TASK_STATUS);
+		$invoice_status = json_encode(Invoices::STATUS);
+
+		$full_path = $invoicescontroller->full_path;
+
 		if($user && ($current_user->id == $id || Gate::check('support-user-view-all'))) {
-			return view( 'support.show', compact( 'user' ) );
+			return view( 'support.show', compact( 'user', 'task_status', 'task_type','full_path', 'invoice_status' ) );
 		}
 		return abort(404);
 	}

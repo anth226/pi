@@ -42,6 +42,7 @@ Route::post('/generate-invoice', 'InvoiceGeneratorController@store' ,  ['middlew
 Route::post('/invoices/edit-support-rep', 'SupportTasksController@addSupportRep' ,  ['middleware' => 'csrf']);
 Route::post('/support/add-task', 'SupportTasksController@addTask' ,  ['middleware' => 'csrf']);
 Route::post('/support/remove-task', 'SupportTasksController@deleteTask' ,  ['middleware' => 'csrf']);
+Route::get('/support/show-tasks', 'SupportTasksController@showTasks' ,  ['middleware' => 'csrf']);
 //
 
 

@@ -13,6 +13,7 @@ class SupportTodo extends Model
 		'invoice_id',
 		'done_by_user_id',
 		'added_by_user_id',
+		'support_rep_user_id',
 		'task_type',
 		'task_status',
 		'done_at'
@@ -21,7 +22,7 @@ class SupportTodo extends Model
 	public const TASK_TYPE = [
 		0 => 'Demo Needed',
 		1 => 'Follow up Call',
-//		2 => 'Refund Requested'
+		2 => 'Refund Requested'
 	];
 
 	public const TASK_STATUS = [
@@ -38,5 +39,15 @@ class SupportTodo extends Model
 	public function doneByuser()
 	{
 		return $this->hasOne('App\User', 'id','done_by_user_id')->withTrashed();
+	}
+
+	public function supportRep()
+	{
+		return $this->hasOne('App\User', 'id','support_rep_user_id')->withTrashed();
+	}
+
+	public function invoice()
+	{
+		return $this->hasOne('App\Invoices', 'id','invoice_id');
 	}
 }

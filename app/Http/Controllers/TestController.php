@@ -102,6 +102,8 @@ class TestController extends BaseController
 //		dd($tt->getNumber(818));
 //		dd($tt->getAvailibleNumber(818));
 //		dd($tt->buyNumber('+18188623918'));
+		$st = new SupportTasksController();
+		dd($st->showTasks());
 	}
 
 	public function getPersonsSources(){

@@ -14,6 +14,7 @@ use App\Salespeople;
 use App\SalespeopleLevels;
 use App\SalespeoplePecentageLog;
 use App\SecondarySalesPeople;
+use App\SupportTodo;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Validator;
@@ -369,6 +370,11 @@ class SalespeopleController extends InvoicesController
 //		$to_pay = $this->moneyFormat($earnings - $payments);
 
 		$user = Auth::user();
+
+		$task_type = json_encode(SupportTodo::TASK_TYPE);
+		$task_status = json_encode(SupportTodo::TASK_STATUS);
+		$invoice_status = json_encode(Invoices::STATUS);
+
 		if( $user->hasRole('Salesperson')){
 			$salesperson_id = Salespeople::withTrashed()->where('email', $user->email)->value('id');
 			if($salesperson_id && $id == $salesperson_id) {
@@ -385,7 +391,7 @@ class SalespeopleController extends InvoicesController
 //					if($lastReportDate && !empty($lastReportDate->access_date)) {
 //						$firstDate = $lastDate = date( "F j, Y", strtotime( $lastReportDate->access_date ) );
 //					}
-					return view( 'salespeople.show', compact( 'salespeople', 'firstDate', 'lastDate' ) );
+					return view( 'salespeople.show', compact( 'salespeople', 'firstDate', 'lastDate', 'task_status', 'task_type', 'invoice_status' ) );
 				}
 			}
 			return abort(403);
@@ -393,7 +399,7 @@ class SalespeopleController extends InvoicesController
 		else {
 			$salespeople = Salespeople::with( 'level.level' )->withTrashed()->find( $id );
 			if ( $salespeople ) {
-				return view( 'salespeople.show', compact( 'salespeople', 'firstDate', 'lastDate', 'to_pay' ) );
+				return view( 'salespeople.show', compact( 'salespeople', 'firstDate', 'lastDate', 'task_status', 'task_type', 'invoice_status', 'to_pay' ) );
 			}
 			return abort( 404 );
 		}
