@@ -371,7 +371,7 @@
                                     <div class="col-lg-4 mb-4">
                                         <div class="card h-100">
                                             <div class="card-header  {!! $class !!}">
-                                                {!! \App\SupportTodo::TASK_STATUS[$todo['task_status']] !!}
+                                                {!! \App\SupportTodo::TASK_STATUS[$todo['task_status']] !!} <small class="text-muted">task#: {!! $todo['id'] !!}</small>
                                             </div>
                                             <div class="card-body">
                                                 <h5 class="card-title">{!! \App\SupportTodo::TASK_TYPE[$todo['task_type']] !!}</h5>

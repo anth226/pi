@@ -90,7 +90,7 @@
                             var res_html =
                                  '<div class="col-12 mb-4">'+
                                         '<div class="card h-100">'+
-                                            '<div class="card-header '+css_class+'">'+ task_status[row.task_status]+'</div>'+
+                                            '<div class="card-header '+css_class+'">'+ task_status[row.task_status]+' <small class="text-muted">task#: '+row.id+'</small></div>'+
                                             '<div class="card-body">'+
                                                 '<div class="row">'+
                                                 '<div class="col-md-6">'+
