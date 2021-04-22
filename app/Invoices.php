@@ -77,7 +77,7 @@ class Invoices extends Model
 
 	public function supportTodo()
 	{
-		return $this->hasMany('App\SupportTodo', 'invoice_id');
+		return $this->hasMany('App\SupportTodo', 'invoice_id')->orderBy('task_status')->orderBy('created_at', 'desc');
 	}
 
 	public function supportTodoActive()

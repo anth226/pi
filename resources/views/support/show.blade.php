@@ -25,7 +25,7 @@
             <div class="row">
                 <div class="col-12">
                     <table class="table table-striped table-bordered table-responsive-sm w-100" id="invoices_table">
-                        <thead>
+                        <thead class="d-none">
                         <tr>
                             <th>Tasks</th>
                         </tr>
@@ -58,6 +58,7 @@
                 processing: true,
                 serverSide: true,
                 order: [
+                    [ 1, "asc" ],
                     [ 0, "desc" ]
                 ],
                 ajax: {
@@ -66,7 +67,7 @@
                 pageLength: 100,
 
                 columns: [
-                    { data: 'created_at', name: 'created_at', "searchable": false,   render: function ( data, type, row ){
+                    { data: 'created_at', name: 'created_at', "sortable": true, "searchable": false, render: function ( data, type, row ){
                             var css_class = '';
                             var css_class_2 = ' text-danger ';
                             if(row.task_status == 1){
@@ -124,11 +125,13 @@
                                     '</div>';
                             return res_html;
                         } },
+                    { data: 'task_status', name: 'task_status', "sortable": true,"searchable": false,  "visible": false},
                     { data: 'invoice.customer.email', name: 'invoice.customer.email', "sortable": false ,  "visible": false},
-                    { data: 'invoice.customer.first_name', name: 'invoice.customer.first_name', "sortable": false ,  "visible": false},
-                    { data: 'invoice.customer.last_name', name: 'invoice.customer.last_name', "sortable": false ,  "visible": false},
-                    { data: 'invoice.customer.phone_number', name: 'invoice.customer.phone_number', "sortable": false ,  "visible": false},
-                    { data: 'invoice.customer.formated_phone_number', name: 'invoice.customer.formated_phone_number', "sortable": false ,  "visible": false},
+                    { data: 'invoice.customer.first_name', name: 'invoice.customer.first_name', "sortable": false,  "visible": false},
+                    { data: 'invoice.customer.last_name', name: 'invoice.customer.last_name', "sortable": false,  "visible": false},
+                    { data: 'invoice.customer.phone_number', name: 'invoice.customer.phone_number', "sortable": false,  "visible": false},
+                    { data: 'invoice.customer.formated_phone_number', name: 'invoice.customer.formated_phone_number', "sortable": false,  "visible": false},
+
                 ]
             });
 
