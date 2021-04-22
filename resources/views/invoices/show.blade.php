@@ -62,6 +62,8 @@
                                 @endif
                             @endif
                         @endif
+
+                        @if( Gate::check('invoice-create') || Gate::check('invoice-edit'))
                         <div class="text-muted mb-4">
                             <div  class="details_bgcolor p-2">
                                 <div>
@@ -120,7 +122,7 @@
                                 @endif
                             </div>
                         </div>
-
+                        @endif
                     </div>
                     <div class="pull-right mb-4 ">
                         <a class="btn btn-primary mt-2" href="/dashboard"> Dashboard</a>
@@ -152,7 +154,7 @@
                     </div>
                     <div>
                         <strong>Customer:</strong>
-                        <a target="_blank" href="{{ route('customers.show', $invoice->customer_id) }}" title="{{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}">
+                        <a @can('customer-list') target="_blank" href="{{ route('customers.show', $invoice->customer_id) }}" @endif title="{{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}">
                             {{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}
                         </a>
                         <small>
@@ -181,7 +183,7 @@
                                 @endphp
                                 <div>
                                     <strong>Salesperson:</strong>
-                                    <a target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
+                                    <a @can('salespeople-list') target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" @endcan title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
                                         {{ $sp->salespersone->name_for_invoice }}
                                     </a>
                                     @can('invoice-create')
@@ -203,7 +205,7 @@
                             @endphp
                             <div class="px-2 small">
                                 <strong>Salesperson:</strong>
-                                <a target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
+                                <a @can('salespeople-list') target="_blank" href="{{ route('salespeople.show', $sp->salespersone->id) }}" @endcan title="({{ $sp->salespersone->first_name }} {{ $sp->salespersone->last_name }})">
                                     {{ $sp->salespersone->name_for_invoice }}
                                 </a>
                                 @can('invoice-create')
@@ -296,7 +298,7 @@
                         <button class="btn btn-primary" id="send_email">Send Invoice Email</button>
                         <div class="err_box"></div>
                     </div>
-                    @endif
+
                     <div class="text-muted details_bgcolor" id="log_box">
                         @if(!empty($logs) && $logs->count())
                             @foreach ($logs as $k=>$log)
@@ -308,6 +310,8 @@
                             @endforeach
                         @endif
                     </div>
+
+                    @endif
                 </div>
             </div>
 
