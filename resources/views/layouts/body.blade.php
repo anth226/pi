@@ -47,9 +47,15 @@
                                 @endif
 
                                 @if( Gate::check('customer-create') || Gate::check('customer-edit') || Gate::check('customer-delete') || Gate::check('customer-list'))
-                                    <a class="dropdown-item" href="/dashboard" >
-                                        {{ __('Dashboard') }}
-                                    </a>
+                                    @if( !empty($current_user) && ($current_user->hasRole('Support Rep') || $current_user->hasRole('Customer Service Admin')))
+                                        <a class="dropdown-item" href="/invoices/show-all" >
+                                            {{ __('Dashboard') }}
+                                        </a>
+                                    @else
+                                        <a class="dropdown-item" href="/dashboard" >
+                                            {{ __('Dashboard') }}
+                                        </a>
+                                    @endif
                                 @endif
 
                                 @if( Gate::check('invoice-create'))

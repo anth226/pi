@@ -38,7 +38,7 @@ class InvoicesController extends BaseController
 	{
 		$this->middleware(['auth']);
 		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete|generated-invoice-list|generated-invoice-create|generated-invoice-edit|generated-invoice-delete|salespeople-reports-view-own|support-user-view-own', ['only' => ['index']]);
-		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['show', 'showPdf']]);
+		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['show', 'showPdf', 'showAll']]);
 		$this->middleware('permission:invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:invoice-edit', ['only' => ['edit','update']]);
 		$this->middleware('permission:invoice-delete', ['only' => ['destroy']]);
@@ -110,28 +110,35 @@ class InvoicesController extends BaseController
 					return $salespeopleController->show( $salesperson_id );
 				}
 			}
-			if ( $user->hasRole( 'Generated Invoices Only' ) ) {
-				$generated_invoice = new InvoiceGeneratorController();
-				return $generated_invoice->create( $request );
-			}
 			if ( $user->hasRole( 'Support Rep' ) ) {
 				$support = new SupportRepController();
 				return $support->show($user->id);
 			}
+			if ( $user->hasRole( 'Generated Invoices Only' ) ) {
+				$generated_invoice = new InvoiceGeneratorController();
+				return $generated_invoice->create( $request );
+			}
 			return abort(404);
 		}
 		else {
-			$lastReportDate = Invoices::orderBy( 'access_date', 'desc' )->value( 'access_date' );
-			$firstDate      = date( "F j, Y" );
-			$lastDate       = date( "F j, Y" );
-			if ( $lastReportDate ) {
-				$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
-			}
-			$task_type = json_encode(SupportTodo::TASK_TYPE);
-			$task_status = json_encode(SupportTodo::TASK_STATUS);
-			$invoice_status = json_encode(Invoices::STATUS);
-			return view( 'invoices.index', compact( 'firstDate', 'lastDate', 'user', 'task_status', 'task_type', 'invoice_status' ) );
+			return $this->showAll();
 		}
+
+	}
+
+	public function showAll()
+	{
+		$user = Auth::user();
+		$lastReportDate = Invoices::orderBy( 'access_date', 'desc' )->value( 'access_date' );
+		$firstDate      = date( "F j, Y" );
+		$lastDate       = date( "F j, Y" );
+		if ( $lastReportDate ) {
+			$lastDate = date( "F j, Y", strtotime( $lastReportDate ) );
+		}
+		$task_type = json_encode(SupportTodo::TASK_TYPE);
+		$task_status = json_encode(SupportTodo::TASK_STATUS);
+		$invoice_status = json_encode(Invoices::STATUS);
+		return view( 'invoices.index', compact( 'firstDate', 'lastDate', 'user', 'task_status', 'task_type', 'invoice_status' ) );
 
 	}
 
