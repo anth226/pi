@@ -46,6 +46,7 @@ Route::post('/support/complete-task', 'SupportTasksController@completeTask' ,  [
 Route::get('/users/{user_id}/support/show-tasks', 'SupportTasksController@showTasks' ,  ['middleware' => 'csrf']);
 //
 
+Route::get("/invoices/show-all", 'InvoicesController@showAll');
 
 Route::resource('/roles','RoleController');
 Route::resource('/users','UserController');
