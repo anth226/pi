@@ -106,9 +106,10 @@ class Elements {
 	}
 
 	public static function supportRepsSelect($name, $params = [], $values = []){
-		$res = '<option value="">Please Select</option>';
+		$res = '';
 		$supportReps = User::whereHas("roles", function($q){ $q->where("name", "Support Rep"); })->orderBy('id','DESC')->get();
 		if($supportReps && $supportReps->count()){
+			$res = '<option value="">Please Select</option>';
 			foreach($supportReps as $ss){
 				if(!$ss->deleted_at) {
 					$option_title = $ss->name;
