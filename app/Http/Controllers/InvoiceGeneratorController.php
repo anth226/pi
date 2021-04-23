@@ -56,7 +56,7 @@ class InvoiceGeneratorController extends InvoicesController
 		<div style=\"margin-top: 30px;width: 100%\">
 	        <div>	            
 	                <p style=\"margin: 5px 0;font-size:13px;\"><small>Thanks for becoming a valued customer at PortfolioInsider.com.</small></p>
-	                <p style=\"margin: 5px 0;font-size:13px;\"><small>If you are not entirely satisfied with your purchase, we're here to help you with world-class support. You are entitled to cancel your order within 6 months without giving any given reason. To exercise your right of refund, you must inform us of your decision.</small></p>
+	                <p style=\"margin: 5px 0;font-size:13px;\"><small>If you are not entirely satisfied with your purchase, we're here to help you with world-class support. You are entitled to cancel your order within 6 months. To exercise your right of refund, you must inform us of your decision.</small></p>
 	                <p style=\"margin: 5px 0;font-size:13px;\"><small>You can contact us via email: support@portfolioinsider.com, phone number: ".$this->support_phone_number.", or mail: 9465 Wilshire Boulevard Office #300. Beverly Hills, CA 90212. We will reimburse you no later than 14 days from the day of which we receive the notification.</small></p>
 	                <p style=\"margin: 5px 0;font-size:13px;\"><small>Refunds are issued to the same form of payment that was used for the order with no additional fees. If you have any further questions or there is any other information you require from us, please don’t hesitate to contact us.  We remain committed to providing excellent customer service and a positive experience for all customers.</small></p> 	       
 	        </div>
@@ -71,7 +71,7 @@ class InvoiceGeneratorController extends InvoicesController
 	        <div>	            
 	                <p style=\"margin: 5px 0;font-size:13px;\"><small>1 Year subscription. Does not auto renew.</small></p>
 	                <p style=\"margin: 5px 0;font-size:13px;\"><small>Thanks for becoming a valued customer at PortfolioInsider.com.</small></p>
-	                <p style=\"margin: 5px 0;font-size:13px;\"><small>If you are not entirely satisfied with your purchase, we're here to help you with world-class support. You are entitled to cancel your order within 6 months without giving any given reason. To exercise your right of refund, you must inform us of your decision.</small></p>
+	                <p style=\"margin: 5px 0;font-size:13px;\"><small>If you are not entirely satisfied with your purchase, we're here to help you with world-class support. You are entitled to cancel your order within 6 months. To exercise your right of refund, you must inform us of your decision.</small></p>
 	                <p style=\"margin: 5px 0;font-size:13px;\"><small>You can contact us via email: support@portfolioinsider.com, phone number: ".$this->support_phone_number.", or mail: 9465 Wilshire Boulevard Office #300. Beverly Hills, CA 90212. We will reimburse you no later than 14 days from the day of which we receive the notification.</small></p>
 	                <p style=\"margin: 5px 0;font-size:13px;\"><small>Refunds are issued to the same form of payment that was used for the order with no additional fees. If you have any further questions or there is any other information you require from us, please don’t hesitate to contact us.  We remain committed to providing excellent customer service and a positive experience for all customers.</small></p> 	       
 	        </div>
