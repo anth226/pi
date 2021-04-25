@@ -42,25 +42,16 @@
 
                     <div style="padding-right: 11px;padding-left: 11px;">
                         <div class="row mb-4">
-                    <div class="col-md-3 col-lg-2 px-1 mb-1">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1">
                         <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
-                                <h3 class="text-center"><span id="subscriptions">0</span></h3>
-
-                                <h3 class="lead text-center">Prime Sales</h3>
+                                <h3 class="text-center"><span id="subscriptions">0</span> <span class="lead text-center">Sales</span></h3>
+                                <h3 class="text-center lead"><span id="avg_deal_size">0</span> <span class="lead text-center">Avg Deal</span></h3>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 col-lg-3 px-1 mb-1">
-                        <div class="card order-card bg-info">
-                            <div class="text-center p-2 text-white">
-                                <h3 class="text-center"><span id="avg_deal_size">0</span></h3>
 
-                                <h3 class="lead text-center">Avg Deal Size</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-5 col-lg-3 px-1 mb-1">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1">
                         <div class="card order-card bg-primary">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="revenue">0</span></h3>
@@ -69,7 +60,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6 col-lg-2 px-1 mb-1 commission">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1 commission">
                         <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="commissions">0</span></h3>
@@ -78,7 +69,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6 col-lg-2 px-1 mb-1 profit">
+                    <div class="col-md-6 col-lg-3 px-1 mb-1 profit">
                         <div class="card order-card bg-success">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="profit">0</span></h3>
