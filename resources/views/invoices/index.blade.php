@@ -285,7 +285,7 @@
                 columns: [
                     { data: 'access_date', name: 'access_date', "searchable": false, orderData: [ 0, 1 ],  render: function ( data, type, row ){
                             if(isSet(row.id)) {
-                                return formatDate(data) + ' <a title="Open invoice in a new tab" target="_blank" href="/invoices/' + data + '"><span class="badge badge-success">View</span></a>';
+                                return formatDate(data) + ' <a title="Open invoice in a new tab" target="_blank" href="/invoices/' + row.id + '"><span class="badge badge-success">View</span></a>';
                             }
                             else{
                                 return formatDate(data);
