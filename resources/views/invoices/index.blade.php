@@ -424,7 +424,7 @@
                     return ("$" + formatted);
                 }
                 else {
-                    return ("$" + formatted + ((parts) ? "." + parts[1].substr(0, 2) : ""));
+                    return ("$" + formatted + ((parts && parts[1] > 0) ? "." + parts[1].substr(0, 2) : ""));
                 }
             };
 
