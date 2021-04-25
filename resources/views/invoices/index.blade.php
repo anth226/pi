@@ -42,15 +42,25 @@
 
                     <div style="padding-right: 11px;padding-left: 11px;">
                         <div class="row mb-4">
-                    <div class="col-md-6 col-lg-3 px-1 mb-1">
+                    <div class="col-md-3 col-lg-2 px-1 mb-1">
                         <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="subscriptions">0</span></h3>
+
                                 <h3 class="lead text-center">Prime Sales</h3>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-3 px-1 mb-1">
+                    <div class="col-md-4 col-lg-3 px-1 mb-1">
+                        <div class="card order-card bg-info">
+                            <div class="text-center p-2 text-white">
+                                <h3 class="text-center"><span id="avg_deal_size">0</span></h3>
+
+                                <h3 class="lead text-center">Avg Deal Size</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5 col-lg-3 px-1 mb-1">
                         <div class="card order-card bg-primary">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="revenue">0</span></h3>
@@ -59,7 +69,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6 col-lg-3 px-1 mb-1 commission">
+                    <div class="col-md-6 col-lg-2 px-1 mb-1 commission">
                         <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="commissions">0</span></h3>
@@ -68,7 +78,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6 col-lg-3 px-1 mb-1 profit">
+                    <div class="col-md-6 col-lg-2 px-1 mb-1 profit">
                         <div class="card order-card bg-success">
                             <div class="text-center p-2 text-white">
                                 <h3 class="text-center"><span id="profit">0</span></h3>
@@ -95,7 +105,7 @@
                     <th>ID</th>
                     <th>Name</th>
                     <th>Salespeople</th>
-                    <th>Email</th>
+                    <th>Email/Phone</th>
                     <th>Phone</th>
                     <th>Amount</th>
                     <th>To Pay</th>
@@ -217,6 +227,11 @@
                                    var percent_profit = profit*100/response.data.revenue;
                                    $('#profit').html(moneyFormat(profit) + '<span class="small text-muted" style="font-size: 1rem;"> '+percent_profit.toFixed(2)+'%</span>');
                                }
+                               if(response.data.count > 0 && response.data.revenue > 0){
+                                   var avg_deal_size = response.data.revenue/response.data.count;
+                                   $('#avg_deal_size').html(moneyFormat(avg_deal_size.toFixed(2)));
+
+                               }
 
                             }
                             else {
@@ -285,8 +300,10 @@
                     { data: 'salespersone', name: 'salespersone',"sortable": false,"searchable": false, className:"text-nowrap", render: function ( data, type, row ){
                             return generateSalespeople(row);
                         }  },
-                    { data: 'customer.email', name: 'customer.email', "sortable": false },
-                    { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap"},
+                    { data: 'customer.email', name: 'customer.email', "sortable": false, render: function ( data, type, row ){
+                            return '<div>'+data+'</div><div>'+row.customer.phone_number+'</div>';
+                        }  },
+                    { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap", "visible": false},
                     { data: 'paid', name: 'paid', "searchable": false, "sortable": false, render: function ( data, type, row ){
                             if(isSet(data)) {
                                 if(data > 0) {
