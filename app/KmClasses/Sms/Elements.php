@@ -24,9 +24,9 @@ class Elements {
 		return floatval(str_replace($dec_point, '.', preg_replace('/[^\d'.preg_quote($dec_point).']/', '', $number)));
 	}
 
-	public static function createDateTime($datetimestring){
+	public static function createDateTime($datetimestring, $format = 'm-d-Y'){
 		$timezone = config('app.timezone');
-		$carbon = Carbon::instance(date_create_from_format('m-d-Y', $datetimestring));
+		$carbon = Carbon::instance(date_create_from_format($format, $datetimestring));
 		$carbon->timezone($timezone);
 		return $carbon->toDateTimeString();
 	}

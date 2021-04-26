@@ -26,11 +26,12 @@ class SupportRepController extends Controller
 		$task_type = json_encode(SupportTodo::TASK_TYPE);
 		$task_status = json_encode(SupportTodo::TASK_STATUS);
 		$invoice_status = json_encode(Invoices::STATUS);
+		$just_now = date("Y-m-d H:i:s");
 
 		$full_path = $invoicescontroller->full_path;
 
 		if($user && ($current_user->id == $id || Gate::check('support-user-view-all'))) {
-			return view( 'support.show', compact( 'user', 'task_status', 'task_type','full_path', 'invoice_status' ) );
+			return view( 'support.show', compact( 'user', 'task_status', 'task_type','full_path', 'invoice_status', 'just_now' ) );
 		}
 		return abort(404);
 	}
