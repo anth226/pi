@@ -111,18 +111,22 @@
                     <div class="mt-4">
                         <label><input id="sens_info" checked type="checkbox"><span class="ml-2 text-info">Show Sensitive Information</span></label>
                     </div>
-                    @can('view-summary')
-                        <div class="mb-4">
+                @endif
+
+                @can('view-summary')
+                    <div style="padding-right: 11px;padding-left: 11px;">
+                        <div class="row mb-4 mt-2">
                             <div class="col-md-6 col-lg-3 px-1 mb-1">
                                 <div class="card order-card bg-primary">
                                     <div class="text-center p-1 text-white">
-                                        <h3 class="lead mb-0"><span id="avg_deal_size">0</span> <span class="lead text-center">Avg Deal</span></h3>
+                                        <h3 class="text-center lead mb-1"><span id="avg_deal_size">0</span></h3>
+                                        <h3 class="text-center lead mb-0">Avg Deal</h3>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    @endcan
-                @endif
+                    </div>
+                @endcan
         </div>
         </div>
     </div>
