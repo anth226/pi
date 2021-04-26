@@ -10,6 +10,7 @@ use App\Invoices;
 use App\InvoiceSupport;
 use App\KmClasses\Sms\Elements;
 use App\SupportTodo;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -189,17 +190,9 @@ class SupportTasksController extends BaseController
 				                    ->with( 'invoice.salespeople.level' )
 				                    ->with( 'invoice.supportReps' )
 				                    ->where( 'support_rep_user_id', $for_user_id )
-
-//							  ->whereHas('invoice.supportReps', function ($query) {
-//									$query->where('user_id', 23);
-//							  })
-
 				;
-//			if($for_user_id){
-//				$query->whereHas('invoice.supportReps', function ($query) {
-//					$query->where('user_id', 23);
-//				});
-//			}
+				$query->selectRaw('*, case when scheduled_at >= "'.Carbon::now().'" then 1 else 0 end as is_after');
+
 				return datatables()->eloquent( $query )->toJson();
 			}
 		}
