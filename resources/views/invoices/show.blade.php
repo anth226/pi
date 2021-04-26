@@ -633,7 +633,20 @@
                 format:'m-d-Y',
                 value: '{{ $access_date }}'
             });
+
+            $('input[name="scheduled_at"]').datetimepicker({
+                timepicker:true,
+                format:'m-d-Y H:00',
+                formatTime:'H:00',
+                formatDate:'m-d-Y',
+                minDate:0,
+                {{--value: '{{ $scheduled_at }}'--}}
+            });
+
             $.datetimepicker.setLocale('en');
+
+
+
 
             function formatNumber(n) {
                 // format number 1000000 to 1,234,567
@@ -886,6 +899,7 @@
             $(document).on('click', '#add_todo', function (event) {
                 var task_id = $('select[name="tasks_select"]').val();
                 var support_rep_user_id = $('select[name="supportTaskRep_id[]"]').val();
+                var scheduled_at = $('input[name="scheduled_at"]').val();
                 if(task_id) {
                     var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
                     $(this).append(ajax_img);
@@ -901,7 +915,8 @@
                         data: {
                             invoice_id:{{$invoice->id}},
                             task_id: task_id,
-                            support_rep_user_id: support_rep_user_id
+                            support_rep_user_id: support_rep_user_id,
+                            scheduled_at:scheduled_at
                         },
                         success: function (response) {
                             location.reload();

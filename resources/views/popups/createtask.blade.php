@@ -12,6 +12,11 @@
                 <div class="form-group mb-2">
                     {!! $tasks_select !!}
                 </div>
+                <strong>Scheduled At:</strong>
+                <div class="form-group mb-2">
+                    {!! Form::text('scheduled_at', null, array('name="scheduled_at"', 'placeholder' => 'Scheduled At','class' => 'form-control datetimepicker-input', 'data-toggle="datetimepicker"', 'data-target="#scheduled_at"')) !!}
+
+                </div>
                 <strong>Select Representative:</strong>
                 <div class="form-group mb-1">
                     {!! $supportTaskRep_select !!}

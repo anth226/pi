@@ -265,6 +265,7 @@ class InvoicesController extends BaseController
 		if($invoice) {
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
 			$access_date    = $this->createTimeString( $invoice->access_date );
+			$scheduled_at   = date('m-d-Y g:00 a', strtotime('+1 hour'));
 			$total = $this->moneyFormat( $invoice->sales_price * $invoice->qty );
 			$file_name = $this->generateFileName($invoice);
 			$phone_number = FormatUsPhoneNumber::nicePhoneNumberFormat($invoice->customer->phone_number, $invoice->customer->formated_phone_number);
@@ -338,7 +339,7 @@ class InvoicesController extends BaseController
 			$task_status = json_encode(SupportTodo::TASK_STATUS);
 			$invoice_status = json_encode(Invoices::STATUS);
 
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'support_todo', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status') );
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'support_todo', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status') );
 		}
 		return abort(404);
 	}

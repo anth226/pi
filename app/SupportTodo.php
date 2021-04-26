@@ -16,7 +16,8 @@ class SupportTodo extends Model
 		'support_rep_user_id',
 		'task_type',
 		'task_status',
-		'done_at'
+		'done_at',
+		'scheduled_at'
 	];
 
 	public const TASK_TYPE = [

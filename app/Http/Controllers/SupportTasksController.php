@@ -8,6 +8,7 @@ use App\Errors;
 use App\Http\Controllers\API\BaseController;
 use App\Invoices;
 use App\InvoiceSupport;
+use App\KmClasses\Sms\Elements;
 use App\SupportTodo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -106,12 +107,18 @@ class SupportTasksController extends BaseController
 
 			$user_logged = Auth::user();
 
-			SupportTodo::create([
+			$todo = [
 				'invoice_id' => $request->input( 'invoice_id' ),
 				'added_by_user_id' => $user_logged->id,
 				'task_type' => $request->input( 'task_id' ),
 				'support_rep_user_id' => $request->input( 'support_rep_user_id' )
-			]);
+			];
+
+			if(!empty($request->input( 'scheduled_at' ))) {
+				$todo['scheduled_at'] = Elements::createDateTime( $request->input( 'scheduled_at' ), 'm-d-Y H:i' );
+			}
+
+			SupportTodo::create($todo);
 
 			ActionsLog::create( [
 				'user_id'    => $user_logged->id,
