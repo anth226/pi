@@ -45,8 +45,8 @@
                     <div class="col-md-6 col-lg-3 px-1 mb-1">
                         <div class="card order-card bg-info">
                             <div class="text-center p-2 text-white">
-                                <h3 class="text-center"><span id="subscriptions">0</span> <span class="lead text-center">Sales</span></h3>
-                                <h3 class="text-center lead"><span id="avg_deal_size">0</span> <span class="lead text-center">Avg Deal</span></h3>
+                                <h3 class="text-center"><span id="subscriptions">0</span></h3>
+                                <h3 class="text-center lead">Sales</h3>
                             </div>
                         </div>
                     </div>
@@ -112,6 +112,21 @@
                         <label><input id="sens_info" checked type="checkbox"><span class="ml-2 text-info">Show Sensitive Information</span></label>
                     </div>
                 @endif
+
+                @can('view-summary')
+                    <div style="padding-right: 11px;padding-left: 11px;">
+                        <div class="row mb-4 mt-2">
+                            <div class="col-md-6 col-lg-3 px-1 mb-1">
+                                <div class="card order-card bg-primary">
+                                    <div class="text-center p-1 text-white">
+                                        <h3 class="text-center lead mb-1"><span id="avg_deal_size">0</span></h3>
+                                        <h3 class="text-center lead mb-0">Avg Deal</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endcan
         </div>
         </div>
     </div>
@@ -424,7 +439,7 @@
                     return ("$" + formatted);
                 }
                 else {
-                    return ("$" + formatted + ((parts && parts[1] > 0) ? "." + parts[1].substr(0, 2) : ""));
+                    return ("$" + formatted + ((parts) ? "." + parts[1].substr(0, 2) : ""));
                 }
             };
 
