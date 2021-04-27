@@ -193,7 +193,7 @@ class SupportTasksController extends BaseController
 				;
 				$query->selectRaw('*, case when scheduled_at >= "'.Carbon::now().'" then 1 else 0 end as is_after');
 
-				if($status){
+				if($status && empty( $request['search']['value'])){
 					if($status == 1 || $status == 2){
 						$query->where('task_status', $status);
 						if($status == 1){
