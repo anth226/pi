@@ -27,9 +27,10 @@ class SupportTodo extends Model
 	];
 
 	public const TASK_STATUS = [
-		0 => 'disabled',
-		1 => 'active',
-		2 => 'completed'
+		0 => 'Disabled',
+		1 => 'Active',
+		2 => 'Completed',
+		3 => 'Scheduled'
 	];
 
 	public function addedByuser()

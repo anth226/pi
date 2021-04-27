@@ -8,6 +8,9 @@
         .bg_scheduled{
             background-color: rgba(255,255,0,.2) !important;
         }
+        .bg_active{
+            background-color: rgba(255,255,0,.5) !important;
+        }
 
     </style>
 @endsection
@@ -34,12 +37,21 @@
             </div>
 
             <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <label class="w-100">
+                        {!! $statusSelect !!}
+                    </label>
+                </div>
+            </div>
+
+            <div class="row">
                 <div class="col-12">
                     <table class="table table-bordered table-responsive-sm w-100" id="invoices_table">
                         <thead>
                         <tr>
                             <th>Task Status</th>
                             <th>Created At</th>
+                            <th>Task Type</th>
                             <th>Scheduled At</th>
                             <th>Name</th>
                             <th>Access Date</th>
@@ -57,16 +69,25 @@
     </div>
 @endsection
 @section('script')
+    <script src="{{ url('/js/select2.min.js') }}"></script>
     <script>
         $(document).ready(function() {
+
+            $("select").select2({
+                width: '100%',
+                placeholder: 'Please select',
+                allowClear: true
+            });
+
+            $('select[name="select_status"]').on('change', function (e) {
+                table_dt.draw();
+            });
 
             var task_type = jQuery.parseJSON('{!! $task_type !!}');
             var task_status = jQuery.parseJSON('{!! $task_status !!}');
             var invoice_status = jQuery.parseJSON('{!! $invoice_status !!}');
-            var just_now = '{!! $just_now !!}';
-            var full_path = '{!! $full_path !!}';
 
-            console.log(just_now);
+            var full_path = '{!! $full_path !!}';
 
             var table = $('table#invoices_table');
             var table_dt = table.DataTable({
@@ -74,14 +95,14 @@
                     if ( data.task_status == 1 ) {
                         if ( data.scheduled_at) {
                             if(!data.is_after){
-                                $(row).addClass('bg-warning');
+                                $(row).addClass('bg_active');
                             }
                             else{
                                 $(row).addClass('bg_scheduled');
                             }
                         }
                         else {
-                            $(row).addClass('bg-warning');
+                            $(row).addClass('bg_active');
                         }
                     }
                     if ( data.task_status == 2) {
@@ -92,10 +113,15 @@
                 serverSide: true,
                 order: [
                     [ 1, "desc" ],
-                    [ 2, "desc" ]
+                    [ 3, "desc" ]
                 ],
                 ajax: {
                     url: "/users/{{ $user->id }}/support/show-tasks",
+                    data: function ( d ) {
+                        return $.extend( {}, d, {
+                            task_status: $('select[name="select_status"]').val()
+                        } );
+                    }
                 },
                 pageLength: 100,
 
@@ -120,6 +146,9 @@
                     { data: 'created_at', name: 'created_at', "sortable": true,"searchable": false, render: function ( data, type, row ){
                             return data+'<div><small class="text-muted">Added by: <strong>'+row.added_byuser.name+'</strong></small></div>';
                     }},
+                    { data: 'task_type', name: 'task_type', "sortable": true,"searchable": false, render: function ( data, type, row ){
+                            return task_type[data];
+                        }},
                     { data: 'scheduled_at', name: 'scheduled_at', "sortable": true},
                     { data: 'invoice.customer.first_name', name: 'invoice.customer.first_name', "sortable": false,"searchable": false, render: function ( data, type, row ){
                             let  res_html = '<div><strong>'+row.invoice.customer.first_name+' '+row.invoice.customer.last_name+'</strong></div>'+
