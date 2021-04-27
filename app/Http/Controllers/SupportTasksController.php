@@ -181,7 +181,7 @@ class SupportTasksController extends BaseController
 	function showTasks(Request $request, $user_id){
 		try {
 			$for_user_id = !empty($user_id) ? $user_id : 0;
-//			$status = !empty($request->input( 'status' )) ? $request->input( 'stats' ) : 0;
+			$status = !empty($request->input( 'task_status' )) ? $request->input( 'task_status' ) : 0;
 			if($for_user_id) {
 				$query = SupportTodo::with( 'invoice.customer' )
 				                    ->with( 'addedByuser' )
@@ -192,6 +192,24 @@ class SupportTasksController extends BaseController
 				                    ->where( 'support_rep_user_id', $for_user_id )
 				;
 				$query->selectRaw('*, case when scheduled_at >= "'.Carbon::now().'" then 1 else 0 end as is_after');
+
+				if($status){
+					if($status == 1 || $status == 2){
+						$query->where('task_status', $status);
+						if($status == 1){
+							$query->where(function($q) use($status){
+								$q->where('scheduled_at', '<', Carbon::now());
+								$q->orWhereNull('scheduled_at');
+							});
+						}
+					}
+					else{
+						if($status == 3){
+							$query->where('scheduled_at', '>=', Carbon::now());
+							$query->where('task_status', 1);
+						}
+					}
+				}
 
 				return datatables()->eloquent( $query )->toJson();
 			}

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Invoices;
+use App\KmClasses\Sms\Elements;
 use App\SupportTodo;
 use App\User;
 use Illuminate\Http\Request;
@@ -26,12 +27,13 @@ class SupportRepController extends Controller
 		$task_type = json_encode(SupportTodo::TASK_TYPE);
 		$task_status = json_encode(SupportTodo::TASK_STATUS);
 		$invoice_status = json_encode(Invoices::STATUS);
-		$just_now = date("Y-m-d H:i:s");
 
 		$full_path = $invoicescontroller->full_path;
 
+		$statusSelect =  Elements::supportStatusSelect('select_status');
+
 		if($user && ($current_user->id == $id || Gate::check('support-user-view-all'))) {
-			return view( 'support.show', compact( 'user', 'task_status', 'task_type','full_path', 'invoice_status', 'just_now' ) );
+			return view( 'support.show', compact( 'user', 'task_status', 'task_type','full_path', 'invoice_status', 'statusSelect' ) );
 		}
 		return abort(404);
 	}

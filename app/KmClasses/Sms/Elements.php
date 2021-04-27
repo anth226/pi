@@ -181,4 +181,14 @@ class Elements {
 		}
 		return $res;
 	}
+
+	public static function supportStatusSelect($name){
+		$tasks = SupportTodo::TASK_STATUS;
+		$res = '<option value="">Show All Tasks</option>';
+		$res .= '<option value="1" selected >' .$tasks[1] . '</option>';// active
+		$res .= '<option value="2" >' .$tasks[2] . '</option>';// completed
+		$res .= '<option value="3" >' .$tasks[3] . '</option>';// scheduled
+		$res = '<select	 name="' . $name . '" >' . $res . '</select>';
+		return $res;
+	}
 }
