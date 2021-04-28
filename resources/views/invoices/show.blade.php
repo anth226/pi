@@ -36,6 +36,15 @@
             line-height: 1.6;
             color: #495057;
         }
+        .bg_completed{
+            background-color: rgba(0,255,0,.1) !important;
+        }
+        .bg_scheduled{
+            background-color: rgba(255,255,0,.2) !important;
+        }
+        .bg_active{
+            background-color: rgba(255,255,0,.4) !important;
+        }
     </style>
 @endsection
 
@@ -326,7 +335,7 @@
                 <div class="card-body">
                     @if( Gate::check('support-tasks-create'))
                         @if($supportReps_select )
-                            <div class="row mb-4">
+                            <div class="row mb-2">
                                 <div class="col-lg-8">
                                     <strong>Default Support Representative:</strong>
                                     <div class="row">
@@ -344,59 +353,38 @@
                                 </div>
                             </div>
 
-                            <div class="row mt-4">
+                            <div class="row mb-2">
                                 <div class="col-lg-8">
                                     <button class="btn btn-info mt-2" data-toggle="modal" data-target="#createtask">Add Task</button>
                                 </div>
                             </div>
                         @endif
                     @endif
-                        @if($support_todo && count($support_todo) )
-                            <div class="row mt-2">
-                                <div class="col-lg-8">
-                                    <strong>Tasks</strong>
-                                </div>
-                            </div>
-                            <div class="row mb-4">
-                                @foreach($support_todo as $todo)
-                                    @php
-                                        $class = '';
-                                        if($todo['task_status'] == 1){
-                                            $class = ' bg-warning ';
-                                        }
-                                        if($todo['task_status'] == 2){
-                                            $class = ' bg-success ';
-                                        }
-                                    @endphp
-                                    <div class="col-lg-4 mb-4">
-                                        <div class="card h-100">
-                                            <div class="card-header  {!! $class !!}">
-                                                {!! \App\SupportTodo::TASK_STATUS[$todo['task_status']] !!} <small class="text-muted">task#: {!! $todo['id'] !!}</small>
-                                            </div>
-                                            <div class="card-body">
-                                                <h5 class="card-title">{!! \App\SupportTodo::TASK_TYPE[$todo['task_type']] !!}</h5>
-                                                <p class="card-text">
-                                                    <div>Added at: {!! $todo['created_at'] !!}</div>
-                                                    <div>Added by: <strong>{!! $todo['added_byuser']['name'] !!}</strong></div>
-                                                    <div>Task for: <strong><a href="/support-reps/{!! $todo['support_rep']['id'] !!}">{!! $todo['support_rep']['name'] !!}</a></strong></div>
-                                                    @if(isset($todo['done_at']))
-                                                        <hr class="mt-1 mb-1">
-                                                        <div>Completed at: {!! $todo['done_at'] !!}</div>
-                                                        <div>Completed by: <strong>{!! $todo['done_byuser']['name'] !!}</strong></div>
-                                                    @endif
-                                                </p>
-                                                @if($todo['task_status'] == 1)
-                                                    @if( Gate::check('support-tasks-create'))
-                                                        <button data-todo_id="{!! $todo['id'] !!}" class="w-100 btn btn-info remove_todo">Remove</button>
-                                                    @endif
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
 
+                        <div class="row">
+                            <div class="col-md-6 col-lg-4">
+                                <label class="w-100">
+                                    {!! $statusSelect !!}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <table class="table table-bordered table-responsive-sm w-100" id="invoices_table">
+                                    <thead>
+                                    <tr>
+                                        <th>Task Status</th>
+                                        <th>Created At</th>
+                                        <th>Task Type</th>
+                                        <th>Scheduled At</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                 </div>
             </div>
 
@@ -519,6 +507,82 @@
                 width: '100%',
                 placeholder: 'Please select',
                 allowClear: true
+            });
+
+            $('select[name="select_status"]').on('change', function (e) {
+                table_dt.draw();
+            });
+
+            var task_type = jQuery.parseJSON('{!! $task_type !!}');
+            var task_status = jQuery.parseJSON('{!! $task_status !!}');
+            var invoice_status = jQuery.parseJSON('{!! $invoice_status !!}');
+
+            var table = $('table#invoices_table');
+            var table_dt = table.DataTable({
+                createdRow: function( row, data, dataIndex ) {
+                    if ( data.task_status == 1 ) {
+                        if ( data.scheduled_at) {
+                            if(!data.is_after){
+                                $(row).addClass('bg_active');
+                            }
+                            else{
+                                $(row).addClass('bg_scheduled');
+                            }
+                        }
+                        else {
+                            $(row).addClass('bg_active');
+                        }
+                    }
+                    if ( data.task_status == 2) {
+                        $(row).addClass('bg_completed');
+                    }
+                },
+                processing: true,
+                serverSide: true,
+                searching: false,
+                order: [
+                    [ 1, "desc" ],
+                    [ 3, "desc" ]
+                ],
+                ajax: {
+                    url: "/invoices/{{ $invoice->id }}/support/show-tasks",
+                    data: function ( d ) {
+                        return $.extend( {}, d, {
+                            task_status: $('select[name="select_status"]').val()
+                        } );
+                    }
+                },
+                pageLength: 100,
+
+                columns: [
+                    { data: 'task_status', name: 'task_status', "sortable": true,"searchable": false, render: function ( data, type, row ){
+                            let res_html = '<div>' + task_status[data]+' <small class="text-muted">task#: '+row.id+'</small></div>';
+                            if(row.is_after){
+                                res_html += '<hr class="mt-1 mb-1"><div>Scheduled</div><hr class="mt-1 mb-1">';
+                            }
+                            if (data == 1) {
+                                @if( Gate::check('support-tasks-create'))
+                                    res_html += '<div class="col-12"><button data-todo_id="' + row.id + '" class="btn btn-sm btn-info remove_todo">Remove</button></div>';
+                                @endif
+                            }
+
+                            if(isSet(row.done_at)){
+                                res_html += '<hr class="mt-1 mb-1">' +
+                                    '<div>Completed at: '+row.done_at+'</div>' +
+                                    '<div title="'+row.done_byuser.email+'">Completed by: <strong>'+row.done_byuser.name+'</strong></div>';
+                            }
+                            return res_html;
+                        }},
+                    { data: 'created_at', name: 'created_at', "sortable": true,"searchable": false, render: function ( data, type, row ){
+                            return data+'<div title="'+row.added_byuser.email+'"><small class="text-muted">Added by: <strong>'+row.added_byuser.name+'</strong></small></div>'+
+                                '<div title="'+row.support_rep.email+'"><small class="text-muted">Task For: <strong><a target="_blank" href="/support-reps/'+row.support_rep.id+'">'+row.support_rep.name+'</a></strong></small></div>';
+                        }},
+                    { data: 'task_type', name: 'task_type', "sortable": true,"searchable": false, render: function ( data, type, row ){
+                            return '<strong>'+task_type[data]+'</strong>';
+                        }},
+                    { data: 'scheduled_at', name: 'scheduled_at', "sortable": true},
+
+                ]
             });
 
             var pr_salesperson = $('select[name="salespeople_id"]');
@@ -644,8 +708,6 @@
             });
 
             $.datetimepicker.setLocale('en');
-
-
 
 
             function formatNumber(n) {
@@ -919,7 +981,8 @@
                             scheduled_at:scheduled_at
                         },
                         success: function (response) {
-                            location.reload();
+                            table_dt.draw();
+                            $('#createtask').modal('hide');
                         }
                     });
                 }
@@ -943,11 +1006,18 @@
                             todo_id: todo_id
                         },
                         success: function (response) {
-                            location.reload();
+                            table_dt.draw();
                         }
                     });
                 }
             });
+
+            function isSet(variable){
+                if(typeof variable !== "undefined" && variable !== null) {
+                    return true;
+                }
+                return false;
+            }
 
         });
 

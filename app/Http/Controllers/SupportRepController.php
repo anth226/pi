@@ -16,7 +16,7 @@ class SupportRepController extends Controller
 	{
 		$this->middleware(['auth']);
 		$this->middleware('permission:support-user-view-own|support-user-view-all|support-tasks-create', ['only' => ['show']]);
-		$this->middleware('permission:support-user-view-all|support-tasks-create',['only' => ['index']]);
+		$this->middleware('permission:support-user-view-all|support-tasks-create',['only' => ['index','showAllTasks']]);
 	}
 
 	public function show($id){
@@ -33,7 +33,24 @@ class SupportRepController extends Controller
 		$statusSelect =  Elements::supportStatusSelect('select_status');
 
 		if($user && ($current_user->id == $id || Gate::check('support-user-view-all'))) {
-			return view( 'support.show', compact( 'user', 'task_status', 'task_type','full_path', 'invoice_status', 'statusSelect' ) );
+			return view( 'support.show', compact( 'user', 'task_status', 'task_type','full_path', 'invoice_status', 'statusSelect', 'current_user' ) );
+		}
+		return abort(404);
+	}
+	public function showAllTasks(){
+
+		$invoicescontroller = new InvoicesController();
+
+		$task_type = json_encode(SupportTodo::TASK_TYPE);
+		$task_status = json_encode(SupportTodo::TASK_STATUS);
+		$invoice_status = json_encode(Invoices::STATUS);
+
+		$full_path = $invoicescontroller->full_path;
+
+		$statusSelect =  Elements::supportStatusSelect('select_status');
+
+		if(Gate::check('support-user-view-all')) {
+			return view( 'support.showall', compact( 'user', 'task_status', 'task_type','full_path', 'invoice_status', 'statusSelect' ) );
 		}
 		return abort(404);
 	}

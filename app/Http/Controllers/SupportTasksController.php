@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\ActionsLog;
-use App\Customers;
 use App\Errors;
 use App\Http\Controllers\API\BaseController;
 use App\Invoices;
@@ -14,12 +13,14 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Exception;
+use Illuminate\Support\Facades\Gate;
 
 class SupportTasksController extends BaseController
 {
 	function __construct() {
 		$this->middleware( [ 'auth' ] );
 		$this->middleware( 'permission:support-tasks-create', ['only' => ['addSupportRep','addTask','deleteTask']] );
+		$this->middleware( 'permission:support-tasks-create|support-user-view-all', ['only' => ['showInvoicesTasks', 'showAllTasks']] );
 		$this->middleware('permission:support-user-view-own|support-user-view-all|support-tasks-create', ['only' => ['showTasks','completeTask']]);
 
 	}
@@ -224,6 +225,97 @@ class SupportTasksController extends BaseController
 		}
 	}
 
+	function showInvoicesTasks(Request $request, $invoice_id){
+		try {
+			$for_invoice_id = !empty($invoice_id) ? $invoice_id : 0;
+			$status = !empty($request->input( 'task_status' )) ? $request->input( 'task_status' ) : 0;
+			if($for_invoice_id) {
+				$query = SupportTodo::with( 'invoice.customer' )
+				                    ->with( 'addedByuser' )
+				                    ->with( 'doneByuser' )
+				                    ->with( 'supportRep' )
+				                    ->with( 'invoice.salespeople.salespersone' )
+				                    ->with( 'invoice.salespeople.level' )
+				                    ->with( 'invoice.supportReps' )
+				                    ->where( 'invoice_id', $for_invoice_id )
+				;
+				$query->selectRaw('*, case when scheduled_at >= "'.Carbon::now().'" then 1 else 0 end as is_after');
+
+				if($status && empty( $request['search']['value'])){
+					if($status == 1 || $status == 2){
+						$query->where('task_status', $status);
+						if($status == 1){
+							$query->where(function($q) use($status){
+								$q->where('scheduled_at', '<', Carbon::now());
+								$q->orWhereNull('scheduled_at');
+							});
+						}
+					}
+					else{
+						if($status == 3){
+							$query->where('scheduled_at', '>=', Carbon::now());
+							$query->where('task_status', 1);
+						}
+					}
+				}
+
+				return datatables()->eloquent( $query )->toJson();
+			}
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'SupportTasksController',
+				'function' => 'showInvoicesTasks'
+			]);
+			return $this->sendError($ex->getMessage());
+		}
+	}
+	function showAllTasks(Request $request){
+		try {
+			$status = !empty($request->input( 'task_status' )) ? $request->input( 'task_status' ) : 0;
+
+			$query = SupportTodo::with( 'invoice.customer' )
+			                    ->with( 'addedByuser' )
+			                    ->with( 'doneByuser' )
+			                    ->with( 'supportRep' )
+			                    ->with( 'invoice.salespeople.salespersone' )
+			                    ->with( 'invoice.salespeople.level' )
+			                    ->with( 'invoice.supportReps' )
+			;
+			$query->selectRaw('*, case when scheduled_at >= "'.Carbon::now().'" then 1 else 0 end as is_after');
+
+			if($status && empty( $request['search']['value'])){
+				if($status == 1 || $status == 2){
+					$query->where('task_status', $status);
+					if($status == 1){
+						$query->where(function($q) use($status){
+							$q->where('scheduled_at', '<', Carbon::now());
+							$q->orWhereNull('scheduled_at');
+						});
+					}
+				}
+				else{
+					if($status == 3){
+						$query->where('scheduled_at', '>=', Carbon::now());
+						$query->where('task_status', 1);
+					}
+				}
+			}
+
+			return datatables()->eloquent( $query )->toJson();
+
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'SupportTasksController',
+				'function' => 'showAllTasks'
+			]);
+			return $this->sendError($ex->getMessage());
+		}
+	}
+
 	function completeTask(Request $request){
 		try {
 			$this->validate( $request, [
@@ -235,25 +327,29 @@ class SupportTasksController extends BaseController
 			$todo = SupportTodo::find($request->input( 'todo_id' ));
 
 			if($todo && $todo->id) {
+				if(Gate::check('support-tasks-create') || (Gate::check('support-user-view-own') && $todo->support_rep_user_id == $user_logged->id)) {
 
-				$data_to_update = [
-					'done_by_user_id' => $user_logged->id,
-					'task_status' => 2,
-					'done_at' => now()
-				];
+					$data_to_update = [
+						'done_by_user_id' => $user_logged->id,
+						'task_status'     => 2,
+						'done_at'         => now()
+					];
 
-				SupportTodo::where('id', $request->input( 'todo_id' ))->update($data_to_update);
+					SupportTodo::where( 'id', $request->input( 'todo_id' ) )->update( $data_to_update );
 
-				ActionsLog::create( [
-					'user_id'    => $user_logged->id,
-					'model'      => 1,
-					'field_name' => 'Tasks',
-					'action'     => 6,
-					'related_id' => $todo->invoice_id
-				] );
+					ActionsLog::create( [
+						'user_id'    => $user_logged->id,
+						'model'      => 1,
+						'field_name' => 'Tasks',
+						'action'     => 6,
+						'related_id' => $todo->invoice_id
+					] );
+					return $this->sendResponse('done');
+				}
+
 			}
+			return $this->sendError('Error!');
 
-			return $this->sendResponse('done');
 		}
 		catch (Exception $ex){
 			Errors::create([
