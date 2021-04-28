@@ -258,9 +258,9 @@ class InvoicesController extends BaseController
 		                   ->with('salespeople.level')
 		                   ->with('product')
 		                   ->with('supportReps.user')
-		                   ->with('supportTodo.doneByuser')
-		                   ->with('supportTodo.addedByuser')
-		                   ->with('supportTodo.supportRep')
+//		                   ->with('supportTodo.doneByuser')
+//		                   ->with('supportTodo.addedByuser')
+//		                   ->with('supportTodo.supportRep')
 		                   ->find($id);
 		if($invoice) {
 			$formated_price = $this->moneyFormat( $invoice->sales_price );
@@ -283,7 +283,7 @@ class InvoicesController extends BaseController
 			$invoiceArray = $invoice->toArray();
 
 			$supportReps = $invoiceArray['support_reps'];
-			$support_todo = $invoiceArray['support_todo'];
+			//$support_todo = $invoiceArray['support_todo'];
 
 			$supportRepsVals = [];
 			if($supportReps && count($supportReps)){
@@ -334,12 +334,13 @@ class InvoicesController extends BaseController
 			$supportReps_select = Elements::supportRepsSelect('supportRep_id[]', [ 'class' => 'form-control', /*'multiple' => 'multiple'*/ ], $supportRepsVals);
 			$supportTaskRep_select = Elements::supportRepsSelect('supportTaskRep_id[]', [ 'class' => 'form-control', /*'multiple' => 'multiple'*/ ], $supportRepsVals);
 			$tasks_select = Elements::taskSelect('tasks_select', [ 'class' => 'form-control' ], []);
+			$statusSelect =  Elements::supportStatusSelect('select_status', 0);
 
 			$task_type = json_encode(SupportTodo::TASK_TYPE);
 			$task_status = json_encode(SupportTodo::TASK_STATUS);
 			$invoice_status = json_encode(Invoices::STATUS);
 
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'support_todo', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status') );
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect') );
 		}
 		return abort(404);
 	}

@@ -29,6 +29,7 @@ Route::get('/test', 'TestController@index')->name('test');
 
 Route::get('/support-reps', 'SupportRepController@index');
 Route::get('/support-reps/{id}', 'SupportRepController@show');
+Route::get('/support/tasks', 'SupportRepController@showAllTasks');
 
 
 //Ajax
@@ -44,6 +45,8 @@ Route::post('/support/add-task', 'SupportTasksController@addTask' ,  ['middlewar
 Route::post('/support/remove-task', 'SupportTasksController@deleteTask' ,  ['middleware' => 'csrf']);
 Route::post('/support/complete-task', 'SupportTasksController@completeTask' ,  ['middleware' => 'csrf']);
 Route::get('/users/{user_id}/support/show-tasks', 'SupportTasksController@showTasks' ,  ['middleware' => 'csrf']);
+Route::get('/invoices/{invoice_id}/support/show-tasks', 'SupportTasksController@showInvoicesTasks' ,  ['middleware' => 'csrf']);
+Route::get('/support/show-tasks', 'SupportTasksController@showAllTasks' ,  ['middleware' => 'csrf']);
 //
 
 Route::get("/invoices/show-all", 'InvoicesController@showAll');

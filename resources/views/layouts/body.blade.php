@@ -75,6 +75,11 @@
                                         {{ __('Support Representatives') }}
                                     </a>
                                 @endif
+                                @if( Gate::check('support-user-view-all') || Gate::check('support-tasks-create'))
+                                    <a class="dropdown-item" href="/support/tasks" >
+                                        {{ __('Tasks') }}
+                                    </a>
+                                @endif
 
                                 @if( Gate::check('salespeople-create') || Gate::check('salespeople-edit') || Gate::check('salespeople-delete') || Gate::check('salespeople-list'))
                                     <a class="dropdown-item" href="/salespeople" >

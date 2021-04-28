@@ -21,21 +21,10 @@
             <div class="row">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
-                        <h2>{{ $user->name }}</h2>
+                        <h2>Tasks</h2>
                     </div>
                 </div>
             </div>
-
-
-            <div class="row">
-                <div class="col-xs-12 col-sm-12 col-md-12">
-                    <div class="form-group">
-                        <strong>Email:</strong>
-                        {{ $user->email }}
-                    </div>
-                </div>
-            </div>
-
             <div class="row">
                 <div class="col-md-6 col-lg-4">
                     <label class="w-100">
@@ -50,6 +39,7 @@
                         <thead>
                         <tr>
                             <th>Task Status</th>
+                            <th>Task For</th>
                             <th>Created At</th>
                             <th>Task Type</th>
                             <th>Scheduled At</th>
@@ -112,11 +102,11 @@
                 processing: true,
                 serverSide: true,
                 order: [
-                    [ 1, "desc" ],
-                    [ 3, "desc" ]
+                    [ 2, "desc" ],
+                    [ 4, "desc" ]
                 ],
                 ajax: {
-                    url: "/users/{{ $user->id }}/support/show-tasks",
+                    url: "/support/show-tasks",
                     data: function ( d ) {
                         return $.extend( {}, d, {
                             task_status: $('select[name="select_status"]').val()
@@ -131,23 +121,24 @@
                         if(row.is_after){
                             res_html += '<hr class="mt-1 mb-1"><div>Scheduled</div><hr class="mt-1 mb-1">';
                         }
-                        else {
-                            if (data == 1) {
-                                @if( Gate::check('support-tasks-create') || (Gate::check('support-user-view-own') && $user->id == $current_user->id))
-                                res_html += '<div class="col-12"><button data-todo_id="' + row.id + '" class="btn btn-sm btn-info complete_todo">Set As Completed</button></div>';
-                                @endif
-                            }
+                        if (data == 1) {
+                            @if( Gate::check('support-tasks-create'))
+                                res_html += '<div class="col-12"><button data-todo_id="' + row.id + '" class="btn btn-sm btn-info remove_todo">Remove</button></div>';
+                            @endif
                         }
                         if(isSet(row.done_at)){
                             res_html += '<hr class="mt-1 mb-1">' +
                                 '<div>Completed at: '+row.done_at+'</div>' +
-                                '<div>Completed by: <strong>'+row.done_byuser.name+'</strong></div>';
+                                '<div title="'+row.done_byuser.email+'">Completed by: <strong>'+row.done_byuser.name+'</strong></div>';
                         }
                         return res_html;
                     }},
-                    { data: 'created_at', name: 'created_at', "sortable": true,"searchable": false, render: function ( data, type, row ){
-                            return data+'<div><small class="text-muted">Added by: <strong>'+row.added_byuser.name+'</strong></small></div>';
+                    { data: 'support_rep_user_id', name: 'support_rep_user_id', "sortable": true,"searchable": false, render: function ( data, type, row ){
+                            return '<div title="'+row.support_rep.email+'"><small class="text-muted"><strong><a target="_blank" href="/support-reps/'+row.support_rep.id+'">'+row.support_rep.name+'</a></strong></small></div>';
                     }},
+                    { data: 'created_at', name: 'created_at', "sortable": true,"searchable": false, render: function ( data, type, row ){
+                            return data+'<div title="'+row.added_byuser.email+'"><small class="text-muted">Added by: <strong>'+row.added_byuser.name+'</strong></small></div>';
+                        }},
                     { data: 'task_type', name: 'task_type', "sortable": true,"searchable": false, render: function ( data, type, row ){
                             return '<strong>'+task_type[data]+'</strong>';
                         }},
@@ -198,7 +189,7 @@
                 return false;
             }
 
-            $(document).on('click', '.complete_todo', function (event) {
+            $(document).on('click', '.remove_todo', function (event) {
                 var todo_id = $(this).data('todo_id');
                 if(todo_id) {
                     var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
@@ -209,7 +200,7 @@
                         }
                     });
                     $.ajax({
-                        url: '/support/complete-task',
+                        url: '/support/remove-task',
                         type: "POST",
                         dataType: "json",
                         data: {
