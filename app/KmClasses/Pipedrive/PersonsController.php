@@ -283,6 +283,58 @@ class PersonsController extends BaseController
 		return CamelCaseHelper::keysToCamelCase($response->body);
 	}
 
+	public function findPersons(
+		$options
+	) {
+		//check or get oauth token
+		OAuthManager::getInstance()->checkAuthorization();
+
+		//prepare query string for API call
+		$_queryBuilder = '/persons/search';
+
+		//process optional query parameters
+		APIHelper::appendUrlWithQueryParameters($_queryBuilder, array (
+			'term'            => $this->val($options, 'term'),
+			'fields'          => $this->val($options, 'fields'),
+			'organization_id'          => $this->val($options, 'organization_id'),
+			'include_fields'          => $this->val($options, 'include_fields'),
+			'start'           => $this->val($options, 'start', 0),
+			'limit'           => $this->val($options, 'limit'),
+			'exact_match' => $this->val($options, 'exact_match'),
+		));
+
+		//validate and preprocess url
+		$_queryUrl = APIHelper::cleanUrl(Configuration::getBaseUri() . $_queryBuilder);
+
+		//prepare headers
+		$_headers = array (
+			'user-agent'    => BaseController::USER_AGENT,
+			'Authorization' => sprintf('Bearer %1$s', Configuration::$oAuthToken->accessToken)
+		);
+
+		//call on-before Http callback
+		$_httpRequest = new HttpRequest(HttpMethod::GET, $_headers, $_queryUrl);
+		if ($this->getHttpCallBack() != null) {
+			$this->getHttpCallBack()->callOnBeforeRequest($_httpRequest);
+		}
+
+		//and invoke the API call request to fetch the response
+		$response = Request::get($_queryUrl, $_headers);
+
+		$_httpResponse = new HttpResponse($response->code, $response->headers, $response->raw_body);
+		$_httpContext = new HttpContext($_httpRequest, $_httpResponse);
+
+		//call on-after Http callback
+		if ($this->getHttpCallBack() != null) {
+			$this->getHttpCallBack()->callOnAfterRequest($_httpContext);
+		}
+
+		//handle errors defined at the API level
+		$this->validateResponse($_httpResponse, $_httpContext);
+
+		return CamelCaseHelper::keysToCamelCase($response->body);
+	}
+
 	/**
 	 * Marks a person as deleted.
 	 *
