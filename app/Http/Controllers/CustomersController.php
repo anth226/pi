@@ -206,7 +206,7 @@ class CustomersController extends BaseController
 	}
 
 
-	protected function sendDataToSMSSystem($input, $action_path = 'ulpi'){
+	public function sendDataToSMSSystem($input, $action_path = 'ulpi'){
 		try {
 			$this->createSMSsystem();
 			if($this->smssystem) {
@@ -1074,6 +1074,70 @@ class CustomersController extends BaseController
 
 			}
 			return $this->sendResponse([], '', false);
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create( ['error' => 'Pipedrive: '.$error, 'controller' => 'CustomersController', 'function' => 'getPipedriveLeadSources'] );
+			return $this->sendError($error, [], 404, false);
+		}
+
+	}
+
+	public function getPipedriveLeadPhonesEmails(Customers $customers){
+		try {
+			$key = config( 'pipedrive.api_key' );
+			$source_field_name = config( 'pipedrive.source_field_id' );
+			$extra_field_name = config( 'pipedrive.extra_field_id' );
+
+			$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
+			$source_field_name = '0d42d585b2f6407cd384cd02838de179c0a1527d';
+			$extra_field_name = '012fe2582b1a93009814bdd11aa6a630622eb209';
+
+			$email = $customers->email;
+			$phone = $customers->phone_number;
+			$customer_id = $customers->id;
+
+			$phones = [
+				trim( strtolower($phone))
+			];
+			$emails = [
+				trim( strtolower($email))
+			];
+
+
+
+			$searchPerson = Pipedrive::executeCommand( $key, new Pipedrive\Commands\FindPersonNew( $email ) );
+			if (
+				!empty($searchPerson) &&
+				!empty($searchPerson->data) &&
+				!empty($searchPerson->data->items) &&
+				count($searchPerson->data->items)
+			)
+			{
+
+				foreach($searchPerson->data->items as $itm){
+					if(!empty($itm->item)) {
+						if ( ! empty( $itm->item->emails ) && count( $itm->item->emails ) ) {
+							foreach ( $itm->item->emails as $em ) {
+								$emails[] = trim( strtolower( $em ) );
+							}
+						}
+						if ( ! empty( $itm->item->phones ) && count( $itm->item->phones ) ) {
+							foreach ( $itm->item->phones as $ph ) {
+								$phones[] = trim( strtolower( $ph ) );
+							}
+						}
+					}
+				}
+
+			}
+
+			$result = [
+				'phones' => array_unique($phones),
+				'emails' => array_unique($emails),
+			];
+
+			return $this->sendResponse($result, '', false);
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();

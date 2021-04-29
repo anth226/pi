@@ -36,6 +36,27 @@ class TestController extends BaseController
 
 	public function index()
 	{
+
+//		$customer = Customers::find(1575);
+//		$cc = new CustomersController();
+		$phones = [
+			'+14645646465',
+			'465) 456-4565',
+			'465) 456-4555'
+		];
+		$emails = [
+			'fgdfgdf@qwerqw.ll',
+			'WRetwet@wer.ll',
+			'wretwet@werrrrr.ll'
+		];
+		$input = [
+			'phones' => json_encode($phones),
+			'emails' => json_encode($emails),
+			'token'   => 'PortInsQezInch111'
+		];
+		dd($this->sendDataToSMSSystem($input, 'https://test.magicstarsystem.com/api/ungrancellead' ));
+
+//		dd($cc->getPipedriveLeadPhonesEmails($customer));
 //		dd(LevelsSalespeople::getSalespersonInfo(23)->toArray());
 //		dd(phpinfo());
 
