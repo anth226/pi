@@ -6,12 +6,12 @@ use App\Customers;
 use App\Errors;
 use App\Http\Controllers\API\BaseController;
 use App\Invoices;
+use App\InvoicesLog;
 use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\PipedriveData;
 use App\SentData;
-use App\SentDataLog;
 use App\Strings;
 use Illuminate\Http\Request;
 use Stripe\StripeClient;
@@ -20,6 +20,8 @@ use Klaviyo\Klaviyo as Klaviyo;
 use Klaviyo\Model\ProfileModel as KlaviyoProfile;
 use Validator;
 use Exception;
+use Illuminate\Support\Facades\Auth;
+
 
 
 class CustomersController extends BaseController
@@ -551,6 +553,12 @@ class CustomersController extends BaseController
 					$result = $documentReference->delete();
 					return $result;
 				}
+				$error = "Error! Can't delete User Acc.";
+				Errors::create([
+					'error' => $error,
+					'controller' => 'CustomersController',
+					'function' => 'deleteFirebaseUserAndDoc'
+				]);
 				return false;
 			}
 			$error = "Wrong Firebase credentials or connection issue";
@@ -573,138 +581,184 @@ class CustomersController extends BaseController
 
 	public function refundSequence(Invoices $invoice){
 		try {
-			$report = [
-				'success' => true,
-				'errors' => []
-			];
-			$email = $invoice->customer->email;
-			$customer_id = $invoice->customer->id;
-			if($email && $customer_id) {
-				$user_data = $this->getFirebaseUserData( $email );
-				if ( $user_data  && !empty($user_data['uid'])) {
-					if ( $this->deleteFirebaseUserAndDoc( $user_data['uid'] ) ) {
-						//firebase data deleted
-						SentData::create( [
-							'service_type' => 2,
-							'field'        => 'uid',
-							'value'        => $user_data['uid'],
-							'action'       => 1
-						] );
-					}
-					else{
-						$report['success'] = false;
-						$report['errors'][] = 'Can\'t delete firebase user';
-					}
-				}
-				else{
-					$report['success'] = false;
-					$report['errors'][] = 'Can\'t get firebase user';
-				}
 
-				//delete stripe
-				if ( ! empty( $user_data['subscriptionId'] ) ) {
-					$this->createStripe();
-					if($this->stripe) {
-						$subscription = $this->stripe->subscriptions->cancel( $user_data['subscriptionId'], [] );
-						if ( $subscription && ! empty( $subscription->status ) && $subscription->status == 'canceled' ) {
-							SentData::create( [
-								'service_type' => 1,
-								'field'        => 'subscriber_id',
-								'value'        => $user_data['subscriptionId'],
-								'action'       => 1
-							] );
-						} else {
-							$report['success']  = false;
-							$report['errors'][] = 'Can\'t cancel stripe subscription';
+			$user_logged = Auth::user();
+
+			$dataToLog = [
+				'action' => 1,
+				'invoice_id' => $invoice->id,
+				'user_id' => $user_logged->id
+			];
+
+			$pipedrive_message = '';
+			$dataToLogPipedrive = $dataToLog;
+			$dataToLogPipedrive['service_id'] = 0;
+
+
+			$phonesAndEmails = $this->getPipedriveLeadPhonesEmails($invoice->customer);
+			if(!empty($phonesAndEmails) && !empty($phonesAndEmails->data)){
+
+				$dataToLogPipedrive['result'] = json_encode($phonesAndEmails);
+
+				$phones = !empty($phonesAndEmails->data->phones) ? $phonesAndEmails->data->phones : [];
+				$emails = !empty($phonesAndEmails->data->emails) ? $phonesAndEmails->data->emails : [];
+
+				// unsubscribe SMS
+				$smsSystemInput = [
+					'phones' => json_encode($phones),
+					'emails' => json_encode($emails),
+					'token'   => 'PortInsQezInch111'
+				];
+				$smsResp = $this->sendDataToSMSSystem($smsSystemInput, 'ungrancellead');
+				$dataToLogDeleteAcc = $dataToLog;
+				$dataToLogDeleteAcc['service_id'] = 6;
+				if(!empty($smsResp)){
+					$responseText = '';
+					if(!empty($smsResp->success) && !empty($smsResp->data) ){
+						$dataToLogDeleteAcc['result'] = $smsResp->data;
+						if(!empty($smsResp->data->phones)) {
+							$responseText .= '<div><strong>SMS System:</strong> <span>Unsubscribed numbers: ' . implode( ', ', json_decode( $smsResp->data->phones, 1 ) ) . '</span></div>';
+						}
+						if(!empty($smsResp->data->emails)) {
+							$responseText .= '<div><strong>SMS System:</strong> <span>Unsubscribed emails: ' . implode( ', ', json_decode( $smsResp->data->emails, 1 ) ) . '</span></div>';
 						}
 					}
 					else{
-							$report['success'] = false;
-							$report['errors'][] = 'Can\'t connect to Stripe';
+						if(!empty($smsResp->message)) {
+							$dataToLogDeleteAcc['error'] = $smsResp->message;
+							$responseText .= '<div class="text-danger"><strong>SMS System Errors:</strong> <span>'.$smsResp->message.'</span></div>';
+						}
 					}
-				}
-				else{
-					$report['success'] = false;
-					$report['errors'][] = 'Can\'t cancel stripe subscription, no strip subscriptionId found';
+					$dataToLogDeleteAcc['message'] = $responseText;
 				}
 
-				if ( ! empty( $user_data['customerId'] ) ) {
-					$customer = $this->stripe->customers->delete( $user_data['customerId'], [] );
-					if ( $customer && ! empty( $customer->deleted ) ) {
-						SentData::create( [
-							'service_type' => 1,
-							'field'        => 'customer_id',
-							'value'        => $user_data['customerId'],
-							'action'       => 1
-						] );
-					}
-					else{
-						$report['success'] = false;
-						$report['errors'][] = 'Can\'t delete stripe user';
-					}
-				}
-				else{
-					$report['success'] = false;
-					$report['errors'][] = 'Can\'t delete stripe user, no stripe customerId found';
-				}
+				InvoicesLog::create($dataToLogDeleteAcc);
 
-				//delete klavio customer
-				$this->createKlaviyo();
-				if($this->klaviyo) {
-					$list_id = $this->klaviyo_listId;
-					$res = $this->klaviyo->lists->unsubscribeMembersFromList($list_id, $email);
-//					dd($res);
-					SentData::create( [
-						'service_type' => 3,
-						'field'        => 'email',
-						'value'        => $email,
-						'action'       => 1
-					] );
-				}
-				else{
-					$report['success'] = false;
-					$report['errors'][] = 'No Klaviyo API Key found';
-				}
+				if($emails && count($emails)){
+					foreach($emails as $email){
+							$message = '';
+							$messageFBAcc = '';
+							$dataToLogFBAcc = $dataToLog;
+							$dataToLogFBAcc['service_id'] = 1;
+							$user_data = $this->getFirebaseUserData( $email );
+							if ( $user_data  && !empty($user_data['uid'])) {
+								$dataToLogDeleteAcc = $dataToLog;
+								$dataToLogDeleteAcc['service_id'] = 2;
+								$dataToLogFBAcc['result'] = json_encode($user_data);
+								$messageFBAcc .= '<div><strong>FireBase:</strong> <span>Deleted Account: '.$email.'</span></div>';
+								if ( $del_res = $this->deleteFirebaseUserAndDoc( $user_data['uid'] ) ) {
+									//firebase data deleted
+									$dataToLogDeleteAcc['result'] = json_encode($del_res);
+									$message .= '<div><strong>FireBase:</strong> <span>Deleted User: '.$email.'</span></div>';
+								}
+								else{
+									$dataToLogDeleteAcc['error'] = 'Can\'t delete Firebase User: '.$email;
+									$message .= '<div class="text-danger"><strong>FireBase:</strong> <span>'.$dataToLogDeleteAcc['error'].'</span></div>';
+								}
+								$dataToLogDeleteAcc['message'] = $message;
+								InvoicesLog::create($dataToLogDeleteAcc);
+							}
+							else{
+								$dataToLogFBAcc['error'] = 'Can\'t get Firebase User\'s data: '.$email;
+								$messageFBAcc .= '<div class="text-danger"><strong>FireBase:</strong> <span>'.$dataToLogFBAcc['error'].'</span></div>';
+							}
+							$dataToLogFBAcc['message'] = $messageFBAcc;
+							InvoicesLog::create($dataToLogFBAcc);
+
+							//delete stripe
+							$message = '';
+							$dataToLogDeleteAcc = $dataToLog;
+							$dataToLogDeleteAcc['service_id'] = 3;
+
+							if ( ! empty( $user_data['subscriptionId'] ) ) {
+								$this->createStripe();
+								if($this->stripe) {
+									$subscription = $this->stripe->subscriptions->cancel( $user_data['subscriptionId'], [] );
+									if ( $subscription && ! empty( $subscription->status ) && $subscription->status == 'canceled' ) {
+										$dataToLogDeleteAcc['result'] = json_encode($subscription);
+										$message .= '<div><strong>Stripe:</strong> <span>Subscription Canceled For User: '.$email.'</span></div>';
+									} else {
+										$dataToLogDeleteAcc['error'] = 'Can\'t cancel stripe subscription for user '.$email;
+										$message .= '<div class="text-danger"><strong>Stripe:</strong> <span>'.$dataToLogDeleteAcc['error'].'</span></div>';
+									}
+
+								}
+								else{
+									$dataToLogDeleteAcc['error'] = 'Can\'t connect to Stripe';
+									$message .= '<div class="text-danger"><strong>Stripe:</strong> <span>'.$dataToLogDeleteAcc['error'].'</span></div>';
+								}
 
 
-				// unsubscribe sms
-				$sms_lead_id = SentData::where( 'customer_id', $customer_id )
-				                       ->where( 'service_type', 4 )
-				                       ->where( 'field', 'lead_id' )
-				                       ->where( 'action', 0 )
-				                       ->orderBy( 'id', 'desc' )
-				                       ->value( 'value' );
-				if ( $sms_lead_id ) {
-					$input = [
-						'lead_id' => $sms_lead_id,
-						'token'   => 'PortInsQezInch111'
-					];
-					$res   = $this->sendDataToSMSSystem( $input, 'ungrancellead' );
-					if ( $res && ! empty( $res['success'] ) ) {
-						SentData::create( [
-							'service_type' => 4,
-							'field'        => 'lead_id',
-							'value'        => $sms_lead_id,
-							'action'       => 1
-						] );
+							}
+							else{
+								$dataToLogDeleteAcc['error'] = 'Can\'t cancel stripe subscription, no strip subscriptionId found';
+								$message .= '<div class="text-danger"><strong>Stripe:</strong> <span>'.$dataToLogDeleteAcc['error'].'</span></div>';
+							}
+
+							$dataToLogDeleteAcc['message'] = $message;
+							InvoicesLog::create($dataToLogDeleteAcc);
+
+							$message = '';
+							$dataToLogDeleteAcc = $dataToLog;
+							$dataToLogDeleteAcc['service_id'] = 4;
+
+							if ( ! empty( $user_data['customerId'] ) ) {
+								$customer = $this->stripe->customers->delete( $user_data['customerId'], [] );
+								if ( $customer && ! empty( $customer->deleted ) ) {
+									$dataToLogDeleteAcc['result'] = json_encode($customer);
+									$message .= '<div><strong>Stripe:</strong> <span>User '.$email.' has been deleted.</span></div>';
+								}
+								else{
+									$dataToLogDeleteAcc['error'] = 'Can\'t delete stripe user '.$email;
+									$message .= '<div class="text-danger"><strong>Stripe:</strong> <span>'.$dataToLogDeleteAcc['error'].'</span></div>';
+								}
+							}
+							else{
+								$dataToLogDeleteAcc['error'] = 'Can\'t delete stripe user '.$email.', no stripe customerId found';
+								$message .= '<div class="text-danger"><strong>Stripe:</strong> <span>'.$dataToLogDeleteAcc['error'].'</span></div>';
+							}
+
+							$dataToLogDeleteAcc['message'] = $message;
+							InvoicesLog::create($dataToLogDeleteAcc);
+
+							//delete klavio customer
+							$message = '';
+							$dataToLogDeleteAcc = $dataToLog;
+							$dataToLogDeleteAcc['service_id'] = 4;
+
+							$this->createKlaviyo();
+							if($this->klaviyo) {
+								$list_id = $this->klaviyo_listId;
+								$res = $this->klaviyo->lists->unsubscribeMembersFromList($list_id, $email);
+								if ( $res ) {
+									$dataToLogDeleteAcc['result'] = json_encode($res);
+									$message .= '<div><strong>Klaviyo:</strong> <span>User '.$email.' has been deleted.</span></div>';
+								}
+								else{
+									$dataToLogDeleteAcc['error'] = 'Can\'t delete Klaviyo user '.$email;
+									$message .= '<div class="text-danger"><strong>Klaviyo:</strong> <span>'.$dataToLogDeleteAcc['error'].'</span></div>';
+								}
+							}
+							else{
+								$dataToLogDeleteAcc['error'] = 'No Klaviyo API Key found';
+								$message .= '<div class="text-danger"><strong>Klaviyo:</strong> <span>'.$dataToLogDeleteAcc['error'].'</span></div>';
+							}
+							$dataToLogDeleteAcc['message'] = $message;
+							InvoicesLog::create($dataToLogDeleteAcc);
+
 					}
-					else{
-						$report['success'] = false;
-						$report['errors'][] = 'Can\'t unsubscribe SMS';
-					}
-				}
-				else{
-					$report['success'] = false;
-					$report['errors'][] = 'Can\'t find lead_id from logs';
 				}
 
 
 			}
 			else{
-				$report['success'] = false;
-				$report['errors'][] = 'Can\'t get customer or email';
+				$dataToLogPipedrive['error'] = 'Unknown Error.';
+				$pipedrive_message .= '<div class="text-danger"><strong>Pipedrive:</strong> <span>'.$dataToLogPipedrive['error'].'</span></div>';
 			}
-			return $report;
+
+			$dataToLogPipedrive['message'] = $pipedrive_message;
+			InvoicesLog::create($dataToLogPipedrive);
+			return true;
 		}
 		catch (Exception $ex){
 			$error = $ex->getMessage();
@@ -1089,9 +1143,9 @@ class CustomersController extends BaseController
 			$source_field_name = config( 'pipedrive.source_field_id' );
 			$extra_field_name = config( 'pipedrive.extra_field_id' );
 
-			$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
-			$source_field_name = '0d42d585b2f6407cd384cd02838de179c0a1527d';
-			$extra_field_name = '012fe2582b1a93009814bdd11aa6a630622eb209';
+//			$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
+//			$source_field_name = '0d42d585b2f6407cd384cd02838de179c0a1527d';
+//			$extra_field_name = '012fe2582b1a93009814bdd11aa6a630622eb209';
 
 			$email = $customers->email;
 			$phone = $customers->phone_number;
