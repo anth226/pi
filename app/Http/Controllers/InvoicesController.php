@@ -21,7 +21,6 @@ use App\SalespeoplePecentageLog;
 use App\SecondarySalesPeople;
 use App\SentData;
 use App\SupportTodo;
-use Aws\imagebuilder\imagebuilderClient;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -909,6 +908,8 @@ class InvoicesController extends BaseController
 				$dataToUpdate['paid'] = 0;
 				$dataToUpdate['own'] = 0;
 				$dataToUpdate['sales_price'] = 0;
+				$cc = new CustomersController();
+				$cc->refundSequence($status_before);
 			}
 
 			Invoices::where('id', $request->input( 'invoice_id' ))->update($dataToUpdate);
@@ -993,6 +994,7 @@ class InvoicesController extends BaseController
 					}
 				}
 			}
+
 
 			return $this->sendResponse('done');
 		}
