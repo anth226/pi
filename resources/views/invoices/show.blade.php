@@ -74,61 +74,58 @@
 
                         @if( Gate::check('invoice-create') || Gate::check('invoice-edit'))
                         <div class="text-muted mb-4">
-                            <div  class="details_bgcolor p-2">
-                                <div>
-                                    <small>
-                                        <strong>Created at:</strong>
-                                        {{ $invoice->created_at }}
-                                    </small>
-                                </div>
-                                @if($sentLog && count($sentLog))
-                                    @foreach($sentLog as $d)
-                                            @php
-                                                $service_name = '';
-                                                switch ($d->service_type){
-                                                    case 1:
-                                                        if($d->field == "subscriber_id"){
-                                                            $service_name = 'Stripe';
-                                                        }
-                                                        break;
-                                                    case 2:
-                                                        $service_name = 'Firebase';
-                                                        break;
-                                                    case 3:
-                                                        $service_name = 'Klaviyo';
-                                                        break;
-                                                    case 4:
-                                                        $service_name = 'SMS System';
-                                                        break;
-                                                    case 5:
-                                                        if($d->field == "deal_id"){
-                                                            $service_name = 'Pipedrive';
-                                                        }
-                                                        break;
-                                                    default:
-                                                        $service_name = '';
-                                                }
-                                            @endphp
-                                            @if($service_name)
-                                            <div>
-                                                <small>
-                                                <strong>Sent to {{$service_name}} at: </strong>
-                                                {{ $d->created_at}}
-                                                </small>
-                                            </div>
-                                            @endif
-                                    @endforeach
-                                @endif
-                                @if (count($errors) > 0)
-                                    <div class="alert alert-danger">
-                                        <strong>Whoops!</strong> There were some problems.<br><br>
-                                        <ul>
-                                            @foreach ($errors->all() as $error)
-                                                <li>{{ $error }}</li>
-                                            @endforeach
-                                        </ul>
+                            <div  class="details_bgcolor p-2 row">
+                                <div class="col-md-6">
+                                    <div>
+                                        <small>
+                                            <strong>Created at:</strong>
+                                            {{ $invoice->created_at }}
+                                        </small>
                                     </div>
-                                @endif
+                                    @if($sentLog && count($sentLog))
+                                        @foreach($sentLog as $d)
+                                                <div>
+                                                    <small>
+                                                    @if($d->action)
+                                                            <strong>{{ \App\SentData::SERVICES[$d->service_type] }}: </strong>
+                                                            Deleted/Unsubscribed {{ $d->value}} {{ $d->field}} at {{ $d->created_at}}
+                                                    </small>
+                                                    @else
+                                                        <strong>Sent to {{ \App\SentData::SERVICES[$d->service_type] }} at: </strong>
+                                                        {{ $d->created_at}}
+                                                        </small>
+                                                    @endif
+                                                </div>
+                                        @endforeach
+                                    @endif
+                                    @if (count($errors) > 0)
+                                        <div class="alert alert-danger">
+                                            <strong>Whoops!</strong> There were some problems.<br><br>
+                                            <ul>
+                                                @foreach ($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="col-md-6">
+                                    @if(!empty($refundData) && $refundData->count())
+                                        <div  class="details_bgcolor p-2">
+                                            @foreach($refundData as $rf)
+                                                @if($rf)
+                                                <div class="text-danger">
+                                                    <small>
+                                                        <strong>{{ \App\SentData::SERVICES[$d->service_type] }} error: </strong>
+                                                        {{ $rf }}
+                                                    </small>
+                                                </div>
+                                               @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+
                             </div>
                         </div>
                         @endif
@@ -151,6 +148,7 @@
                             {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}--}}
                             {{--{!! Form::close() !!}--}}
                         {{--@endcan--}}
+
                     </div>
                 </div>
             </div>

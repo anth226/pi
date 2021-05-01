@@ -13,4 +13,12 @@ class SentData extends Model
 		'value',
 		'action' //0 - create, 1-delete/unsubscribe/cancel
 	];
+
+	public const SERVICES = [
+		1 => 'Stripe',
+		2 => 'Firebase',
+		3 => 'Klaviyo',
+		4 => 'SMS System',
+		5 => 'Pipedrive',
+	];
 }

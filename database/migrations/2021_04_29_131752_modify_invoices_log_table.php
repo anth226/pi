@@ -16,6 +16,8 @@ class ModifyInvoicesLogTable extends Migration
 		Schema::table('invoices_logs', function (Blueprint $table) {
 			$table->dropColumn('user_id');
 			$table->dropColumn('invoice_id');
+		});
+		Schema::table('invoices_logs', function (Blueprint $table) {
 			$table->unsignedBigInteger('invoice_id')->nullable();
 			$table->unsignedBigInteger('user_id')->nullable();
 			$table->unsignedInteger('service_id')->default(0)->index();
