@@ -39,22 +39,22 @@ class TestController extends BaseController
 
 //		$customer = Customers::find(1575);
 //		$cc = new CustomersController();
-		$phones = [
-			'+14645646465',
-			'465) 456-4565',
-			'465) 456-4555'
-		];
-		$emails = [
-			'fgdfgdf@qwerqw.ll',
-			'WRetwet@wer.ll',
-			'wretwet@werrrrr.ll'
-		];
-		$input = [
-			'phones' => json_encode($phones),
-			'emails' => json_encode($emails),
-			'token'   => 'PortInsQezInch111'
-		];
-		dd($this->sendDataToSMSSystem($input, 'https://test.magicstarsystem.com/api/ungrancellead' ));
+//		$phones = [
+//			'+14645646465',
+//			'465) 456-4565',
+//			'465) 456-4555'
+//		];
+//		$emails = [
+//			'fgdfgdf@qwerqw.ll',
+//			'WRetwet@wer.ll',
+//			'wretwet@werrrrr.ll'
+//		];
+//		$input = [
+//			'phones' => json_encode($phones),
+//			'emails' => json_encode($emails),
+//			'token'   => 'PortInsQezInch111'
+//		];
+//		dd($this->sendDataToSMSSystem($input, 'https://test.magicstarsystem.com/api/ungrancellead' ));
 
 //		dd($cc->getPipedriveLeadPhonesEmails($customer));
 //		dd(LevelsSalespeople::getSalespersonInfo(23)->toArray());
@@ -67,11 +67,11 @@ class TestController extends BaseController
 //		$res = $c->refundSequence($invoice);
 //		dd($res);
 //		$userProperties = [
-//			'email'         => 'jaigaur@optionline.net',
-//			'phone'         => '203-762-2662',
-//			'first_name' => 'Gaur',
-//			'last_name' => 'Gaur',
-//			'full_name' => 'Jai Gaur',
+//			'email'         => 'ahillfinancial@gmail.com',
+//			'phone'         => '8479623361',
+//			'first_name' => 'Fred',
+//			'last_name' => 'Hill',
+//			'full_name' => 'Fred Hill',
 //			'source' => 'portfolio-insider-prime',
 //			'tags' => 'portfolio-insider-prime',
 //		];

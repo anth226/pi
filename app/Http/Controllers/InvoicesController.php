@@ -9,6 +9,7 @@ use App\EmailTemplates;
 use App\Errors;
 use App\Http\Controllers\API\BaseController;
 use App\Invoices;
+use App\InvoicesLog;
 use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
@@ -339,7 +340,9 @@ class InvoicesController extends BaseController
 			$task_status = json_encode(SupportTodo::TASK_STATUS);
 			$invoice_status = json_encode(Invoices::STATUS);
 
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect') );
+			$refundData = InvoicesLog::where('invoice_id', $id)->pluck('error');
+
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect', 'refundData') );
 		}
 		return abort(404);
 	}
