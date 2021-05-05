@@ -50,7 +50,7 @@
                         <th>Salesperson</th>
                         <th>Total Sales</th>
                         <th>Revenue</th>
-                        <th>Commission</th>
+                        {{--<th>Commission</th>--}}
                     </tr>
                     </thead>
                     <tbody>
@@ -113,11 +113,11 @@
                 ]
             });
 
-            getSummaryData();
+            // getSummaryData();
 
             function getReportData()
             {
-                getSummaryData();
+                // getSummaryData();
                 table_dt.draw();
             }
 
@@ -161,7 +161,7 @@
                 processing: true,
                 serverSide: true,
                 order: [
-                    [ 3, "desc" ]
+                    [ 2, "desc" ]
                 ],
                 ajax: {
                     url: "/spreportsdatatables.data",
@@ -186,9 +186,9 @@
                     { data: 'revenue', name: 'revenue', "searchable": false, "sortable": true,  render: function ( data, type, row ){
                             return moneyFormat(data);
                         }  },
-                    { data: 'sum', name: 'sum', "searchable": false, "sortable": true,  render: function ( data, type, row ){
-                            return moneyFormat(data);
-                        }  }
+                    // { data: 'sum', name: 'sum', "searchable": false, "sortable": true,  render: function ( data, type, row ){
+                    //         return moneyFormat(data);
+                    //     }  }
                 ]
             });
 
