@@ -48,4 +48,8 @@ class Customers extends Model
 	public function pipedriveExtra()	{
 		return $this->hasMany('App\PipedriveData', 'customer_id','id')->where('field_name',1);
 	}
+	public function contacts()
+	{
+		return $this->hasMany('App\CustomersContacts', 'customer_id', 'id');
+	}
 }

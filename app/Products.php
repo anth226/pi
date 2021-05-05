@@ -15,7 +15,11 @@ class Products extends Model
 		'title',
 		'description',
 		'sku',
-		'price'
+		'price',
+		'stripe_coupon_id',
+		'stripe_price_id',
+		'dev_stripe_coupon_id',
+		'dev_stripe_price_id'
 	];
 
 	public static function getIdsAndFullNames(){

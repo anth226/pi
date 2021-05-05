@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Customers;
+use App\CustomersContacts;
+use App\CustomersContactSubscriptions;
 use App\Errors;
 use App\Http\Controllers\API\BaseController;
 use App\Invoices;
@@ -134,8 +136,13 @@ class CustomersController extends BaseController
 		$customer = Customers::with('invoices')->find($id);
 		$sentLog = SentData::where('customer_id', $id)->orderBy('id', 'asc')->get();
 
+		$contact_type = json_encode(CustomersContacts::CONTACT_TYPES);
+		$contact_subtype = json_encode(CustomersContacts::CONTACT_SUBTYPES);
+		$subscription_type = json_encode(CustomersContactSubscriptions::SUBSCRIPTION_TYPES);
+		$subscription_status = json_encode(CustomersContactSubscriptions::SUBSCRIPTION_STATUS);
+
 		if($customer) {
-			return view( 'customers.show', compact( 'customer', 'sentLog' ) );
+			return view( 'customers.show', compact( 'customer', 'sentLog', 'contact_subtype', 'contact_type', 'subscription_status', 'subscription_type' ) );
 		}
 		return abort(404);
 	}
@@ -223,7 +230,7 @@ class CustomersController extends BaseController
 				curl_close( $ch );
 				if ( $res ) {
 					$result = json_decode( $res );
-					if ( $result && ! empty( $result->success ) && $result->success && ! empty( $result->data ) ) {
+					if ( $result && ! empty( $result->success ) && $result->success && isset( $result->data ) ) {
 						return $this->sendResponse( $result->data, '', false );
 					} else {
 						$error = "Wrong response from " . $url;
@@ -1155,9 +1162,9 @@ class CustomersController extends BaseController
 			$source_field_name = config( 'pipedrive.source_field_id' );
 			$extra_field_name = config( 'pipedrive.extra_field_id' );
 
-//			$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
-//			$source_field_name = '0d42d585b2f6407cd384cd02838de179c0a1527d';
-//			$extra_field_name = '012fe2582b1a93009814bdd11aa6a630622eb209';
+			$key = 'fbdff7e0ac6e80b3b3c6e4fbce04e00f10b37864';
+			$source_field_name = '0d42d585b2f6407cd384cd02838de179c0a1527d';
+			$extra_field_name = '012fe2582b1a93009814bdd11aa6a630622eb209';
 
 			$email = $customers->email;
 			$phone = $customers->phone_number;
@@ -1212,4 +1219,5 @@ class CustomersController extends BaseController
 		}
 
 	}
+
 }

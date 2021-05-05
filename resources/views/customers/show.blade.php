@@ -106,9 +106,200 @@
                         @endif
                     </div>
                 </div>
+
+                <div class="col-md-12 mt-2">
+                    <form id="add_phone" class="mb-2">
+                        <div class="form-row align-items-center">
+                            <div class="col-auto">
+                                <label class="sr-only" for="phone_number">Phone Number</label>
+                                <input type="tel" class="form-control mb-2" name="phone_number" placeholder="Phone Number">
+                            </div>
+                            <div class="col-auto">
+                                <input type="hidden" name="customer_id" value="{{$customer->id}}">
+                                <button type="submit" class="btn btn-primary mb-2 submit" >Add Phone Number</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <form id="add_email">
+                        <div class="form-row align-items-center">
+                            <div class="col-auto">
+                                <label class="sr-only" for="email_address">Email Address</label>
+                                <input type="email" class="form-control mb-2" name="email_address" placeholder="Email Address">
+                            </div>
+                            <div class="col-auto">
+                                <input type="hidden" name="customer_id" value="{{$customer->id}}">
+                                <button type="submit" class="btn btn-primary mb-2 submit" >Add Email Address</button>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+
+                <div class="col-md-12 mt-2">
+
+                    <table class="table table-bordered table-responsive-sm w-100" id="contacts_table">
+                        <thead>
+                        <tr>
+                            <th>Created At</th>
+                            <th>Contact</th>
+                            <th>Subscriptions</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
 
         </div>
     </div>
+@endsection
+@section('script')
+    <script>
+        $(document).ready(function() {
+
+            var contact_type = jQuery.parseJSON('{!! $contact_type !!}');
+            var contact_subtype = jQuery.parseJSON('{!! $contact_subtype !!}');
+            var subscription_type = jQuery.parseJSON('{!! $subscription_type !!}');
+            var subscription_status = jQuery.parseJSON('{!! $subscription_status !!}');
+
+
+            $(document).on('submit', '#add_phone', function (event) {
+                makeAjaxCall($(this));
+            });
+
+            $(document).on('submit', '#add_email', function (event) {
+                makeAjaxCall($(this));
+            });
+
+            function makeAjaxCall(current_form){
+                event.preventDefault();
+                const current_button = current_form.find('.submit');
+                const $form = current_form;
+                const submitData = $form.serialize();
+
+                current_form.prev('.error').remove();
+                const button_content = current_button.html();
+                console.log(button_content);
+                const ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                current_button.prop('disabled', 'disabled').append(ajax_img);
+
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/customers-contacts/add-contact',
+                    type: "POST",
+                    dataType: "json",
+                    data: submitData,
+                    success: function (response) {
+                        cont_table_dt.draw();
+                    },
+                    error: function (response) {
+                        current_button.prop('disabled', '');
+                        current_button.html(button_content);
+                        current_form.before('<div class="error">'+response.responseJSON.message+'</div>');
+                    }
+                });
+            }
+
+            $(document).on('click', '.unsubscribe_subs', function (event) {
+                let subs_id = $(this).data('subsid');
+                const current_button = $(this);
+                current_button.next('.error').remove();
+                const button_content = current_button.html();
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                $('.unsubscribe_subs').prop('disabled', 'disabled');
+                current_button.prop('disabled', 'disabled').append(ajax_img);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/customers-contacts/unsubscribe/'+subs_id,
+                    type: "POST",
+                    dataType: "json",
+                    success: function (response) {
+                        cont_table_dt.draw();
+                    },
+                    error: function (response) {
+                        $('.unsubscribe_subs').prop('disabled', '');
+                        current_button.html(button_content);
+                        current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
+                    }
+                });
+            });
+
+            var cont_table = $('table#contacts_table');
+            var cont_table_dt = cont_table.DataTable({
+
+                processing: true,
+                serverSide: true,
+                // searching: false,
+                order: [
+                    [ 1, "asc" ]
+                ],
+                ajax: {
+                    url: "/customers-contacts",
+                    data: function ( d ) {
+                        return $.extend( {}, d, {
+                            customer_id: {{$customer->id}}
+                        } );
+                    }
+                },
+                pageLength: 100,
+
+                columns: [
+                    { data: 'created_at', name: 'created_at', "sortable": true,"searchable": false, render: function ( data, type, row ){
+                            return data+'<div title="'+data+'"><small class="text-muted">Added by: <strong>'+row.user.name+'</strong></small></div>';
+                        }},
+                    { data: 'contact_term', name: 'contact_term', "sortable": false,"searchable": true, render: function ( data, type, row ){
+                            let res_html = data;
+                            if(!row.subscriptions.length && !row.is_main_for_invoice_id){
+                                res_html += '<div><button data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-danger" >Delete Contact</button></div>';
+                            }
+                            return res_html;
+                        }},
+
+                    { data: 'subscriptions', name: 'subscriptions', "sortable": false,"searchable": false, render: function ( data, type, row ){
+                            return generateSubs(data);
+                        }},
+                    { data: 'formated_contact_term', name: 'formated_contact_term', "sortable": false,"searchable": true, "visible":false},
+
+
+                ]
+            });
+
+            function generateSubs(subscriptions){
+                let ret_html = '';
+                if(isSet(subscriptions)){
+                    $.each(subscriptions, function( index, value ) {
+                        ret_html += '<div class=card><div class="card-body">';
+                        ret_html += '<div>'+subscription_type[value.subscription_type]+'</div>';
+                        ret_html += '<div>Status: '+subscription_status[value.subscription_status]+'</div>';
+                        ret_html += '<div><small>Created At: '+value.created_at+'</small></div>';
+                        ret_html += '<div><small>Created By:'+value.user.name+'</small></div>';
+                        ret_html += '<div><button data-subsid="'+value.id+'" class="btn btn-sm btn-danger mt-2 unsubscribe_subs" >Unsubscribe</button></div>';
+                        ret_html += '</div></div>';
+                    });
+                }
+                return ret_html;
+            }
+
+            function isSet(variable){
+                if(typeof variable !== "undefined" && variable !== null) {
+                    return true;
+                }
+                return false;
+            }
+
+        })
+    </script>
 @endsection
