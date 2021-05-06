@@ -176,6 +176,36 @@
                 makeAjaxCall($(this));
             });
 
+            $(document).on('click', '.del-contact', function (event) {
+                let contact_id = $(this).data('contact_id');
+                const current_button = $(this);
+                current_button.next('.error').remove();
+                const button_content = current_button.html();
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                current_button.prop('disabled', 'disabled').append(ajax_img);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/customers-contacts/delete-contact',
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        contact_id: contact_id
+                    },
+                    success: function (response) {
+                        cont_table_dt.draw();
+                    },
+                    error: function (response) {
+                        current_button.prop('disabled', '');
+                        current_button.html(button_content);
+                        current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
+                    }
+                });
+            });
+
             function makeAjaxCall(current_form){
                 event.preventDefault();
                 const current_button = current_form.find('.submit');
@@ -200,6 +230,8 @@
                     data: submitData,
                     success: function (response) {
                         cont_table_dt.draw();
+                        current_button.prop('disabled', '');
+                        current_button.html(button_content);
                     },
                     error: function (response) {
                         current_button.prop('disabled', '');
@@ -244,7 +276,7 @@
                 serverSide: true,
                 // searching: false,
                 order: [
-                    [ 1, "asc" ]
+                    [ 0, "desc" ]
                 ],
                 ajax: {
                     url: "/customers-contacts",
@@ -263,13 +295,13 @@
                     { data: 'contact_term', name: 'contact_term', "sortable": false,"searchable": true, render: function ( data, type, row ){
                             let res_html = data;
                             if(!row.subscriptions.length && !row.is_main_for_invoice_id){
-                                res_html += '<div><button data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-danger" >Delete Contact</button></div>';
+                                res_html += '<div><button data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-danger del-contact" >Delete Contact</button></div>';
                             }
                             return res_html;
                         }},
 
                     { data: 'subscriptions', name: 'subscriptions', "sortable": false,"searchable": false, render: function ( data, type, row ){
-                            return generateSubs(data);
+                            return generateSubs(data) + '<div class="mt-2"><button data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-primary add_subscription" >Subscribe</button></div>';
                         }},
                     { data: 'formated_contact_term', name: 'formated_contact_term', "sortable": false,"searchable": true, "visible":false},
 
@@ -279,7 +311,7 @@
 
             function generateSubs(subscriptions){
                 let ret_html = '';
-                if(isSet(subscriptions)){
+                if(isSet(subscriptions) && subscriptions.length){
                     $.each(subscriptions, function( index, value ) {
                         ret_html += '<div class=card><div class="card-body">';
                         ret_html += '<div>'+subscription_type[value.subscription_type]+'</div>';

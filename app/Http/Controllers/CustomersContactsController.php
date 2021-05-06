@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\ActionsLog;
 use Illuminate\Support\Facades\Auth;
 use App\CustomersContacts;
 use App\CustomersContactSubscriptions;
@@ -66,6 +67,15 @@ class CustomersContactsController extends CustomersController
 						$contactData['contact_term']          = $phone_number;
 						$contactData['formated_contact_term'] = $formated_phone_number;
 						$res = CustomersContacts::create( $contactData );
+						if($res){
+							$user = Auth::user();
+							ActionsLog::create([
+								'user_id' => $user->id,
+								'model' => 8,
+								'action' => 0,
+								'related_id' => $res->id
+							]);
+						}
 						return $this->sendResponse($res);
 					}
 					else{
@@ -130,61 +140,72 @@ class CustomersContactsController extends CustomersController
 	}
 
 	public function ifHaveSubscriptions(CustomersContacts $contact){
-		if($contact->contact_type == 1){ // phone
-			$sms = $this->checkSmsSubsPhone( $contact->contact_term );
-			if ( $sms && $sms['success'] && isset( $sms['data'] ) ) {
-				$dataToSave = [
-					'customers_contact_id' => $contact->id,
-					'user_id'              => 1,
-					'subscription_type'    => 3,
-					'subscription_status'  => $sms['data']
-				];
-				$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $contact->id )->where( 'subscription_type', 3)->get();
-				if($if_record_exist && $if_record_exist->count()){
-					foreach($if_record_exist as $r) {
-						$dataToSave = [
-							'user_id'              => 1,
-							'subscription_status'  => $sms['data']
-						];
-						CustomersContactSubscriptions::where('id', $r->id)->update($dataToSave);
-					}
-				}
-				else {
-					CustomersContactSubscriptions::create( $dataToSave );
-				}
-				return $sms['data'];
-			}
-			return true;
-		}
-		else{
-			if(!$contact->contact_type){ //email
-				$sms = $this->checkSmsSubsEmail( $contact->contact_term );
-				if ( $sms && $sms['success'] && isset( $sms['data'] )) {
-					$dataToSave = [
+		try {
+			if ( $contact->contact_type == 1 ) { // phone
+				$sms = $this->checkSmsSubsPhone( $contact->contact_term );
+				if ( $sms && $sms['success'] && isset( $sms['data'] ) ) {
+					$dataToSave      = [
 						'customers_contact_id' => $contact->id,
 						'user_id'              => 1,
-						'subscription_type'    => 4,
+						'subscription_type'    => 3,
 						'subscription_status'  => $sms['data']
 					];
-					$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $contact->id )->where( 'subscription_type', 4)->get();
-					if($if_record_exist && $if_record_exist->count()) {
+					$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $contact->id )->where( 'subscription_type', 3 )->get();
+					if ( $if_record_exist && $if_record_exist->count() ) {
 						foreach ( $if_record_exist as $r ) {
 							$dataToSave = [
-								'user_id'              => 1,
-								'subscription_status'  => $sms['data']
+								'user_id'             => 1,
+								'subscription_status' => $sms['data']
 							];
-							CustomersContactSubscriptions::where('id', $r->id)->update($dataToSave);
+							CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSave );
 						}
-					}
-					else {
+					} else {
 						CustomersContactSubscriptions::create( $dataToSave );
 					}
+
 					return $sms['data'];
 				}
+
 				return true;
+			} else {
+				if ( ! $contact->contact_type ) { //email
+					$sms = $this->checkSmsSubsEmail( $contact->contact_term );
+					if ( $sms && $sms['success'] && isset( $sms['data'] ) ) {
+						$dataToSave      = [
+							'customers_contact_id' => $contact->id,
+							'user_id'              => 1,
+							'subscription_type'    => 4,
+							'subscription_status'  => $sms['data']
+						];
+						$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $contact->id )->where( 'subscription_type', 4 )->get();
+						if ( $if_record_exist && $if_record_exist->count() ) {
+							foreach ( $if_record_exist as $r ) {
+								$dataToSave = [
+									'user_id'             => 1,
+									'subscription_status' => $sms['data']
+								];
+								CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSave );
+							}
+						} else {
+							CustomersContactSubscriptions::create( $dataToSave );
+						}
+
+						return $sms['data'];
+					}
+
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersContactsController',
+				'function' => 'ifHaveSubscriptions'
+			]);
+			return $this->sendError($ex->getMessage());
+		}
 	}
 
 	public function checkSmsSubsPhone($phone){
@@ -192,7 +213,7 @@ class CustomersContactsController extends CustomersController
 			'phone' => $phone,
 			'token'   => 'PortInsQezInch111'
 		];
-		return $this->sendDataToSMSSystem($data);
+		return $this->sendDataToSMSSystem($data, 'stugelvichak');
 
 	}
 	public function checkSmsSubsEmail($email){
@@ -200,16 +221,37 @@ class CustomersContactsController extends CustomersController
 			'email' => $email,
 			'token'   => 'PortInsQezInch111'
 		];
-		return $this->sendDataToSMSSystem($data);
+		return $this->sendDataToSMSSystem($data, 'stugelvichak');
 	}
 
-	public function deleteContact($contact_id){
-		$contact = CustomersContacts::find($contact_id);
-		if(!$contact->is_main_for_invoice_id && !$this->ifHaveSubscriptions($contact)){
+	public function deleteContact(Request $request){
+		try {
+			$this->validate($request, [
+				'contact_id' => 'required'
 
+			]);
+			$contact = CustomersContacts::find( $request->input('contact_id' ));
+			if ( ! $contact->is_main_for_invoice_id && ! $this->ifHaveSubscriptions( $contact ) ) {
+				CustomersContacts::where( 'id', $contact->id )->delete();
+				$user = Auth::user();
+				ActionsLog::create([
+					'user_id' => $user->id,
+					'model' => 8,
+					'action' => 2,
+					'related_id' => $contact->id
+				]);
+				return $this->sendResponse('done');
+			} else {
+				return $this->sendError( 'Sorry you can not delete this contact' );
+			}
 		}
-		else{
-			return $this->sendError('Sorry you can not delete this contact');
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersContactsController',
+				'function' => 'deleteContact'
+			]);
+			return $this->sendError($ex->getMessage());
 		}
 	}
 }
