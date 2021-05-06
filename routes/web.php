@@ -37,6 +37,7 @@ Route::get('/support/tasks', 'SupportRepController@showAllTasks');
 Route::get('/customers-contacts', 'CustomersContactsController@showContacts', ['middleware' => 'csrf']);
 Route::post('/customers-contacts/unsubscribe/{subs_id}', 'CustomersContactsController@unsubscribeFromSmsSystem', ['middleware' => 'csrf']);
 Route::post('/customers-contacts/add-contact', 'CustomersContactsController@addContact', ['middleware' => 'csrf']);
+Route::post('/customers-contacts/delete-contact', 'CustomersContactsController@deleteContact', ['middleware' => 'csrf']);
 
 Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail', ['middleware' => 'csrf']);
 Route::post('/send-generatedinvoice-email', 'SendEmailController@sendGeneratedInvoiceEmail', ['middleware' => 'csrf']);
