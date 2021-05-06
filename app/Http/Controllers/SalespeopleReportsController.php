@@ -12,7 +12,7 @@ class SalespeopleReportsController extends InvoicesController
 	function __construct()
 	{
 		$this->middleware(['auth']);
-		$this->middleware('permission:salespeople-reports-view-all');
+		$this->middleware('permission:salespeople-reports-view-all|salespeople-report');
 	}
 
 	public function index(Request $request)

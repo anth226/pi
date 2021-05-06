@@ -37,7 +37,7 @@ class InvoicesController extends BaseController
 	function __construct()
 	{
 		$this->middleware(['auth']);
-		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete|generated-invoice-list|generated-invoice-create|generated-invoice-edit|generated-invoice-delete|salespeople-reports-view-own|support-user-view-own', ['only' => ['index']]);
+		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete|generated-invoice-list|generated-invoice-create|generated-invoice-edit|generated-invoice-delete|salespeople-reports-view-own|support-user-view-own|salespeople-report', ['only' => ['index']]);
 		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['show', 'showPdf', 'showAll']]);
 		$this->middleware('permission:invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:invoice-edit', ['only' => ['edit','update']]);
@@ -102,7 +102,7 @@ class InvoicesController extends BaseController
 	public function index(Request $request)
 	{
 		$user = Auth::user();
-		if($user->hasRole('Generated Invoices Only') || $user->hasRole('Salesperson') || $user->hasRole('Support Rep')) {
+		if($user->hasRole('Generated Invoices Only') || $user->hasRole('Salesperson') || $user->hasRole('Support Rep') || $user->hasRole('Salespeople Reports')) {
 			if ( $user->hasRole( 'Salesperson' ) ) {
 				$salesperson_id = Salespeople::withTrashed()->where( 'email', $user->email )->value( 'id' );
 				if ( $salesperson_id ) {
@@ -117,6 +117,11 @@ class InvoicesController extends BaseController
 			if ( $user->hasRole( 'Generated Invoices Only' ) ) {
 				$generated_invoice = new InvoiceGeneratorController();
 				return $generated_invoice->create( $request );
+			}
+
+			if ( $user->hasRole( 'Salespeople Reports' ) ) {
+				$salespeople_reports = new SalespeopleReportsController();
+				return $salespeople_reports->index( $request );
 			}
 			return abort(404);
 		}
