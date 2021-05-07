@@ -35,7 +35,9 @@ Route::get('/support/tasks', 'SupportRepController@showAllTasks');
 //Ajax
 
 Route::get('/customers-contacts', 'CustomersContactsController@showContacts', ['middleware' => 'csrf']);
-Route::post('/customers-contacts/unsubscribe/{subs_id}', 'CustomersContactsController@unsubscribeFromSmsSystem', ['middleware' => 'csrf']);
+Route::post('/customers-contacts/unsubscribe/{subs_id}', 'CustomersContactsController@unsubscribe', ['middleware' => 'csrf']);
+Route::post('/customers-contacts/subscribe', 'CustomersContactsController@subscribe', ['middleware' => 'csrf']);
+
 Route::post('/customers-contacts/add-contact', 'CustomersContactsController@addContact', ['middleware' => 'csrf']);
 Route::post('/customers-contacts/delete-contact', 'CustomersContactsController@deleteContact', ['middleware' => 'csrf']);
 

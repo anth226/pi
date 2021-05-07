@@ -36,6 +36,10 @@ class ActionsLog extends Model
 		3 => 'Email Sent',
 		4 => 'Task Added',
 		5 => 'Task Removed',
-		6 => 'Task Completed'
+		6 => 'Task Completed',
+		7 => 'Contact Subscribed to Klavio',
+		8 => 'Contact Unsubscribed from Klaviyo',
+		9 => 'Contact Subscribed to SmsSystem',
+		10 => 'Contact Unsubscribed from SmsSystem'
 	];
 }

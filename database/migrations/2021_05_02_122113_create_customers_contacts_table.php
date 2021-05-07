@@ -21,7 +21,7 @@ class CreateCustomersContactsTable extends Migration
             $table->unsignedInteger('contact_notes')->default(0)->index();
             $table->unsignedBigInteger('is_main_for_invoice_id')->nullable()->index();
             $table->string('contact_term');
-            $table->string('formated_contact_term');
+            $table->string('formated_contact_term')->index();
             $table->unsignedBigInteger('customer_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
 	        $table->foreign('customer_id')->references('id')->on('customers')->onUpdate('CASCADE');
