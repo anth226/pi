@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\ActionsLog;
+use App\Customers;
 use Illuminate\Support\Facades\Auth;
 use App\CustomersContacts;
 use App\CustomersContactSubscriptions;
@@ -32,6 +33,7 @@ class CustomersContactsController extends CustomersController
 				$query = CustomersContacts::with( 'subscriptions.user' )
 				                    ->with( 'user' )
 				                    ->where( 'customer_id', $customer_id )
+
 				;
 				return datatables()->eloquent( $query )->toJson();
 			}
@@ -61,40 +63,61 @@ class CustomersContactsController extends CustomersController
 					'user_id' => $user->id
 				];
 				if($formated_phone_number){
-					$if_phone_exist = CustomersContacts::where( 'customer_id', $customer_id )->where( 'contact_type', 1 )->where( 'formated_contact_term', $formated_phone_number )->count();
-					if ( ! $if_phone_exist ) {
-						$contactData['contact_type']          = 1;
-						$contactData['contact_term']          = $phone_number;
-						$contactData['formated_contact_term'] = $formated_phone_number;
-						$res = CustomersContacts::create( $contactData );
-						if($res){
-							$user = Auth::user();
-							ActionsLog::create([
-								'user_id' => $user->id,
-								'model' => 8,
-								'action' => 0,
-								'related_id' => $res->id
-							]);
+					$if_phone_exist_global = CustomersContacts::where( 'contact_type', 1 )->where( 'formated_contact_term', $formated_phone_number )->first();
+					if($if_phone_exist_global && $if_phone_exist_global->count()){
+						if($if_phone_exist_global->customer_id == $customer_id){
+							return $this->sendError( 'Phone number already exist.' );
 						}
-						return $this->sendResponse($res);
+						$is_customer_exist = Customers::where('id',$if_phone_exist_global->customer_id)->count();// checking if deleted
+						if($is_customer_exist) {
+							return $this->sendError( 'Other <a target="_blank" href="/customers/' . $if_phone_exist_global->customer_id . '">customer</a> has the same phone.' );
+						}
 					}
-					else{
-						return $this->sendError('Phone number already exist.');
+
+					$contactData['contact_type']          = 1;
+					$contactData['contact_term']          = $phone_number;
+					$contactData['formated_contact_term'] = $formated_phone_number;
+					$res                                  = CustomersContacts::create( $contactData );
+					if ( $res ) {
+						$user = Auth::user();
+						ActionsLog::create( [
+							'user_id'    => $user->id,
+							'model'      => 8,
+							'action'     => 0,
+							'related_id' => $res->id
+						] );
 					}
+					return $this->sendResponse( $res );
+
 				}
 				else{
 					if($email_address){
-						$if_email_exist = CustomersContacts::where('customer_id', $customer_id)->where('contact_type', 0)->where('formated_contact_term', $email_address)->count();
-						if(!$if_email_exist){
-							$contactData['contact_type'] = 0;
-							$contactData['contact_term'] = $email_address;
-							$contactData['formated_contact_term'] = $email_address;
-							$res = CustomersContacts::create($contactData);
-							return $this->sendResponse($res);
+						$if_email_exist_global = CustomersContacts::where( 'contact_type', 0 )->where( 'formated_contact_term', $email_address )->first();
+						if($if_email_exist_global && $if_email_exist_global->count()){
+							if($if_email_exist_global->customer_id == $customer_id){
+								return $this->sendError( 'Email address already exist.' );
+							}
+							$is_customer_exist = Customers::where('id',$if_email_exist_global->customer_id)->count();// checking if deleted
+							if($is_customer_exist) {
+								return $this->sendError( 'Other <a target="_blank" href="/customers/' . $if_email_exist_global->customer_id . '">customer</a> has the same address' );
+							}
 						}
-						else{
-							return $this->sendError('Email address already exist.');
+
+						$contactData['contact_type']          = 0;
+						$contactData['contact_term']          = $email_address;
+						$contactData['formated_contact_term'] = $email_address;
+						$res                                  = CustomersContacts::create( $contactData );
+						if ( $res ) {
+							$user = Auth::user();
+							ActionsLog::create( [
+								'user_id'    => $user->id,
+								'model'      => 8,
+								'action'     => 0,
+								'related_id' => $res->id
+							] );
 						}
+						return $this->sendResponse( $res );
+
 					}
 					else{
 						return $this->sendError('Please Enter value for the field.');
@@ -114,29 +137,202 @@ class CustomersContactsController extends CustomersController
 		}
 	}
 
-	public function unsubscribeFromSmsSystem($subs_id){
+	public function deleteContact(Request $request){
 		try {
-			$contact = CustomersContactSubscriptions::with('contact')->find($subs_id);
-			return $this->sendResponse($contact);
+			$this->validate($request, [
+				'contact_id' => 'required'
 
-//			return $this->sendError('Error!');
+			]);
+			$contact = CustomersContacts::find( $request->input('contact_id' ));
+			if ( ! $contact->is_main_for_invoice_id && ! $this->ifHaveSubscriptions( $contact ) ) {
+				CustomersContacts::where( 'id', $contact->id )->delete();
+				$user = Auth::user();
+				ActionsLog::create([
+					'user_id' => $user->id,
+					'model' => 8,
+					'action' => 2,
+					'related_id' => $contact->id
+				]);
+				return $this->sendResponse('done');
+			} else {
+				return $this->sendError( 'Sorry you can not delete this contact' );
+			}
 		}
 		catch (Exception $ex){
 			Errors::create([
 				'error' => $ex->getMessage(),
 				'controller' => 'CustomersContactsController',
-				'function' => 'unsubscribeFromSmsSystem'
+				'function' => 'deleteContact'
 			]);
 			return $this->sendError($ex->getMessage());
 		}
 	}
 
-	public function unsubscribeNumberFromSmsSystem($phone){
-
+	public function subscribe(Request $request){
+		try {
+			$subscription_type = !empty($request->input( 'subscription_type' )) ? $request->input( 'subscription_type' ) : null;
+			$contact_id = !empty($request->input( 'contact_id' )) ? $request->input( 'contact_id' ) : 0;
+			$contact = CustomersContacts::with('customer')->find($contact_id);
+			$action = 'subscribe';
+			if($contact && $contact->count() && isset($subscription_type)) {
+				switch ( $subscription_type ) {
+					case 2: // Klaviyo: Daily Prime
+						return $this->manageKlaviyo( $contact, $action );
+						break;
+					case 3: // SMS System
+					case 4:
+						return $this->manageSmsSystem( $contact, $action );
+						break;
+				}
+			}
+			return $this->sendError('Error!');
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersContactsController',
+				'function' => 'subscribe'
+			]);
+			return $this->sendError($ex->getMessage());
+		}
+	}
+	public function unsubscribe($subs_id){
+		try {
+			$subscription = CustomersContactSubscriptions::with('contact.customer')->find($subs_id);
+			$action = 'unsubscribe';
+			if($subscription && $subscription->count() && $action) {
+				switch ( $subscription->subscription_type ) {
+					case 2: // Klaviyo: Daily Prime
+						return $this->manageKlaviyo( $subscription->contact, $action );
+						break;
+					case 3: // SMS System
+					case 4:
+						return $this->manageSmsSystem( $subscription->contact, $action );
+						break;
+				}
+			}
+			return $this->sendError('Error!');
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersContactsController',
+				'function' => 'unsubscribe'
+			]);
+			return $this->sendError($ex->getMessage());
+		}
 	}
 
-	public function unsubscribeEmailFromSmsSystem($email){
+	public function manageSmsSystem( $contact, $action = 'subscribe' ){
+		$user = Auth::user();
+		$ajaxData = [
+				'first_name' => $contact->customer->first_name,
+				'last_name' => $contact->customer->last_name,
+				'full_name' => $contact->customer->first_name . ' ' . $contact->customer->last_name,
+				'source' => 'portfolio-insider-prime',
+				'tags' => 'portfolio-insider-prime',
+				'token'   => 'PortInsQezInch111'
+		];
+		if($contact->contact_type){
+			$ajaxData['phone'] = $contact->contact_term;
+			$ajaxData['phones'] = json_encode([$contact->contact_term]);
+		}
+		else{
+			$ajaxData['email'] = $contact->contact_term;
+			$ajaxData['emails'] = json_encode([$contact->contact_term]);
+		}
 
+		$url = '';
+		$action_for_log = '';
+
+		switch($action) {
+			case 'subscribe':
+				$url = 'ulpi';
+				$action_for_log = 9;
+				break;
+			case 'unsubscribe':
+				$url = 'ungrancellead';
+				$action_for_log = 10;
+				break;
+		}
+
+		if($url && $action_for_log) {
+			$smssystem_res = $this->sendDataToSMSSystem( $ajaxData, $url );
+			if ( ! $smssystem_res['success'] ) {
+				$message = 'Error! Can\'t send data to SMS System';
+				if ( ! empty( $smssystem_res['message'] ) ) {
+					$message = $smssystem_res['message'];
+				}
+				return $this->sendError( $message );
+			}
+			ActionsLog::create([
+				'user_id' => $user->id,
+				'model' => 8,
+				'action' => $action_for_log,
+				'related_id' => $contact->id
+			]);
+
+			$customer_id = CustomersContacts::where('id', $contact->id)->value('customer_id');
+			$this->subscriptionsCheck($customer_id, $user->id);
+			return $this->sendResponse( 'done' );
+		}
+		return $this->sendError('Error!');
+	}
+	public function manageKlaviyo( $contact, $action = 'subscribe' ){
+		$user = Auth::user();
+		switch($action) {
+			case 'subscribe':
+				$ajaxData = [
+					'phone' => $contact->customer->phone_number,
+					'email' => $contact->contact_term,
+					'first_name' => $contact->customer->first_name,
+					'last_name' => $contact->customer->last_name,
+					'full_name' => $contact->customer->first_name . ' ' . $contact->customer->last_name,
+					'source' => 'portfolio-insider-prime',
+					'tags' => 'portfolio-insider-prime',
+				];
+				$klaviyo_res = $this->sendDataToKlaviyo($ajaxData);
+				if ( ! $klaviyo_res['success'] ) {
+					$message = 'Error! Can\'t send data to SMS System';
+					if ( ! empty( $klaviyo_res['message'] ) ) {
+						$message = $klaviyo_res['message'];
+					}
+					return $this->sendError( $message );
+				}
+				ActionsLog::create([
+					'user_id' => $user->id,
+					'model' => 8,
+					'action' => 7,
+					'related_id' => $contact->id
+				]);
+				$customer_id = CustomersContacts::where('id', $contact->id)->value('customer_id');
+				$this->subscriptionsCheck($customer_id, $user->id);
+				return $this->sendResponse( 'done' );
+				break;
+			case 'unsubscribe':
+				$this->createKlaviyo();
+				if($this->klaviyo) {
+					$list_id = $this->klaviyo_listId;
+					$res = $this->klaviyo->lists->unsubscribeMembersFromList($list_id, $contact->contact_term);
+					if ( $res ) {
+						ActionsLog::create([
+							'user_id' => $user->id,
+							'model' => 8,
+							'action' => 8,
+							'related_id' => $contact->id
+						]);
+						$customer_id = CustomersContacts::where('id', $contact->id)->value('customer_id');
+						$this->subscriptionsCheck($customer_id, $user->id);
+						return $this->sendResponse( 'done' );
+					}
+					$message = 'Can\'t delete Klaviyo user '.$contact->contact_term;
+					return $this->sendError( $message );
+				}
+				$message = 'No Klaviyo API Key found';
+				return $this->sendError( $message );
+				break;
+		}
+		return $this->sendError('Error!');
 	}
 
 	public function ifHaveSubscriptions(CustomersContacts $contact){
@@ -207,7 +403,6 @@ class CustomersContactsController extends CustomersController
 			return $this->sendError($ex->getMessage());
 		}
 	}
-
 	public function checkSmsSubsPhone($phone){
 		$data = [
 			'phone' => $phone,
@@ -224,34 +419,5 @@ class CustomersContactsController extends CustomersController
 		return $this->sendDataToSMSSystem($data, 'stugelvichak');
 	}
 
-	public function deleteContact(Request $request){
-		try {
-			$this->validate($request, [
-				'contact_id' => 'required'
 
-			]);
-			$contact = CustomersContacts::find( $request->input('contact_id' ));
-			if ( ! $contact->is_main_for_invoice_id && ! $this->ifHaveSubscriptions( $contact ) ) {
-				CustomersContacts::where( 'id', $contact->id )->delete();
-				$user = Auth::user();
-				ActionsLog::create([
-					'user_id' => $user->id,
-					'model' => 8,
-					'action' => 2,
-					'related_id' => $contact->id
-				]);
-				return $this->sendResponse('done');
-			} else {
-				return $this->sendError( 'Sorry you can not delete this contact' );
-			}
-		}
-		catch (Exception $ex){
-			Errors::create([
-				'error' => $ex->getMessage(),
-				'controller' => 'CustomersContactsController',
-				'function' => 'deleteContact'
-			]);
-			return $this->sendError($ex->getMessage());
-		}
-	}
 }

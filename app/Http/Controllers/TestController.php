@@ -40,6 +40,67 @@ class TestController extends BaseController
 	public function index()
 	{
 
+		$pi_users = [
+			'it@portfolioinsider.com',
+			'kyle@portfolioinsider.com',
+			'simon@portfolioinsider.com',
+			'Dan@portfolioinsider.com',
+			'deric@portfolioinsider.com',
+			'Gus@Portfolioinsider.com',
+			'Daniel@Portfolioinsider.com',
+			'Santiago@Portfolioinsider.com',
+			'Nickp@portfolioinsider.com',
+			'walter@portfolioinsider.com',
+			'evan@portfolioinsider.com',
+			'collin@portfolioinsider.com',
+			'steve@portfolioinsider.com',
+			'jaydon@portfolioinsider.com',
+			'albert@portfolioinsider.com',
+			'christopher@portfolioinsider.com',
+			'michaelo@portfolioinsider.com',
+			'lucasrichter@portfolioinsider.com',
+			'chandler@portfolioinsider.com',
+			'ahmed@portfolioinsider.com',
+			'cameron@portfolioinsider.com',
+			'lane@portfolioinsider.com',
+			'joshuaD@portfolioinsider.com',
+			'Greg@portfolioinsider.com',
+			'jacob@portfolioinsider.com',
+			'diego@portfolioinsider.com',
+			'nicholas@portfolioinsider.com',
+			'miguel@portfolioinsider.com',
+			'alejandro@portfolioinsider.com',
+			'andrew@portfolioinsider.com',
+			'joshuaL@portfolioinsider.com',
+			'crusader@portfolioinsider.com',
+			'jordan@portfolioinsider.com',
+			'cesarg@portfolioinsider.com',
+			'john@portfolioinsider.com',
+			'stewart@portfolioinsider.com',
+			'michael@portfolioinsider.com',
+			'brandon@portfolioinsider.com',
+			'hunter@portfolioinsider.com',
+			'jay@portfolioinsider.com'
+		];
+//		foreach($pi_users as $u){
+//			$u = trim(strtolower($u));
+//			$u_array = explode('@', $u);
+//			$u_name = ucwords($u_array[0]);
+//
+//			$userProperties = [
+//				'email'         => $u,
+//				'phone'         => '',
+//				'first_name' => $u_name,
+//				'last_name' => '',
+//				'full_name' => $u_name,
+//				'source' => 'portfolio-insider-prime',
+//				'tags' => 'portfolio-insider-prime',
+//			];
+//
+//			$this->sendDataToSMSSystem($userProperties);
+//		}
+//		echo 'done';
+
 //		$customer = Customers::find(1575);
 //		$cc = new CustomersController();
 //		$phones = [
@@ -128,7 +189,7 @@ class TestController extends BaseController
 
 //		$this->contacts();
 //		$this->contactsFromPipedrive();
-		$this->smsSubsCheck();
+//		$this->smsSubsCheck();
 	}
 
 	public function getPersonsSources(){
@@ -542,6 +603,7 @@ class TestController extends BaseController
 		];
 		return $this->sendDataToSMSSystem($data, $url = 'https://magicstarsystem.com/api/stugelvichak');
 	}
+
 
 	public function smsSubsCheck(){
 		$invoices = Invoices::with('customer.contacts')->where('id', 1711)->get();

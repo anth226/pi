@@ -1220,4 +1220,157 @@ class CustomersController extends BaseController
 
 	}
 
+	public function addContacts(Customers $customer, $user_id,  $invoice_id = 0){
+		try {
+			$contactData = [
+				'customer_id' => $customer->id,
+				'user_id'     => $user_id
+			];
+			if ( $invoice_id ) {
+				$contactData['is_main_for_invoice_id'] = $invoice_id;
+			}
+			$phone                 = ! empty( $customer->phone_number ) ? trim( strtolower( $customer->phone_number ) ) : '';
+			$email                 = ! empty( $customer->email ) ? trim( strtolower( $customer->email ) ) : '';
+			$formated_phone_number = FormatUsPhoneNumber::formatPhoneNumber( $phone );
+			if ( $formated_phone_number ) {
+				$if_phone_exist = CustomersContacts::where( 'customer_id', $customer->id )->where( 'contact_type', 1 )->where( 'formated_contact_term', $formated_phone_number )->count();
+				if ( ! $if_phone_exist ) {
+					$contactData['contact_type']          = 1;
+					$contactData['contact_term']          = $phone;
+					$contactData['formated_contact_term'] = $formated_phone_number;
+					CustomersContacts::create( $contactData );
+				}
+			}
+			$if_email_exist = CustomersContacts::where( 'customer_id', $customer->id )->where( 'contact_type', 0 )->where( 'formated_contact_term', $email )->count();
+			if ( ! $if_email_exist ) {
+				$contactData['contact_type']          = 0;
+				$contactData['contact_term']          = $email;
+				$contactData['formated_contact_term'] = $email;
+				CustomersContacts::create( $contactData );
+			}
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersController',
+				'function' => 'addContacts'
+			]);
+		}
+	}
+
+
+	public function checkSmsSubsPhone($phone){
+		$data = [
+			'phone' => $phone,
+			'token'   => 'PortInsQezInch111'
+		];
+		return $this->sendDataToSMSSystem($data, $url = 'stugelvichak');
+
+	}
+	public function checkSmsSubsEmail($email){
+		$data = [
+			'email' => $email,
+			'token'   => 'PortInsQezInch111'
+		];
+		return $this->sendDataToSMSSystem($data, $url = 'stugelvichak');
+	}
+	public function checkKlaviyo($email){
+		$this->createKlaviyo();
+		if($this->klaviyo) {
+			$list_id = $this->klaviyo_listId;
+			$res = $this->klaviyo->lists->checkListMembership( $list_id, [$email] );
+			if ( $res ) {
+				return $this->sendResponse(1, '', false);
+			}
+			$error_mess = 'Can\'t delete Klaviyo user '.$email;
+			return $this->sendError($error_mess, '',404,false );
+		}
+		$error_mess = 'No Klaviyo API Key found';
+		return $this->sendError($error_mess, '',404,false );
+	}
+
+	public function subscriptionsCheck($customer_id, $user_id, $invoice_id = 0){
+		try {
+			$contacts = CustomersContacts::where( 'customer_id', $customer_id )->get();
+			if ( $contacts && $contacts->count() ) {
+				foreach ( $contacts as $c ) {
+					$dataToSave = [
+						'customers_contact_id' => $c->id,
+						'user_id'              => $user_id
+					];
+					if ( $c->contact_type ) { //phone
+						$sms = $this->checkSmsSubsPhone( $c->contact_term );
+						if ( $sms && $sms['success'] && isset( $sms['data'] ) ) {
+							$dataToSave['subscription_type']   = 3;
+							$dataToSave['subscription_status'] = $sms['data'];
+							if ( $invoice_id ) {
+								$dataToSave['invoice_id'] = $invoice_id;
+							}
+							$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $c->id )->where( 'subscription_type', 3 )->get();
+							if ( $if_record_exist && $if_record_exist->count() ) {
+								foreach ( $if_record_exist as $r ) {
+									$dataToSave = [
+										'subscription_status' => $sms['data']
+									];
+									CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSave );
+								}
+							} else {
+								CustomersContactSubscriptions::create( $dataToSave );
+							}
+						}
+					} else { //email
+						$sms = $this->checkSmsSubsEmail( $c->contact_term );
+						if ( $sms && $sms['success'] && isset( $sms['data'] ) ) {
+							$dataToSave['subscription_type']   = 4;
+							$dataToSave['subscription_status'] = $sms['data'];
+							if ( $invoice_id ) {
+								$dataToSave['invoice_id'] = $invoice_id;
+							}
+							$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $c->id )->where( 'subscription_type', 4 )->get();
+
+							if ( $if_record_exist && $if_record_exist->count() ) {
+								foreach ( $if_record_exist as $r ) {
+									$dataToSave = [
+										'subscription_status' => $sms['data']
+									];
+									CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSave );
+								}
+							} else {
+								CustomersContactSubscriptions::create( $dataToSave );
+							}
+						}
+						$sms = $this->checkKlaviyo($c->contact_term);
+
+						if ( $sms && $sms['success'] && isset( $sms['data'] ) ) {
+							$dataToSave['subscription_type']   = 2;
+							$dataToSave['subscription_status'] = $sms['data'];
+							if ( $invoice_id ) {
+								$dataToSave['invoice_id'] = $invoice_id;
+							}
+							$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $c->id )->where( 'subscription_type', 2 )->get();
+							if ( $if_record_exist && $if_record_exist->count() ) {
+								foreach ( $if_record_exist as $r ) {
+									$dataToSave = [
+										'subscription_status' => $sms['data']
+									];
+									CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSave );
+								}
+							} else {
+								CustomersContactSubscriptions::create( $dataToSave );
+							}
+						}
+					}
+				}
+			}
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersController',
+				'function' => 'subscriptionCheck'
+			]);
+		}
+
+	}
+
 }

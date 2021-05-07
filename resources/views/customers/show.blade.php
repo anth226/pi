@@ -134,6 +134,17 @@
                         </div>
                     </form>
 
+                    <form id="recheck_subscriptions">
+                        <div class="form-row align-items-center">
+                            <div class="col-auto">
+                                <input type="hidden" name="customer_id" value="{{$customer->id}}">
+                                <button type="submit" class="btn btn-primary mb-2 submit" >Recheck Subscriptions</button>
+                            </div>
+                        </div>
+                    </form>
+
+
+
                 </div>
 
                 <div class="col-md-12 mt-2">
@@ -241,13 +252,11 @@
                 });
             }
 
-            $(document).on('click', '.unsubscribe_subs', function (event) {
-                let subs_id = $(this).data('subsid');
-                const current_button = $(this);
+            function unsubscribeAjax(subs_id, current_button){
                 current_button.next('.error').remove();
                 const button_content = current_button.html();
                 var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
-                $('.unsubscribe_subs').prop('disabled', 'disabled');
+                $('button').prop('disabled', 'disabled');
                 current_button.prop('disabled', 'disabled').append(ajax_img);
                 $.ajaxSetup({
                     headers: {
@@ -260,13 +269,57 @@
                     dataType: "json",
                     success: function (response) {
                         cont_table_dt.draw();
+                        $('button').prop('disabled', '');
                     },
                     error: function (response) {
-                        $('.unsubscribe_subs').prop('disabled', '');
+                        $('button').prop('disabled', '');
                         current_button.html(button_content);
                         current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
                     }
                 });
+            }
+            function subscribeAjax(contact_id, subscription_type, current_button){
+                current_button.next('.error').remove();
+                const button_content = current_button.html();
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                $('button').prop('disabled', 'disabled');
+                current_button.append(ajax_img);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/customers-contacts/subscribe',
+                    type: "POST",
+                    dataType: "json",
+                    data:{
+                        contact_id: contact_id,
+                        subscription_type: subscription_type
+                    },
+                    success: function (response) {
+                        cont_table_dt.draw();
+                        $('button').prop('disabled', '');
+                    },
+                    error: function (response) {
+                        $('button').prop('disabled', '');
+                        current_button.html(button_content);
+                        current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
+                    }
+                });
+            }
+
+            $(document).on('click', '.unsubscribe_subs', function (event) {
+                let subs_id = $(this).data('subsid');
+                const current_button = $(this);
+                unsubscribeAjax(subs_id, current_button);
+            });
+
+            $(document).on('click', '.subscribe_subs', function (event) {
+                let contact_id = $(this).data('contact_id');
+                let subscription_type = $(this).data('subscription_type');
+                const current_button = $(this);
+                subscribeAjax(contact_id, subscription_type, current_button);
             });
 
             var cont_table = $('table#contacts_table');
@@ -301,7 +354,7 @@
                         }},
 
                     { data: 'subscriptions', name: 'subscriptions', "sortable": false,"searchable": false, render: function ( data, type, row ){
-                            return generateSubs(data) + '<div class="mt-2"><button data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-primary add_subscription" >Subscribe</button></div>';
+                            return generateSubs(data, row);
                         }},
                     { data: 'formated_contact_term', name: 'formated_contact_term', "sortable": false,"searchable": true, "visible":false},
 
@@ -309,9 +362,19 @@
                 ]
             });
 
-            function generateSubs(subscriptions){
+            function generateSubs(subscriptions, row){
+                const KlaviyoPrimeSmsButton = '<div class="mt-2"><button data-subscription_type="2" data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-primary subscribe_subs" >Subscribe email to Klaviyo Prime daily</button></div>';
+                const smsSystemPrimePhoneButton = '<div class="mt-2"><button data-subscription_type="3" data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-primary subscribe_subs" >Subscribe phone to SmsSystem:Prime</button></div>';
+                const smsSystemPrimeEmailButton = '<div class="mt-2"><button data-subscription_type="4" data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-primary subscribe_subs" >Subscribe email to SmsSystem:Prime</button></div>';
+
+
+                let ifHaveSMSPrimePhone = false;
+                let ifHaveSMSPrimeEmail = false;
+                let ifHaveSMSPrimeKlaviyo = false;
+
                 let ret_html = '';
                 if(isSet(subscriptions) && subscriptions.length){
+
                     $.each(subscriptions, function( index, value ) {
                         ret_html += '<div class=card><div class="card-body">';
                         ret_html += '<div>'+subscription_type[value.subscription_type]+'</div>';
@@ -320,8 +383,31 @@
                         ret_html += '<div><small>Created By:'+value.user.name+'</small></div>';
                         ret_html += '<div><button data-subsid="'+value.id+'" class="btn btn-sm btn-danger mt-2 unsubscribe_subs" >Unsubscribe</button></div>';
                         ret_html += '</div></div>';
+                        if(isSet(value.subscription_type)){
+                            if(value.subscription_type == 2){ //Klaviyo: Daily Prime
+                                ifHaveSMSPrimeKlaviyo = true;
+                            }
+                            if(value.subscription_type == 3){ //SMS System: Prime sms
+                                ifHaveSMSPrimePhone = true;
+                            }
+                            if(value.subscription_type == 4){ //SMS System: Prime email
+                                ifHaveSMSPrimeEmail = true;
+                            }
+                        }
                     });
                 }
+
+                if(!ifHaveSMSPrimeKlaviyo && row.contact_type == 0){
+                    ret_html += KlaviyoPrimeSmsButton;
+                }
+                if(!ifHaveSMSPrimePhone && row.contact_type == 1){
+                    ret_html += smsSystemPrimePhoneButton;
+                }
+                if(!ifHaveSMSPrimeEmail && row.contact_type == 0){
+                    ret_html += smsSystemPrimeEmailButton;
+                }
+
+
                 return ret_html;
             }
 

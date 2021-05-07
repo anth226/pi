@@ -46,7 +46,7 @@ class CustomersContacts extends Model
 
 	public function subscriptions()
 	{
-		return $this->hasMany('App\CustomersContactSubscriptions', 'customers_contact_id', 'id');
+		return $this->hasMany('App\CustomersContactSubscriptions', 'customers_contact_id', 'id')->where('subscription_status', '>', 0);
 	}
 
 	public function user()

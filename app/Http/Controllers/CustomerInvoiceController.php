@@ -261,6 +261,8 @@ class CustomerInvoiceController extends CustomersController
 				'related_id' => $invoice->id
 			]);
 
+			$this->addContacts($customer, $user->id,  $invoice->id);
+
 			$invoice_instance = new InvoicesController();
 			$invoice_instance->generatePDF($invoice->id, $pdftemplate);
 
@@ -331,6 +333,8 @@ class CustomerInvoiceController extends CustomersController
 			$invoice_instance->savePercentages($invoice_percentages, $invoice->id);
 
 			$this->getPipedriveLeadSources($customer);
+
+			$this->subscriptionsCheck($customer->id, $user->id, $invoice->id );
 
 			return $this->sendResponse($invoice->id);
 		}
