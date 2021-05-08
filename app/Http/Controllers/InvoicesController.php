@@ -9,7 +9,6 @@ use App\EmailTemplates;
 use App\Errors;
 use App\Http\Controllers\API\BaseController;
 use App\Invoices;
-use App\InvoicesLog;
 use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
@@ -906,8 +905,6 @@ class InvoicesController extends BaseController
 
 			$user_logged = Auth::user();
 
-
-
 			$status_before = Invoices::with('customer')->where('id', $request->input( 'invoice_id' ))->first();
 
 			if($user_logged->id == 1 && $request->input( 'refundRequested' ) == 1111) { // unsubscribe from everywhere (beta) only for dev
@@ -1025,7 +1022,6 @@ class InvoicesController extends BaseController
 					}
 				}
 			}
-
 
 			return $this->sendResponse('done');
 		}
