@@ -136,7 +136,6 @@
                             {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}--}}
                             {{--{!! Form::close() !!}--}}
                         {{--@endcan--}}
-
                     </div>
                 </div>
             </div>
