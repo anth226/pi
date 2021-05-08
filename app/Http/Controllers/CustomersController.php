@@ -660,9 +660,6 @@ class CustomersController extends BaseController
 		}
 	}
 
-
-
-
 	public function getFirebaseCollectionRecord($id, $collection= 'users'){
 		try {
 			$this->createFirebase();
@@ -1271,11 +1268,13 @@ class CustomersController extends BaseController
 					}
 				}
 				else{
-					$err_message = 'Can\'t cancel stripe subscription, no stripe subscriptionId found';
+//					$err_message = 'Can\'t cancel stripe subscription, no stripe subscriptionId found';
+					return $this->sendResponse('No Subscription Found', '', $is_response_json );
 				}
 			}
 			else{
-				$err_message = 'Can\'t get Firebase User\'s data: '.$email;
+//				$err_message = 'Can\'t get Firebase User\'s data: '.$email;
+				return $this->sendResponse('No User Found', '', $is_response_json );
 			}
 
 			Errors::create([
@@ -1308,7 +1307,8 @@ class CustomersController extends BaseController
 				$err_message = 'Can\'t delete Firebase User: '.$email;
 			}
 			else {
-				$err_message = 'Can\'t get Firebase User\'s data: ' . $email;
+//				$err_message = 'Can\'t get Firebase User\'s data: ' . $email;
+				return $this->sendResponse( 'No User Found', '', $is_response_json );
 			}
 			Errors::create([
 				'error' => $err_message,
