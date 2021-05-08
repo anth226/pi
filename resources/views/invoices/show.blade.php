@@ -67,7 +67,7 @@
                                 <div class="h5 text-danger mb-4">{{ \App\Invoices::STATUS[$invoice->status] }} <span class="small"><button class="btn btn-outline-primary btn-sm" id="unset_refund_requested">Unset</button></span></div>
                             @else
                                 @if($invoice->status == 3)
-                                    <div class="h5 text-danger mb-4">{{ \App\Invoices::STATUS[$invoice->status] }} <span class="small"><button class="btn btn-outline-primary btn-sm" id="unset_refunded">Unset</button></span></div>
+                                    <div class="h5 text-danger mb-4">{{ \App\Invoices::STATUS[$invoice->status] }} <!--<span class="small"><button class="btn btn-outline-primary btn-sm" id="unset_refunded">Unset</button></span>--></div>
                                 @endif
                             @endif
                         @endif
@@ -109,22 +109,7 @@
                                         </div>
                                     @endif
                                 </div>
-                                <div class="col-md-6">
-                                    @if(!empty($refundData) && $refundData->count())
-                                        <div  class="details_bgcolor p-2">
-                                            @foreach($refundData as $rf)
-                                                @if($rf)
-                                                <div class="text-danger">
-                                                    <small>
-                                                        <strong>{{ \App\SentData::SERVICES[$d->service_type] }} error: </strong>
-                                                        {{ $rf }}
-                                                    </small>
-                                                </div>
-                                               @endif
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </div>
+
 
                             </div>
                         </div>
@@ -829,8 +814,11 @@
             });
 
             $(document).on('click', '#refunded', function (event) {
+                const current_button = $(this);
+                current_button.next('.error').remove();
+                const button_content = current_button.html();
                 var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
-                $(this).append(ajax_img);
+                current_button.prop('disabled', 'disabled').append(ajax_img);
                 $.ajaxSetup({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -846,7 +834,13 @@
                     },
                     success: function (response) {
                         location.reload();
+                    },
+                    error: function (response) {
+                        current_button.prop('disabled', '');
+                        current_button.html(button_content);
+                        current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
                     }
+
                 });
             });
 
