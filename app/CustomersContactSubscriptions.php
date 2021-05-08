@@ -24,6 +24,23 @@ class CustomersContactSubscriptions extends Model
 		3 => 'Does not exist',
 		4 => 'Duplicate',
 		5 => 'Not Valid',
+		// for stripe subs status
+		6 => 'Past Due',
+		7 => 'Unpaid',
+		8 => 'Canceled',
+		9 => 'Incomplete',
+		10 => 'Incomplete Expired',
+		11 => 'Trialing'
+	];
+
+	public const STRIPE_STATUSES = [
+		'active' =>1,
+		'past_due' => 6,
+		'unpaid' => 7,
+		'canceled' => 8,
+		'incomplete' => 9,
+		'incomplete_expired' => 10,
+		'trialing' => 11
 	];
 
 	public const SUBSCRIPTION_TYPES = [
