@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\ActionsLog;
 use App\Customers;
 use App\CustomersContacts;
 use App\CustomersContactSubscriptions;
@@ -560,25 +561,21 @@ class CustomersController extends BaseController
 					$result = $documentReference->delete();
 					return $result;
 				}
-				$error = "Error! Can't delete User Acc.";
-				Errors::create([
-					'error' => $error,
-					'controller' => 'CustomersController',
-					'function' => 'deleteFirebaseUserAndDoc'
-				]);
-				return false;
+				$err_message = "Error! Can't delete User Acc.";
 			}
-			$error = "Wrong Firebase credentials or connection issue";
+			else {
+				$err_message = "Wrong Firebase credentials or connection issue";
+			}
 			Errors::create([
-				'error' => $error,
+				'error' => $err_message,
 				'controller' => 'CustomersController',
 				'function' => 'deleteFirebaseUserAndDoc'
 			]);
 			return false;
 		} catch (Exception $ex){
-			$error = $ex->getMessage();
+			$err_message = $ex->getMessage();
 			Errors::create([
-				'error' => $error,
+				'error' => $err_message,
 				'controller' => 'CustomersController',
 				'function' => 'deleteFirebaseUserAndDoc'
 			]);
@@ -587,212 +584,82 @@ class CustomersController extends BaseController
 	}
 
 	public function refundSequence(Invoices $invoice){
+		$errors = [];
 		try {
-
-			$user_logged = Auth::user();
-
-			$dataToLog = [
-				'action' => 1,
-				'invoice_id' => $invoice->id,
-				'user_id' => $user_logged->id
-			];
-
-			$dataToLogPipedrive = $dataToLog;
-			$dataToLogPipedrive['service_id'] = 0;
-
-
-			$phonesAndEmails = $this->getPipedriveLeadPhonesEmails($invoice->customer);
-			if(!empty($phonesAndEmails) && !empty($phonesAndEmails['data'])){
-
-				$dataToLogPipedrive['result'] = json_encode($phonesAndEmails);
-
-				$phones = !empty($phonesAndEmails['data']['phones']) ? $phonesAndEmails['data']['phones'] : [];
-				$emails = !empty($phonesAndEmails['data']['emails']) ? $phonesAndEmails['data']['emails'] : [];
-
-				// unsubscribe SMS
-				$smsSystemInput = [
-					'phones' => json_encode($phones),
-					'emails' => json_encode($emails),
-					'token'   => 'PortInsQezInch111'
-				];
-
-
-				$smsResp = $this->sendDataToSMSSystem($smsSystemInput, 'ungrancellead');
-				$dataToLogDeleteAcc = $dataToLog;
-				$dataToLogDeleteAcc['service_id'] = 4;
-				if(!empty($smsResp)){
-					if(!empty($smsResp->success) && !empty($smsResp->data) ){
-						$dataToLogDeleteAcc['result'] = $smsResp->data;
-						if(!empty($smsResp->data->phones)) {
-							SentData::create( [
-								'service_type' => $dataToLogDeleteAcc['service_id'],
-								'field'        => 'phone',
-								'value'        => implode( ', ', json_decode( $smsResp->data->phones, 1 ) ),
-								'action'       => 4
-							] );
-						}
-						if(!empty($smsResp->data->emails)) {
-							SentData::create( [
-								'service_type' => $dataToLogDeleteAcc['service_id'],
-								'field'        => 'email',
-								'value'        => implode( ', ', json_decode( $smsResp->data->emails, 1 ) ),
-								'action'       => 4
-							] );
-						}
+			$phones = [];
+			$emails = [];
+			$contacts = CustomersContacts::where('customer_id', $invoice->customer_id)->get();
+			if($contacts && $contacts->count()){
+				foreach($contacts as $contact){
+					if($contact->contact_type){
+						$phones[] = $contact->formated_contact_term;
 					}
 					else{
-						if(!empty($smsResp->message)) {
-							$dataToLogDeleteAcc['error'] = $smsResp->message;
+						$emails[] = $contact->formated_contact_term;
+					}
+				}
+			}
+
+
+
+			if($emails && count($emails)){
+				foreach($emails as $email){
+					$email = trim(strtolower($email));
+					$customer_email = trim(strtolower($invoice->customer->email));
+					if($email == $customer_email) {
+						// unsubscribe Stripe
+						$res_stripe = $this->unsubscribeStripe( $email, false );
+						if ( ! $res_stripe || ! $res_stripe['success'] ) {
+							$error    = "Can not unsubscribe " . $email . " from Stripe. ";
+							$errors[] = $error . ! empty( $res_stripe['message'] ) ? $res_stripe['message'] : "";
+						}
+
+						// delete Firebase
+						$res_firebase = $this->unsubscribeFirebase( $email, false );
+						if ( ! $res_firebase || ! $res_firebase['success'] ) {
+							$error    = "Can not unsubscribe " . $email . " from FireBase. ";
+							$errors[] = $error . ! empty( $res_firebase['message'] ) ? $res_firebase['message'] : "";
 						}
 					}
 
-				}
-
-				InvoicesLog::create($dataToLogDeleteAcc);
-
-				if($emails && count($emails)){
-					foreach($emails as $email){
-							$dataToLogFBAcc = $dataToLog;
-							$dataToLogFBAcc['service_id'] = 2;
-							$user_data = $this->getFirebaseUserData( $email );
-							if ( $user_data  && !empty($user_data['uid'])) {
-								$dataToLogDeleteAcc = $dataToLog;
-								$dataToLogDeleteAcc['service_id'] = 7;
-								$dataToLogFBAcc['result'] = json_encode($user_data);
-								SentData::create( [
-									'service_type' => $dataToLogFBAcc['service_id'],
-									'field'        => 'email',
-									'value'        => $email,
-									'action'       => 1
-								] );
-								if ( $del_res = $this->deleteFirebaseUserAndDoc( $user_data['uid'] ) ) {
-									//firebase data deleted
-									$dataToLogDeleteAcc['result'] = json_encode($del_res);
-									SentData::create( [
-										'service_type' => $dataToLogDeleteAcc['service_id'],
-										'field'        => 'email',
-										'value'        => $email,
-										'action'       => 1
-									] );
-								}
-								else{
-									$dataToLogDeleteAcc['error'] = 'Can\'t delete Firebase User: '.$email;
-								}
-								InvoicesLog::create($dataToLogDeleteAcc);
-							}
-							else{
-								$dataToLogFBAcc['error'] = 'Can\'t get Firebase User\'s data: '.$email;
-							}
-							InvoicesLog::create($dataToLogFBAcc);
-
-							//delete stripe
-							$dataToLogDeleteAcc = $dataToLog;
-							$dataToLogDeleteAcc['service_id'] = 6;
-
-							if ( ! empty( $user_data['subscriptionId'] ) ) {
-								$this->createStripe();
-								if($this->stripe) {
-									$subscription = $this->stripe->subscriptions->cancel( $user_data['subscriptionId'], [] );
-									if ( $subscription && ! empty( $subscription->status ) && $subscription->status == 'canceled' ) {
-										$dataToLogDeleteAcc['result'] = !empty($subscription->id) ? $subscription->id : '';
-										SentData::create( [
-											'service_type' => $dataToLogDeleteAcc['service_id'],
-											'field'        => 'email',
-											'value'        => $email,
-											'action'       => 1
-										] );
-									} else {
-										$dataToLogDeleteAcc['error'] = 'Can\'t cancel stripe subscription for user '.$email;
-									}
-
-								}
-								else{
-									$dataToLogDeleteAcc['error'] = 'Can\'t connect to Stripe';
-								}
-
-
-							}
-							else{
-								$dataToLogDeleteAcc['error'] = 'Can\'t cancel stripe subscription, no stripe subscriptionId found';
-							}
-							InvoicesLog::create($dataToLogDeleteAcc);
-
-							$dataToLogDeleteAcc = $dataToLog;
-							$dataToLogDeleteAcc['service_id'] = 1;
-
-							if ( ! empty( $user_data['customerId'] ) ) {
-								$customer = $this->stripe->customers->delete( $user_data['customerId'], [] );
-								if ( $customer && ! empty( $customer->deleted ) ) {
-									$dataToLogDeleteAcc['result'] = json_encode($customer);
-									SentData::create( [
-										'service_type' => $dataToLogDeleteAcc['service_id'],
-										'field'        => 'email',
-										'value'        => $email,
-										'action'       => 1
-									] );
-								}
-								else{
-									$dataToLogDeleteAcc['error'] = 'Can\'t delete stripe user '.$email;
-								}
-							}
-							else{
-								$dataToLogDeleteAcc['error'] = 'Can\'t delete stripe user '.$email.', no stripe customerId found';
-							}
-
-							InvoicesLog::create($dataToLogDeleteAcc);
-
-							//delete klavio customer
-							$dataToLogDeleteAcc = $dataToLog;
-							$dataToLogDeleteAcc['service_id'] = 8;
-
-							$this->createKlaviyo();
-							if($this->klaviyo) {
-								$list_id = $this->klaviyo_listId;
-								$res = $this->klaviyo->lists->unsubscribeMembersFromList($list_id, $email);
-								if ( $res ) {
-									$dataToLogDeleteAcc['result'] = json_encode($res);
-									SentData::create( [
-										'service_type' => $dataToLogDeleteAcc['service_id'],
-										'field'        => 'email',
-										'value'        => $email,
-										'action'       => 1
-									] );
-								}
-								else{
-									$dataToLogDeleteAcc['error'] = 'Can\'t delete Klaviyo user '.$email;
-								}
-							}
-							else{
-								$dataToLogDeleteAcc['error'] = 'No Klaviyo API Key found';
-							}
-							InvoicesLog::create($dataToLogDeleteAcc);
-
+					// unsubscribe klavio customer
+					$res_klaviyo = $this->unsubscribeKlaviyo( $email, false);
+					if(!$res_klaviyo || !$res_klaviyo['success']){
+						$error = "Can not unsubscribe ".$email." from Klaviyo. ";
+						$errors[] = $error . !empty($res_klaviyo['message']) ? $res_klaviyo['message'] : "";
 					}
+
+
 				}
-
-
-			}
-			else{
-				$dataToLogPipedrive['error'] = 'Unknown Error.';
 			}
 
-			InvoicesLog::create($dataToLogPipedrive);
-			return true;
+			// unsubscribe SMS
+			$res_smssystem = $this->unsubscribeSmsSystem(json_encode($emails), json_encode($phones), false);
+			if(!$res_smssystem || !$res_smssystem['success']){
+				$errors[] = !empty($res_smssystem['message']) ? $res_smssystem['message'] : "Can not unsubscribe from SMS System";
+			}
+
+			$user = Auth::user();
+			$this->subscriptionsCheck($invoice->customer_id, $user->id );
+
+			if(count($errors)){
+				return $this->sendError( "Some errors happen.", $errors, 404, false );
+			}
+
+			return $this->sendResponse( 'done', '', false );
 		}
 		catch (Exception $ex){
-			$error = $ex->getMessage();
-			$report = [
-				'success' => false,
-				'errors' => [$error]
-			];
+			$err_message = $ex->getMessage();
+			$errors[] = $err_message;
 			Errors::create([
-				'error' => $error,
+				'error' => $err_message,
 				'controller' => 'CustomersController',
 				'function' => 'refundSequence'
 			]);
-			return $report;
+			return $this->sendError( $err_message, $errors, 404, false );
 		}
 	}
+
 
 
 
@@ -1275,18 +1142,25 @@ class CustomersController extends BaseController
 		return $this->sendDataToSMSSystem($data, $url = 'stugelvichak');
 	}
 	public function checkKlaviyo($email){
-		$this->createKlaviyo();
-		if($this->klaviyo) {
-			$list_id = $this->klaviyo_listId;
-			$res = $this->klaviyo->lists->checkListMembership( $list_id, [$email] );
-			if ( $res ) {
-				return $this->sendResponse(1, '', false);
+		try {
+			$this->createKlaviyo();
+			if ( $this->klaviyo ) {
+				$list_id    = $this->klaviyo_listId;
+				$res        = $this->klaviyo->lists->checkListMembership( $list_id, [ $email ] );
+				$subscr_res = count( $res ) ? 1 : 0;
+				return $this->sendResponse( $subscr_res, '', false );
 			}
-			$error_mess = 'Can\'t delete Klaviyo user '.$email;
-			return $this->sendError($error_mess, '',404,false );
+			$error_mess = 'No Klaviyo API Key found';
+			return $this->sendError( $error_mess, '', 404, false );
 		}
-		$error_mess = 'No Klaviyo API Key found';
-		return $this->sendError($error_mess, '',404,false );
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersController',
+				'function' => 'checkKlaviyo'
+			]);
+			return $this->sendError($ex->getMessage(),'',404, false);
+		}
 	}
 
 	public function subscriptionsCheck($customer_id, $user_id, $invoice_id = 0){
@@ -1309,16 +1183,17 @@ class CustomersController extends BaseController
 							$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $c->id )->where( 'subscription_type', 3 )->get();
 							if ( $if_record_exist && $if_record_exist->count() ) {
 								foreach ( $if_record_exist as $r ) {
-									$dataToSave = [
+									$dataToSaveForUpdate = [
 										'subscription_status' => $sms['data']
 									];
-									CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSave );
+									CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSaveForUpdate );
 								}
 							} else {
 								CustomersContactSubscriptions::create( $dataToSave );
 							}
 						}
 					} else { //email
+
 						$sms = $this->checkSmsSubsEmail( $c->contact_term );
 						if ( $sms && $sms['success'] && isset( $sms['data'] ) ) {
 							$dataToSave['subscription_type']   = 4;
@@ -1330,10 +1205,10 @@ class CustomersController extends BaseController
 
 							if ( $if_record_exist && $if_record_exist->count() ) {
 								foreach ( $if_record_exist as $r ) {
-									$dataToSave = [
+									$dataToSaveForUpdate = [
 										'subscription_status' => $sms['data']
 									];
-									CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSave );
+									CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSaveForUpdate );
 								}
 							} else {
 								CustomersContactSubscriptions::create( $dataToSave );
@@ -1341,19 +1216,21 @@ class CustomersController extends BaseController
 						}
 						$sms = $this->checkKlaviyo($c->contact_term);
 
-						if ( $sms && $sms['success'] && isset( $sms['data'] ) ) {
+						if ( $sms && $sms['success']) {
+							$sms['data'] = !empty($sms['data']) ? $sms['data'] : 0;
 							$dataToSave['subscription_type']   = 2;
 							$dataToSave['subscription_status'] = $sms['data'];
 							if ( $invoice_id ) {
 								$dataToSave['invoice_id'] = $invoice_id;
 							}
 							$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $c->id )->where( 'subscription_type', 2 )->get();
+
 							if ( $if_record_exist && $if_record_exist->count() ) {
 								foreach ( $if_record_exist as $r ) {
-									$dataToSave = [
+									$dataToSaveForUpdate = [
 										'subscription_status' => $sms['data']
 									];
-									CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSave );
+									CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSaveForUpdate );
 								}
 							} else {
 								CustomersContactSubscriptions::create( $dataToSave );
@@ -1369,6 +1246,223 @@ class CustomersController extends BaseController
 				'controller' => 'CustomersController',
 				'function' => 'subscriptionCheck'
 			]);
+		}
+
+	}
+
+	public function unsubscribeStripe( $email, $is_response_json = true ){
+		// we need to get subs_id from firebase first
+		try {
+			$err_message = '';
+			$user_data = $this->getFirebaseUserData( $email );
+			if ( $user_data  && !empty($user_data['uid'])) {
+
+				if ( ! empty( $user_data['subscriptionId'] ) ) {
+					$this->createStripe();
+					if($this->stripe) {
+						$subscription = $this->stripe->subscriptions->cancel( $user_data['subscriptionId'], [] );
+						if ( $subscription && ! empty( $subscription->status ) && $subscription->status == 'canceled' ) {
+							return $this->sendResponse($subscription->id, $email.' subscription canceled from Stripe', $is_response_json );
+						}
+						$err_message = 'Can\'t cancel stripe subscription for user '.$email;
+					}
+					else{
+						$err_message = 'Can\'t connect to Stripe';
+					}
+				}
+				else{
+					$err_message = 'Can\'t cancel stripe subscription, no stripe subscriptionId found';
+				}
+			}
+			else{
+				$err_message = 'Can\'t get Firebase User\'s data: '.$email;
+			}
+
+			Errors::create([
+				'error' => $err_message,
+				'controller' => 'CustomersController',
+				'function' => 'unsubscribeFirebase'
+			]);
+			return $this->sendError( $err_message, '', 404, $is_response_json );
+
+		}
+		catch (Exception $ex){
+			$err_message = $ex->getMessage();
+			Errors::create([
+				'error' => $err_message,
+				'controller' => 'CustomersController',
+				'function' => 'unsubscribeStripe'
+			]);
+			return $this->sendError( $err_message, '', 404, $is_response_json );
+		}
+	}
+	public function unsubscribeFirebase( $email, $is_response_json = true ){
+		try {
+			$err_message = '';
+			$user_data = $this->getFirebaseUserData( $email );
+			if ( $user_data  && !empty($user_data['uid'])) {
+				if ( $this->deleteFirebaseUserAndDoc( $user_data['uid'] ) ) {
+					//firebase data deleted
+					return $this->sendResponse( $user_data, $email.' deleted from firebase', $is_response_json );
+				}
+				$err_message = 'Can\'t delete Firebase User: '.$email;
+			}
+			else {
+				$err_message = 'Can\'t get Firebase User\'s data: ' . $email;
+			}
+			Errors::create([
+				'error' => $err_message,
+				'controller' => 'CustomersController',
+				'function' => 'unsubscribeFirebase'
+			]);
+			return $this->sendError( $err_message, '', 404, $is_response_json );
+
+		}
+		catch (Exception $ex){
+			$err_message = $ex->getMessage();
+			Errors::create([
+				'error' => $err_message,
+				'controller' => 'CustomersController',
+				'function' => 'unsubscribeFirebase'
+			]);
+			return $this->sendError( $err_message, '', 404, $is_response_json );
+		}
+	}
+	public function unsubscribeSmsSystem( $emails, $phones, $is_response_json = true ){
+		try {
+			$ajaxData      = [
+				'phones' => $phones, // need json
+				'emails' => $emails, //need json
+				'token'  => 'PortInsQezInch111'
+			];
+			$smssystem_res = $this->sendDataToSMSSystem( $ajaxData, 'ungrancellead' );
+			if ( ! $smssystem_res['success'] ) {
+				$message = 'Error! Can\'t send data to SMS System';
+				if ( ! empty( $smssystem_res['message'] ) ) {
+					$message = $smssystem_res['message'];
+				}
+				Errors::create([
+					'error' => $message,
+					'controller' => 'CustomersController',
+					'function' => 'unsubscribeSmsSystem'
+				]);
+				return $this->sendError( $message, '', 404, $is_response_json );
+			}
+			return $this->sendResponse( 'done', '', $is_response_json );
+		}
+		catch (Exception $ex){
+			$err_message = $ex->getMessage();
+			Errors::create([
+				'error' => $err_message,
+				'controller' => 'CustomersController',
+				'function' => 'unsubscribeSmsSystem'
+			]);
+			return $this->sendError( $err_message, '', 404, $is_response_json );
+		}
+	}
+	public function unsubscribeKlaviyo( $email, $is_response_json = true ){
+		try {
+			$err_message = '';
+			$this->createKlaviyo();
+			if ( $this->klaviyo ) {
+				$list_id = $this->klaviyo_listId;
+				$res     = $this->klaviyo->lists->unsubscribeMembersFromList( $list_id, $email );
+				if ( ! $res ) {
+					return $this->sendResponse( 'done', $email.' unsubscribed from SMS Klaviyo prime daily emails', $is_response_json );
+				}
+				$err_message = 'Can\'t delete Klaviyo user ' . $email;
+			}
+			else {
+				$err_message = 'No Klaviyo API Key found';
+			}
+			Errors::create([
+				'error' => $err_message,
+				'controller' => 'CustomersController',
+				'function' => 'unsubscribeKlaviyo'
+			]);
+			return $this->sendError( $err_message, '', 404, $is_response_json );
+		}
+		catch (Exception $ex){
+			$err_message = $ex->getMessage();
+			Errors::create([
+				'error' => $err_message,
+				'controller' => 'CustomersController',
+				'function' => 'unsubscribeKlaviyo'
+			]);
+			return $this->sendError( $err_message, '', 404, $is_response_json );
+		}
+	}
+
+	public function subscribeSmsSystem( $email = '', $phone = '', $first_name = '', $last_name = '', $is_response_json = true ){
+		try {
+			$ajaxData = [
+				'first_name' => $first_name,
+				'last_name'  => $last_name,
+				'full_name'  => $first_name . ' ' . $last_name,
+				'phone'      => $phone,
+				'email'      => $email,
+				'source'     => 'portfolio-insider-prime',
+				'tags'       => 'portfolio-insider-prime',
+				'token'      => 'PortInsQezInch111'
+			];
+
+			$smssystem_res = $this->sendDataToSMSSystem( $ajaxData, 'ulpi' );
+			if ( ! $smssystem_res['success'] ) {
+				$err_message = 'Error! Can\'t send data to SMS System';
+				if ( ! empty( $smssystem_res['message'] ) ) {
+					$err_message = $smssystem_res['message'];
+				}
+				Errors::create([
+					'error' => $err_message,
+					'controller' => 'CustomersController',
+					'function' => 'subscribeSmsSystem'
+				]);
+				return $this->sendError( $err_message, '', 404, $is_response_json );
+			}
+			return $this->sendResponse( 'done', '', $is_response_json );
+		}
+		catch (Exception $ex){
+			$err_message = $ex->getMessage();
+			Errors::create([
+				'error' => $err_message,
+				'controller' => 'CustomersController',
+				'function' => 'subscribeSmsSystem'
+			]);
+			return $this->sendError( $err_message, '', 404, $is_response_json );
+		}
+	}
+	public function subscribeKlaviyo( $email, $phone = '', $first_name = '', $last_name = '', $is_response_json = true ){
+		try {
+			$ajaxData    = [
+				'phone'      => $phone,
+				'email'      => $email,
+				'first_name' => $first_name,
+				'last_name'  => $last_name
+			];
+			$klaviyo_res = $this->sendDataToKlaviyo( $ajaxData );
+			if ( ! $klaviyo_res['success'] ) {
+				$err_message = 'Error! Can\'t send data to SMS System';
+				if ( ! empty( $klaviyo_res['message'] ) ) {
+					$err_message = $klaviyo_res['message'];
+				}
+				Errors::create([
+					'error' => $err_message,
+					'controller' => 'CustomersController',
+					'function' => 'subscribeKlaviyo'
+				]);
+				return $this->sendError( $err_message, '', 404, $is_response_json );
+			}
+
+			return $this->sendResponse( 'done', '', $is_response_json );
+		}
+		catch (Exception $ex){
+			$err_message = $ex->getMessage();
+			Errors::create([
+				'error' => $err_message,
+				'controller' => 'CustomersController',
+				'function' => 'subscribeKlaviyo'
+			]);
+			return $this->sendError( $err_message, '', 404, $is_response_json );
 		}
 
 	}

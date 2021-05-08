@@ -345,9 +345,7 @@ class InvoicesController extends BaseController
 			$task_status = json_encode(SupportTodo::TASK_STATUS);
 			$invoice_status = json_encode(Invoices::STATUS);
 
-			$refundData = InvoicesLog::where('invoice_id', $id)->pluck('error');
-
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect', 'refundData') );
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect') );
 		}
 		return abort(404);
 	}
@@ -917,7 +915,17 @@ class InvoicesController extends BaseController
 				$dataToUpdate['own'] = 0;
 				$dataToUpdate['sales_price'] = 0;
 				$cc = new CustomersController();
-				$cc->refundSequence($status_before);
+				$res = $cc->refundSequence($status_before);
+				if(!$res['success']){
+					$errors = 'Unknown Error happen.';
+					if($res['data'] && is_array($res['data'])){
+						$errors = '';
+						foreach ($res['data'] as $e){
+							$errors .= '<div>'.$e.'</div>';
+						}
+					}
+					return $this->sendError($errors);
+				}
 			}
 
 			Invoices::where('id', $request->input( 'invoice_id' ))->update($dataToUpdate);

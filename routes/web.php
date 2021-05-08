@@ -40,6 +40,7 @@ Route::post('/customers-contacts/subscribe', 'CustomersContactsController@subscr
 
 Route::post('/customers-contacts/add-contact', 'CustomersContactsController@addContact', ['middleware' => 'csrf']);
 Route::post('/customers-contacts/delete-contact', 'CustomersContactsController@deleteContact', ['middleware' => 'csrf']);
+Route::post('/customers-contacts/recheck_subscriptions', 'CustomersContactsController@recheckSubscriptions', ['middleware' => 'csrf']);
 
 Route::post('/send-invoice-email', 'SendEmailController@sendInvoiceEmail', ['middleware' => 'csrf']);
 Route::post('/send-generatedinvoice-email', 'SendEmailController@sendGeneratedInvoiceEmail', ['middleware' => 'csrf']);

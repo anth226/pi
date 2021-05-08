@@ -180,11 +180,15 @@
 
 
             $(document).on('submit', '#add_phone', function (event) {
-                makeAjaxCall($(this));
+                makeAjaxCall($(this), '/customers-contacts/add-contact');
             });
 
             $(document).on('submit', '#add_email', function (event) {
-                makeAjaxCall($(this));
+                makeAjaxCall($(this),'/customers-contacts/add-contact');
+            });
+
+            $(document).on('submit', '#recheck_subscriptions', function (event) {
+                makeAjaxCall($(this),'/customers-contacts/recheck_subscriptions');
             });
 
             $(document).on('click', '.del-contact', function (event) {
@@ -216,98 +220,6 @@
                     }
                 });
             });
-
-            function makeAjaxCall(current_form){
-                event.preventDefault();
-                const current_button = current_form.find('.submit');
-                const $form = current_form;
-                const submitData = $form.serialize();
-
-                current_form.prev('.error').remove();
-                const button_content = current_button.html();
-                console.log(button_content);
-                const ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
-                current_button.prop('disabled', 'disabled').append(ajax_img);
-
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-                $.ajax({
-                    url: '/customers-contacts/add-contact',
-                    type: "POST",
-                    dataType: "json",
-                    data: submitData,
-                    success: function (response) {
-                        cont_table_dt.draw();
-                        current_button.prop('disabled', '');
-                        current_button.html(button_content);
-                    },
-                    error: function (response) {
-                        current_button.prop('disabled', '');
-                        current_button.html(button_content);
-                        current_form.before('<div class="error">'+response.responseJSON.message+'</div>');
-                    }
-                });
-            }
-
-            function unsubscribeAjax(subs_id, current_button){
-                current_button.next('.error').remove();
-                const button_content = current_button.html();
-                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
-                $('button').prop('disabled', 'disabled');
-                current_button.prop('disabled', 'disabled').append(ajax_img);
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-                $.ajax({
-                    url: '/customers-contacts/unsubscribe/'+subs_id,
-                    type: "POST",
-                    dataType: "json",
-                    success: function (response) {
-                        cont_table_dt.draw();
-                        $('button').prop('disabled', '');
-                    },
-                    error: function (response) {
-                        $('button').prop('disabled', '');
-                        current_button.html(button_content);
-                        current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
-                    }
-                });
-            }
-            function subscribeAjax(contact_id, subscription_type, current_button){
-                current_button.next('.error').remove();
-                const button_content = current_button.html();
-                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
-                $('button').prop('disabled', 'disabled');
-                current_button.append(ajax_img);
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-                $.ajax({
-                    url: '/customers-contacts/subscribe',
-                    type: "POST",
-                    dataType: "json",
-                    data:{
-                        contact_id: contact_id,
-                        subscription_type: subscription_type
-                    },
-                    success: function (response) {
-                        cont_table_dt.draw();
-                        $('button').prop('disabled', '');
-                    },
-                    error: function (response) {
-                        $('button').prop('disabled', '');
-                        current_button.html(button_content);
-                        current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
-                    }
-                });
-            }
 
             $(document).on('click', '.unsubscribe_subs', function (event) {
                 let subs_id = $(this).data('subsid');
@@ -410,13 +322,103 @@
 
                 return ret_html;
             }
-
             function isSet(variable){
                 if(typeof variable !== "undefined" && variable !== null) {
                     return true;
                 }
                 return false;
             }
+            function makeAjaxCall(current_form, url){
+                event.preventDefault();
+                const current_button = current_form.find('.submit');
+                const $form = current_form;
+                const submitData = $form.serialize();
+
+                current_form.prev('.error').remove();
+                const button_content = current_button.html();
+                console.log(button_content);
+                const ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                current_button.prop('disabled', 'disabled').append(ajax_img);
+
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    dataType: "json",
+                    data: submitData,
+                    success: function (response) {
+                        cont_table_dt.draw();
+                        current_button.prop('disabled', '');
+                        current_button.html(button_content);
+                    },
+                    error: function (response) {
+                        current_button.prop('disabled', '');
+                        current_button.html(button_content);
+                        current_form.before('<div class="error">'+response.responseJSON.message+'</div>');
+                    }
+                });
+            }
+            function unsubscribeAjax(subs_id, current_button){
+                current_button.next('.error').remove();
+                const button_content = current_button.html();
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                $('button').prop('disabled', 'disabled');
+                current_button.prop('disabled', 'disabled').append(ajax_img);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/customers-contacts/unsubscribe/'+subs_id,
+                    type: "POST",
+                    dataType: "json",
+                    success: function (response) {
+                        cont_table_dt.draw();
+                        $('button').prop('disabled', '');
+                    },
+                    error: function (response) {
+                        $('button').prop('disabled', '');
+                        current_button.html(button_content);
+                        current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
+                    }
+                });
+            }
+            function subscribeAjax(contact_id, subscription_type, current_button){
+                current_button.next('.error').remove();
+                const button_content = current_button.html();
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                $('button').prop('disabled', 'disabled');
+                current_button.append(ajax_img);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/customers-contacts/subscribe',
+                    type: "POST",
+                    dataType: "json",
+                    data:{
+                        contact_id: contact_id,
+                        subscription_type: subscription_type
+                    },
+                    success: function (response) {
+                        cont_table_dt.draw();
+                        $('button').prop('disabled', '');
+                    },
+                    error: function (response) {
+                        $('button').prop('disabled', '');
+                        current_button.html(button_content);
+                        current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
+                    }
+                });
+            }
+
 
         })
     </script>
