@@ -127,6 +127,9 @@
                             @if($invoice->status != 2 && $invoice->status != 3)
                                 <button class="btn btn-outline-primary mt-2" id="refund_requested">Set as {{ \App\Invoices::STATUS[2] }}</button>
                             @endif
+                            @if(isset($user_id) && $user_id == 1)
+                                <button class="btn btn-danger mt-2" id="unsubscribe_all">Unsubscribe from Everywhere <small>beta</small></button>
+                            @endif
                         @endcan
                         {{--@can('invoice-delete')--}}
                             {{--{!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline;']) !!}--}}
@@ -1002,6 +1005,40 @@
                         }
                     });
                 }
+            });
+
+
+            $(document).on('click', '#unsubscribe_all', function (event) {
+                const current_button = $(this);
+                current_button.next('.error').remove();
+                const button_content = current_button.html();
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                current_button.prop('disabled', 'disabled').append(ajax_img);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/invoices/update-status/',
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        invoice_id:{{$invoice->id}},
+                        refundRequested:1111
+                    },
+                    success: function (response) {
+                        current_button.prop('disabled', '');
+                        current_button.html(button_content);
+                        current_button.after('<div class="text-success">'+response.message+'</div>');
+                    },
+                    error: function (response) {
+                        current_button.prop('disabled', '');
+                        current_button.html(button_content);
+                        current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
+                    }
+
+                });
             });
 
             function isSet(variable){

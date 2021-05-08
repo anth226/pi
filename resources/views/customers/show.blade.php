@@ -103,9 +103,15 @@
                         @if(!empty($customer->invoices))
                             <strong>Invoices:</strong>
                             <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$customer->invoices->id}}"><span class="badge badge-success">{{ $customer->invoices->invoice_number }}</span></a>
+                            {{--@if(isset($user_id) && $user_id == 1)--}}
+                                {{--<button class="btn btn-danger mt-2" id="delete_all">Delete Invoice and customer <small>beta</small></button>--}}
+                            {{--@endif--}}
                         @endif
                     </div>
                 </div>
+
+
+                @if(isset($user_id) && $user_id == 1)
 
                 <div class="col-md-12 mt-2">
                     <form id="add_phone" class="mb-2">
@@ -163,6 +169,9 @@
                         </tbody>
                     </table>
                 </div>
+
+                @endif
+
             </div>
 
 
@@ -234,6 +243,8 @@
                 subscribeAjax(contact_id, subscription_type, current_button);
             });
 
+             @if(isset($user_id) && $user_id == 1)
+
             var cont_table = $('table#contacts_table');
             var cont_table_dt = cont_table.DataTable({
 
@@ -273,6 +284,8 @@
 
                 ]
             });
+
+            @endif
 
             function generateSubs(subscriptions, row){
                 const KlaviyoPrimeSmsButton = '<div class="mt-2"><button data-subscription_type="2" data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-primary subscribe_subs" >Subscribe email to Klaviyo Prime daily</button></div>';

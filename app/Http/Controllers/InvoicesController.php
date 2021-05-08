@@ -344,8 +344,10 @@ class InvoicesController extends BaseController
 			$task_type = json_encode(SupportTodo::TASK_TYPE);
 			$task_status = json_encode(SupportTodo::TASK_STATUS);
 			$invoice_status = json_encode(Invoices::STATUS);
+			$user = Auth::user();
+			$user_id = $user->id;
 
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect') );
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect', 'user_id') );
 		}
 		return abort(404);
 	}
@@ -904,19 +906,14 @@ class InvoicesController extends BaseController
 
 			$user_logged = Auth::user();
 
+
+
 			$status_before = Invoices::with('customer')->where('id', $request->input( 'invoice_id' ))->first();
 
-			$dataToUpdate = [
-				'status' => $request->input( 'refundRequested' )
-			];
-
-			if($request->input( 'refundRequested' ) == 3){ // refunded
-				$dataToUpdate['paid'] = 0;
-				$dataToUpdate['own'] = 0;
-				$dataToUpdate['sales_price'] = 0;
+			if($user_logged->id == 1 && $request->input( 'refundRequested' ) == 1111) { // unsubscribe from everywhere (beta) only for dev
 				$cc = new CustomersController();
 				$res = $cc->refundSequence($status_before);
-				if(!$res['success']){
+				if(!empty($res) && !$res['success']){
 					$errors = 'Unknown Error happen.';
 					if($res['data'] && is_array($res['data'])){
 						$errors = '';
@@ -926,6 +923,24 @@ class InvoicesController extends BaseController
 					}
 					return $this->sendError($errors);
 				}
+				else{
+					$messages = '';
+					foreach ($res['data'] as $e){
+						$messages .= '<div>'.$e.'</div>';
+					}
+					$res['message'] = $messages;
+					return response()->json( $res, 200 );
+				}
+			}
+
+			$dataToUpdate = [
+				'status' => $request->input( 'refundRequested' )
+			];
+
+			if($request->input( 'refundRequested' ) == 3){ // refunded
+				$dataToUpdate['paid'] = 0;
+				$dataToUpdate['own'] = 0;
+				$dataToUpdate['sales_price'] = 0;
 			}
 
 			Invoices::where('id', $request->input( 'invoice_id' ))->update($dataToUpdate);
