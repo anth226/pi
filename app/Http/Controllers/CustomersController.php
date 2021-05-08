@@ -1180,6 +1180,62 @@ class CustomersController extends BaseController
 		}
 	}
 
+	public function checkStripe($subs_id, $email){
+		try {
+			$err_message = '';
+			if($subs_id){
+				$this->createStripe();
+				if($this->stripe) {
+					$subscription = $this->stripe->subscriptions->retrive( $subs_id, [] );
+					if ( $subscription && ! empty( $subscription->status ) && ($subscription->status == 'active' || $subscription->status == 'trialing') ) {
+						return $this->sendResponse($subscription->id, '', false );
+					}
+					$err_message = 'No stripe subscription or subscription is not active for user '.$email;
+				}
+				else{
+					$err_message = 'Can\'t connect to Stripe';
+				}
+			}
+			else{
+				$err_message = 'No Stripe subscriptionId';
+			}
+			return $this->sendError( $err_message, '', 404, false );
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersController',
+				'function' => 'checkStripe'
+			]);
+			return $this->sendError($ex->getMessage(),'',404, false);
+		}
+	}
+	public function checkFirebase($email){
+		try {
+			$user_data = $this->getFirebaseUserData( $email );
+			if ( $user_data && ! empty( $user_data['uid'] ) ) {
+
+				if ( ! empty( $user_data['subscriptionId'] ) ) {
+					return $this->sendResponse( $user_data['subscriptionId'],  'Found Firebase user '.$email.', Stripe subscriptionId: '.$user_data['subscriptionId'], false );
+				} else {
+//					$err_message = 'Can\'t cancel stripe subscription, no stripe subscriptionId found';
+					return $this->sendResponse( '', 'Found Firebase user '.$email.', No Stripe subscriptionId', false );
+				}
+			} else {
+				$err_message = 'Can\'t get Firebase User\'s data: '.$email;
+				return $this->sendError($err_message,'',404, false);
+			}
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersController',
+				'function' => 'checkFirebaseAndStripe'
+			]);
+			return $this->sendError($ex->getMessage(),'',404, false);
+		}
+	}
+
 	public function subscriptionsCheck($customer_id, $user_id, $invoice_id = 0){
 		try {
 			$contacts = CustomersContacts::where( 'customer_id', $customer_id )->get();
