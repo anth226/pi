@@ -187,7 +187,7 @@ class TestController extends BaseController
 //		dd($tt->buyNumber('+18188623918'));
 
 
-//		$this->contacts();
+		$this->contacts();
 //		$this->contactsFromPipedrive();
 //		$this->smsSubsCheck();
 	}
