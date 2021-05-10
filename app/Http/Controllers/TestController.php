@@ -189,7 +189,7 @@ class TestController extends BaseController
 
 //		$this->contacts();
 //		$this->contactsFromPipedrive();
-		$this->smsSubsCheck();
+//		$this->smsSubsCheck();
 	}
 
 	public function getPersonsSources(){
