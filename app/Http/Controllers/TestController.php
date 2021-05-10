@@ -188,8 +188,8 @@ class TestController extends BaseController
 
 
 //		$this->contacts();
-		$this->contactsFromPipedrive();
-//		$this->smsSubsCheck();
+//		$this->contactsFromPipedrive();
+		$this->smsSubsCheck();
 	}
 
 	public function getPersonsSources(){
@@ -606,63 +606,14 @@ class TestController extends BaseController
 
 
 	public function smsSubsCheck(){
-		$invoices = Invoices::with('customer.contacts')->where('id', 1711)->get();
-
+		$invoices = Invoices::with('customer')->get();
+		$cc = new CustomersController();
 		foreach($invoices as $i){
-			if(!empty($i->customer) && !empty($i->customer->contacts)) {
-				foreach($i->customer->contacts as $c) {
-					if ( $c->contact_type ) { //phone
-						$sms = $this->checkSmsSubsPhone( $c->contact_term );
-						if ( $sms && $sms['success'] && isset( $sms['data'] ) ) {
-							$dataToSave = [
-								'customers_contact_id' => $c->id,
-								'user_id'              => 1,
-								'invoice_id'           => $i->id,
-								'subscription_type'    => 3,
-								'subscription_status'  => $sms['data']
-							];
-							$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $c->id )->where( 'subscription_type', 3)->get();
-							if($if_record_exist && $if_record_exist->count()){
-								foreach($if_record_exist as $r) {
-									$dataToSave = [
-										'user_id'              => 1,
-										'subscription_status'  => $sms['data']
-									];
-									CustomersContactSubscriptions::where('id', $r->id)->update($dataToSave);
-								}
-							}
-							else {
-								CustomersContactSubscriptions::create( $dataToSave );
-							}
-						}
-					} else { //email
-						$sms = $this->checkSmsSubsEmail( $c->contact_term );
-						if ( $sms && $sms['success'] && isset( $sms['data'] )) {
-							$dataToSave = [
-								'customers_contact_id' => $c->id,
-								'user_id'              => 1,
-								'invoice_id'           => $i->id,
-								'subscription_type'    => 4,
-								'subscription_status'  => $sms['data']
-							];
-							$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $c->id )->where( 'subscription_type', 4)->get();
-							if($if_record_exist && $if_record_exist->count()) {
-								foreach ( $if_record_exist as $r ) {
-									$dataToSave = [
-										'user_id'              => 1,
-										'subscription_status'  => $sms['data']
-									];
-									CustomersContactSubscriptions::where('id', $r->id)->update($dataToSave);
-								}
-							}
-							else {
-								CustomersContactSubscriptions::create( $dataToSave );
-							}
-						}
-					}
-				}
+			if(!empty($i->customer)) {
+				$cc->subscriptionsCheck($i->customer->id, 1);
 			}
 		}
+		echo "Done!";
 	}
 
 }
