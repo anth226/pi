@@ -610,7 +610,7 @@ class TestController extends BaseController
 		$cc = new CustomersController();
 		foreach($invoices as $i){
 			if(!empty($i->customer)) {
-				$cc->subscriptionsCheck($i->customer->id, 1);
+				$cc->subscriptionsCheck($i->customer->id, 1, $i->id);
 			}
 		}
 		echo "Done!";
