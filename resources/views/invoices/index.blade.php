@@ -312,10 +312,17 @@
                     { data: 'product.title', name: 'product.title', "sortable": true, "searchable": false, render: function ( data, type, row ){
                             let res_str = '<div class="h5">'+data+'</div><div><small>'+row.product.description+'</small></div>';
                             if(row.product.id > 1) {
-                                res_str += '<div class="small">Start Date: '+row.stripe_current_period_start+'</div>';
-                                res_str += '<div class="small">End Date: '+row.stripe_current_period_end+'</div>';
-                                res_str += '<div class="h6">Status: <span class="status_'+row.stripe_subscription_status+'">'+subscription_status[row.stripe_subscription_status]+'<span></div>';
+                                if(isSet(row.stripe_current_period_start)) {
+                                    res_str += '<div class="small">Start Date: ' + row.stripe_current_period_start + '</div>';
+                                }
+                                if(isSet(row.stripe_current_period_end)) {
+                                    res_str += '<div class="small">End Date: ' + row.stripe_current_period_end + '</div>';
+                                }
                             }
+                            if(isSet(row.stripe_subscription_status)) {
+                                res_str += '<div class="h6">Status: <span class="status_' + row.stripe_subscription_status + '">' + subscription_status[row.stripe_subscription_status] + '<span></div>';
+                            }
+
                             return res_str;
                         }  },
 

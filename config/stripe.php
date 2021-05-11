@@ -5,6 +5,7 @@ if(config('app.env') == 'local'){
 		'endpointSecret' => env( 'STRIPE_TEST_ENDPOINT_SECRET' ) ?: '',
 		'price'          => env( 'STRIPE_TEST_PRICE_ID' ) ?: '',
 		'coupon'         => env( 'STRIPE_TEST_COUPON_ID_PRIME' ) ?: '',
+		'webhook_secret' => env( 'STRIPE_TEST_WEBHOOK_SECRET' ) ?: '',
 	];
 }
 else {
@@ -13,5 +14,6 @@ else {
 		'endpointSecret' => env( 'STRIPE_PROD_ENDPOINT_SECRET' ) ?: '',
 		'price'          => env( 'STRIPE_PROD_PRICE_ID' ) ?: '',
 		'coupon'         => env( 'STRIPE_PROD_COUPON_ID_PRIME' ) ?: '',
+		'webhook_secret' => env( 'STRIPE_PROD_WEBHOOK_SECRET' ) ?: '',
 	];
 }
