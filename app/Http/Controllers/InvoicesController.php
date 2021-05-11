@@ -142,12 +142,14 @@ class InvoicesController extends BaseController
 		$task_type = json_encode(SupportTodo::TASK_TYPE);
 		$task_status = json_encode(SupportTodo::TASK_STATUS);
 		$invoice_status = json_encode(Invoices::STATUS);
-		return view( 'invoices.index', compact( 'firstDate', 'lastDate', 'user', 'task_status', 'task_type', 'invoice_status' ) );
+		$subscription_status = json_encode(Invoices::SUBSCRIPTION_SUBS_STATUS);
+		return view( 'invoices.index', compact( 'firstDate', 'lastDate', 'user', 'task_status', 'task_type', 'invoice_status', 'subscription_status' ) );
 
 	}
 
 	public function anyData(Request $request){
 		$query =  Invoices::with('customer')
+		                  ->with('product')
 		                  ->with('salespeople.salespersone')
 						  ->with('salespeople.level')
 						  ->with('customer.pipedriveSources')
@@ -343,10 +345,10 @@ class InvoicesController extends BaseController
 			$task_type = json_encode(SupportTodo::TASK_TYPE);
 			$task_status = json_encode(SupportTodo::TASK_STATUS);
 			$invoice_status = json_encode(Invoices::STATUS);
+			$subscription_status = json_encode(Invoices::SUBSCRIPTION_SUBS_STATUS);
 			$user = Auth::user();
 			$user_id = $user->id;
-
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect', 'user_id') );
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect', 'user_id', 'subscription_status') );
 		}
 		return abort(404);
 	}
@@ -617,10 +619,10 @@ class InvoicesController extends BaseController
 	}
 
 
-	public function generateInvoiceNumber($id, $prefix = '00425-'){
+	public function generateInvoiceNumber($id, $prefix = '00425'){
 		$value = 1025 + $id;
 		$valueWithZeros = $formatted_value = sprintf("%05d", $value);
-		return $prefix.$valueWithZeros;
+		return $prefix.'-'.$valueWithZeros;
 	}
 
 	public function moneyFormat($value){
@@ -636,17 +638,17 @@ class InvoicesController extends BaseController
 	}
 
 	public function generatePDF($id, $pdftemplate = 'pdfviewmain'){
-		$item_price = 9995;
 		$invoice = Invoices::
 							with('customer')
 		                   ->with('salespersone')
 		                   ->with('product')
 		                   ->find($id);
 		if($invoice) {
+			$item_price = $invoice->product->price;
 			if(($item_price - $invoice->sales_price) <=0 ) {
 				$item_price = $invoice->sales_price;
 			}
-			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->customer->id);
+			$invoice->invoice_number = $this->generateInvoiceNumber($invoice->customer->id, $invoice->product->sku);
 			$price_before_discount = $this->moneyFormat( $item_price );
 			$total_before_discount = $this->moneyFormat( $item_price * $invoice->qty );
 			$discount = $this->moneyFormat( ($item_price - $invoice->sales_price) * $invoice->qty );

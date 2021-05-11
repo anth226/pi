@@ -78,6 +78,21 @@
 
 
             {!! Form::open(array('route' => 'customers-invoices.store','method'=>'POST', 'id' => 'invoiceCreate')) !!}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <strong>Subscription Type *:</strong>
+                        {!! Form::select('product_id', $products,[], array('class' => 'form-control')) !!}
+                    </div>
+                </div>
+
+                <div class="col-md-6 d-none">
+                    <div class="form-group">
+                        <strong>Quantity *:</strong>
+                        {!! Form::number('qty', null, array('placeholder' => 'Quantity','class' => 'form-control', 'min="1"', 'max="10000"', 'step="1"', 'value="1"')) !!}
+                    </div>
+                </div>
+            </div>
 	        <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -196,21 +211,7 @@
                     </div>
                 </div>
             </div>
-            <div class="row d-none">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Product *:</strong>
-                        {!! Form::select('product_id', $products,[], array('class' => 'form-control')) !!}
-                    </div>
-                </div>
 
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <strong>Quantity *:</strong>
-                        {!! Form::number('qty', null, array('placeholder' => 'Quantity','class' => 'form-control', 'min="1"', 'max="10000"', 'step="1"', 'value="1"')) !!}
-                    </div>
-                </div>
-            </div>
 
             @if(!empty($test_mode))
                 <input type="hidden" name="test_mode" value="{{$test_mode}}">
@@ -241,6 +242,31 @@
                 placeholder: 'Please select',
                 allowClear: true
             });
+
+            var product_sel = $('select[name="product_id"]');
+            var pdftemplate_sel = $('select[name="pdftemplate_id"]');
+            product_sel.on('change', function(){
+                updatePdfTemplateSelect();
+            });
+
+            function updatePdfTemplateSelect(){
+                let product_id = product_sel.val();
+                switch(product_id) {
+                    case '1':
+                        pdftemplate_sel.val(1);
+                        pdftemplate_sel.trigger('change');
+                        break;
+                    case '2':
+                        pdftemplate_sel.val(4);
+                        pdftemplate_sel.trigger('change');
+                        break;
+                    default:
+                        pdftemplate_sel.val(1);
+                        pdftemplate_sel.trigger('change');
+                }
+            }
+
+            updatePdfTemplateSelect();
 
             var pr_salesperson = $('select[name="salespeople_id"]');
             var second_salesperson = $('select[name="second_salespeople_id[]"]');

@@ -45,6 +45,15 @@
         .bg_active{
             background-color: rgba(255,255,0,.4) !important;
         }
+        .status_1{
+            color:#28a745!important;
+        }
+        .status_11{
+            color:#ffc107!important;
+        }
+        .status_7, .status_8, .status_9, .status_10{
+            color:#dc3545!important;
+        }
     </style>
 @endsection
 
@@ -271,6 +280,27 @@
                         <strong>Access Date:</strong>
                         {{ $access_date }}
                     </div>
+
+                    @if($invoice->product_id > 1)
+                        @if(!empty($invoice->stripe_current_period_start))
+                            <div>
+                                <strong>Start Date:</strong>
+                                {{ $invoice->stripe_current_period_start }}
+                            </div>
+                        @endif
+                        @if(!empty($invoice->stripe_current_period_end))
+                            <div>
+                                <strong>End Date:</strong>
+                                {{ $invoice->stripe_current_period_end }}
+                            </div>
+                        @endif
+                        @if(!empty($invoice->stripe_current_period_start))
+                            <div>
+                                <strong>Stripe Subscription Status:</strong>
+                                <span class="status_{{ $invoice->stripe_subscription_status }}">{{ \App\Invoices::SUBSCRIPTION_SUBS_STATUS[$invoice->stripe_subscription_status] }}</span>
+                            </div>
+                        @endif
+                    @endif
 
                 </div>
                 <div class="col-md-6">
