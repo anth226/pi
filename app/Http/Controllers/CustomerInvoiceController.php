@@ -75,6 +75,7 @@ class CustomerInvoiceController extends CustomersController
 			'phone_number' => 'required|max:120|min:10',
 			'salespeople_id' => 'required|numeric|min:1',
 			'product_id' => 'required|numeric|min:1',
+			'pdftemplate_id' => 'required|numeric|min:1',
 			'sales_price' => 'required',
 			'qty' => 'required|numeric|min:1',
 			'access_date' => 'required',
@@ -110,7 +111,8 @@ class CustomerInvoiceController extends CustomersController
 			'phone_number' => $request->input('phone_number'),
 			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
 			'sales_price' => $sales_price,
-			'paid' => $paid
+			'paid' => $paid,
+			'stripe_product_id' => $request->input('product_id')
 		];
 
 		if(!$test_mode) {
@@ -239,7 +241,7 @@ class CustomerInvoiceController extends CustomersController
 				$pdftemplate = PdfTemplates::where('id', $pdftemplate_id)->value('slug');
 			}
 
-			$invoice = Invoices::create([
+			$invoice_data_to_save = [
 				'customer_id' => $customer->id,
 				'salespeople_id' => $salespeople_id->salespeople_id,
 				'product_id' => $request->input('product_id'),
@@ -250,8 +252,29 @@ class CustomerInvoiceController extends CustomersController
 				'paid' => $paid,
 				'own' => $sales_price - $paid,
 				'paid_at' => Carbon::now(),
-				'pdftemplate_id' => $pdftemplate_id
-			]);
+				'pdftemplate_id' => $pdftemplate_id,
+			];
+
+			if(!empty($stripe_res) && !empty($stripe_res['data'])){
+				if(!empty($stripe_res['data']['id'])){
+					$invoice_data_to_save['stripe_subscription_id'] = $stripe_res['data']['id'];
+				}
+				if(!empty($stripe_res['data']['customer'])){
+					$invoice_data_to_save['stripe_customer_id'] = $stripe_res['data']['customer'];
+				}
+				if(!empty($stripe_res['data']['current_period_end'])){
+					$invoice_data_to_save['stripe_current_period_end'] = date("Y-m-d H:i:s",$stripe_res['data']['current_period_end']);
+				}
+				if(!empty($stripe_res['data']['current_period_start'])){
+					$invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s",$stripe_res['data']['current_period_start']);
+				}
+				if(!empty($stripe_res['data']['status'])){
+					$invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$stripe_res['data']['status']];
+				}
+			}
+
+			$invoice = Invoices::create($invoice_data_to_save);
+
 
 			$user = Auth::user();
 			ActionsLog::create([

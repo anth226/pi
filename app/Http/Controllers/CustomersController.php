@@ -12,6 +12,7 @@ use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\KmClasses\Sms\UsStates;
 use App\PipedriveData;
+use App\Products;
 use App\SentData;
 use App\Strings;
 use Illuminate\Http\Request;
@@ -297,20 +298,25 @@ class CustomersController extends BaseController
 			return $this->sendError($error, [], 404, false);
 		}
 	}
-	public function createStripeSubscription($customer_id){
+	public function createStripeSubscription($customer_id, $product_id){
 		try{
+			$product =  Products::find($product_id);
 			$data = [
 				'customer' => $customer_id,
 				'coupon' => config('stripe.coupon'),
 				'trial_from_plan' => true,
 			];
-			if(config('stripe.price')){
+			if(config('app.env') == 'local') {
 				$data['items'] = [
-					['price' => config('stripe.price')]
+					['price' => $product->dev_stripe_price_id]
 				];
+				$data['coupon'] = $product->dev_stripe_coupon_id;
 			}
-			if(config('stripe.coupon')){
-				$data['coupon'] = config('stripe.coupon');
+			else{
+				$data['items'] = [
+					['price' => $product->stripe_price_id]
+				];
+				$data['coupon'] = $product->stripe_coupon_id;
 			}
 			$subscription = $this->stripe->subscriptions->create($data);
 			return $this->sendResponse($subscription, '', false);
@@ -332,7 +338,7 @@ class CustomersController extends BaseController
 			if($this->stripe) {
 				$res = $this->createStripeCustomer( $input );
 				if ( $res && $res['success'] && ! empty( $res['data'] ) ) {
-					return $this->createStripeSubscription( $res['data'] );
+					return $this->createStripeSubscription( $res['data'], $input['stripe_product_id'] );
 				}
 				return $res;
 			}

@@ -23,8 +23,8 @@ class Products extends Model
 	];
 
 	public static function getIdsAndFullNames(){
-		return self::selectRaw("id, CONCAT(title, ' ($', price, ', sku: ', sku, ')') as full_name")
-		           ->orderBy('id', 'desc')
+		return self::selectRaw("id, CONCAT(title, ' (', description, ')') as full_name")
+		           ->orderBy('id', 'asc')
 		           ->limit(1000)
 		           ->pluck('full_name', 'id')
 		           ->toArray()

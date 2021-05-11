@@ -33,16 +33,6 @@ class CustomersContactSubscriptions extends Model
 		11 => 'Trialing'
 	];
 
-	public const STRIPE_STATUSES = [
-		'active' =>1,
-		'past_due' => 6,
-		'unpaid' => 7,
-		'canceled' => 8,
-		'incomplete' => 9,
-		'incomplete_expired' => 10,
-		'trialing' => 11
-	];
-
 	public const SUBSCRIPTION_TYPES = [
 		0 => 'Firebase',
 		1 => 'Firebase User',

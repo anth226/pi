@@ -8,6 +8,15 @@
         .bg_refunded{
             background-color: rgba(0,0,0,.3) !important;
         }
+        .status_1{
+            color:#28a745!important;
+        }
+        .status_11{
+            color:#ffc107!important;
+        }
+        .status_7, .status_8, .status_9, .status_10{
+            color:#dc3545!important;
+        }
     </style>
 @endsection
 
@@ -94,9 +103,10 @@
                 <tr>
                     <th>Access Date</th>
                     <th>ID</th>
-                    <th>Name</th>
-                    <th>Email/Phone</th>
+                    <th>Subscription</th>
+                    <th>Customer</th>
                     <th>Phone</th>
+                    <th>Email</th>
                     <th>Salespeople</th>
                     <th>Amount</th>
                     <th>To Pay</th>
@@ -137,6 +147,7 @@
             var task_type = jQuery.parseJSON('{!! $task_type !!}');
             var task_status = jQuery.parseJSON('{!! $task_status !!}');
             var invoice_status = jQuery.parseJSON('{!! $invoice_status !!}');
+            var subscription_status = jQuery.parseJSON('{!! $subscription_status !!}');
 
             var show_sansitive_info = false;
 
@@ -290,28 +301,35 @@
                 // ],
                 columns: [
                     { data: 'access_date', name: 'access_date', "searchable": false, orderData: [ 0, 1 ],  render: function ( data, type, row ){
+                            let res_str = '<div class="h5">' + formatDate(data) + '</div>';
+                            res_str += '<div class="my-2"><div><small><strong>Created at: </strong></small></div><div><small>'+formatDateTime(row.created_at)+'</small></div></div>';
                             if(isSet(row.id)) {
-                                return formatDate(data) + ' <a title="Open invoice in a new tab" target="_blank" href="/invoices/' + row.id + '"><span class="badge badge-success">View</span></a>';
+                                res_str += '<div><a title="Open invoice in a new tab" target="_blank" href="/invoices/' + row.id + '"><span class="badge badge-success">View</span></a></div>';
                             }
-                            else{
-                                return formatDate(data);
-                            }
+                            return res_str;
                         } },
                     { data: 'id', name: 'id', "searchable": false,  "visible": false },
+                    { data: 'product.title', name: 'product.title', "sortable": true, "searchable": false, render: function ( data, type, row ){
+                            let res_str = '<div class="h5">'+data+'</div><div><small>'+row.product.description+'</small></div>';
+                            if(row.product.id > 1) {
+                                res_str += '<div class="small">Start Date: '+row.stripe_current_period_start+'</div>';
+                                res_str += '<div class="small">End Date: '+row.stripe_current_period_end+'</div>';
+                                res_str += '<div class="h6">Status: <span class="status_'+row.stripe_subscription_status+'">'+subscription_status[row.stripe_subscription_status]+'<span></div>';
+                            }
+                            return res_str;
+                        }  },
 
                     { data: 'customer.first_name', name: 'customer.first_name',"sortable": false,  render: function ( data, type, row ){
                             let nameStr = '<div><a href="/customers/'+row.customer.id+'" target="_blank">'+row.customer.first_name+' '+row.customer.last_name+'</a></div>';
+                            nameStr += '<div>'+row.customer.email+'</div><div class="text-nowrap">'+row.customer.phone_number+'</div>';
                             if(row.status == 2 || row.status == 3){
                                 nameStr += '<div style="line-height: 1.1;" class="mt-2 text-danger small">'+invoice_status[row.status]+'</div>'
                             }
                             return nameStr;
                         }},
 
-
-                    { data: 'customer.email', name: 'customer.email', "sortable": false, render: function ( data, type, row ){
-                            return '<div>'+data+'</div><div>'+row.customer.phone_number+'</div>';
-                        }  },
-                    { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, className:"text-nowrap", "visible": false},
+                    { data: 'customer.phone_number', name: 'customer.phone_number', "sortable": false, "visible": false},
+                    { data: 'customer.email', name: 'customer.email', "sortable": false, "visible": false},
                     { data: 'salespersone', name: 'salespersone',"sortable": false,"searchable": false, className:"text-nowrap", render: function ( data, type, row ){
                             return generateSalespeople(row);
                         }  },
@@ -451,6 +469,11 @@
                 var y = formattedDate.getFullYear();
                 const month = formattedDate.toLocaleString('default', { month: 'short' });
                 return month + " " + d + " " + y;
+            }
+            function formatDateTime(datetime){
+                let datetime_array = datetime.split(" ");
+                let res_str = formatDate(datetime_array[0]);
+                return res_str + ' ' + datetime_array[1];
             }
 
             function isSet(variable){

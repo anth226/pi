@@ -26,13 +26,37 @@ class Invoices extends Model
 		'paid_at',
 		'refunded_at',
 		'pdftemplate_id',
-		'status'
+		'status',
+		'stripe_subscription_id',
+		'stripe_customer_id',
+		'stripe_current_period_end',
+		'stripe_current_period_start',
+		'stripe_subscription_status'
 	];
 
 	public const STATUS = [
 		1 => 'Active',
 		2 => 'High Risk',
 		3 => 'Refunded'
+	];
+	public const SUBSCRIPTION_SUBS_STATUS = [
+		1 => 'Active',
+		6 => 'Past Due',
+		7 => 'Unpaid',
+		8 => 'Canceled',
+		9 => 'Incomplete',
+		10 => 'Incomplete Expired',
+		11 => 'Trialing'
+	];
+
+	public const STRIPE_STATUSES = [
+		'active' =>1,
+		'past_due' => 6,
+		'unpaid' => 7,
+		'canceled' => 8,
+		'incomplete' => 9,
+		'incomplete_expired' => 10,
+		'trialing' => 11
 	];
 
 	public function customer()
