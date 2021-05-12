@@ -1220,8 +1220,8 @@ class CustomersController extends BaseController
 			if ( $user_data )  {
 				return $this->sendResponse( $user_data, '', false);
 			} else {
-				$err_message = 'Can\'t get Firebase User\'s data: '.$email;
-				return $this->sendError($err_message,'',404, false);
+				$message = 'Can\'t get Firebase User\'s data: '.$email;
+				return $this->sendResponse($user_data,$message, false);
 			}
 		}
 		catch (Exception $ex){
@@ -1314,12 +1314,16 @@ class CustomersController extends BaseController
 							$user_data = !empty($sms['data']) ? $sms['data'] : [];
 							$dataToSave['subscription_type']   = 1;
 							$dataToSave['subscription_status'] = 1;
+							if(empty($user_data['userId'])){
+								$dataToSave['subscription_status'] = 0;
+							}
 							if(!empty($user_data['disabled'])){
 								$dataToSave['subscription_status'] = 12;
 							}
 							if ( $invoice_id ) {
 								$dataToSave['invoice_id'] = $invoice_id;
 							}
+
 							$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $c->id )->where( 'subscription_type', 1 )->get();
 
 							if ( $if_record_exist && $if_record_exist->count() ) {
@@ -1337,7 +1341,13 @@ class CustomersController extends BaseController
 
 							//check stripe
 							if(!empty($user_data['subscriptionId'])) {
-								$sms = $this->checkStripe( $user_data['subscriptionId'], $c->contact_term );
+								$subscription_id = $user_data['subscriptionId'];
+							}
+							else {
+								$subscription_id = Invoices::where('customer_id', $customer_id)->value('stripe_subscription_id');
+							}
+							if($subscription_id){
+								$sms = $this->checkStripe( $subscription_id, $c->contact_term );
 
 								if ( $sms && $sms['success'] ) {
 									$sms['data']  = ! empty( $sms['data'] ) ? $sms['data'] : 0;
