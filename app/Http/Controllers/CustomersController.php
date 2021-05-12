@@ -498,8 +498,8 @@ class CustomersController extends BaseController
 			if($this->firebase) {
 				$auth = $this->firebase->createAuth();
 				$res =  $auth->getUserByEmail($email);
-				if($res && $res->uid){
-					return $res->uid;
+				if($res){
+					return $res;
 				}
 				else{
 					return false;
@@ -526,18 +526,19 @@ class CustomersController extends BaseController
 
 	public function getFirebaseUserData($email){
 		try {
-			$firebase_uid = $this->findFirebaseUser( $email );
-			if ( $firebase_uid ) {
-				$ret_data = [
-					'uid' => $firebase_uid,
-					'customerId' => '',
-					'subscriptionId' => ''
-				];
-				$user_data = $this->getFirebaseCollectionRecord( $firebase_uid );
-				if ( ! empty( $user_data ) && ! empty( $user_data['customerId'] ) ) {
-					$ret_data['customerId'] = $user_data['customerId'];
-					$ret_data['subscriptionId'] = !empty($user_data['subscriptionId']) ? $user_data['subscriptionId'] : '';
-					return $ret_data;
+			$firebase = $this->findFirebaseUser( $email );
+			if ( !empty($firebase) && !empty($firebase->uid) ) {
+				$user_data = $this->getFirebaseCollectionRecord( $firebase->uid );
+				if (isset( $user_data ) && is_array($user_data) ) {
+					$user_data['uid'] = $firebase->uid;
+					$user_data['disabled'] = $firebase->disabled;
+					return $user_data;
+				}
+				else{
+					return [
+						'uid' => $firebase->uid,
+						'disabled' => $firebase->disabled
+					];
 				}
 			}
 			return false;
@@ -1186,13 +1187,12 @@ class CustomersController extends BaseController
 
 	public function checkStripe($subs_id, $email){
 		try {
-			$err_message = '';
 			if($subs_id){
 				$this->createStripe();
 				if($this->stripe) {
-					$subscription = $this->stripe->subscriptions->retrive( $subs_id, [] );
-					if ( $subscription && ! empty( $subscription->status ) && ($subscription->status == 'active' || $subscription->status == 'trialing') ) {
-						return $this->sendResponse($subscription->id, '', false );
+					$subscription = $this->stripe->subscriptions->retrieve( $subs_id, [] );
+					if ( !empty($subscription) ) {
+						return $this->sendResponse($subscription, '', false );
 					}
 					$err_message = 'No stripe subscription or subscription is not active for user '.$email;
 				}
@@ -1217,14 +1217,8 @@ class CustomersController extends BaseController
 	public function checkFirebase($email){
 		try {
 			$user_data = $this->getFirebaseUserData( $email );
-			if ( $user_data && ! empty( $user_data['uid'] ) ) {
-
-				if ( ! empty( $user_data['subscriptionId'] ) ) {
-					return $this->sendResponse( $user_data['subscriptionId'],  'Found Firebase user '.$email.', Stripe subscriptionId: '.$user_data['subscriptionId'], false );
-				} else {
-//					$err_message = 'Can\'t cancel stripe subscription, no stripe subscriptionId found';
-					return $this->sendResponse( '', 'Found Firebase user '.$email.', No Stripe subscriptionId', false );
-				}
+			if ( $user_data )  {
+				return $this->sendResponse( $user_data, '', false);
 			} else {
 				$err_message = 'Can\'t get Firebase User\'s data: '.$email;
 				return $this->sendError($err_message,'',404, false);
@@ -1312,6 +1306,92 @@ class CustomersController extends BaseController
 							} else {
 								CustomersContactSubscriptions::create( $dataToSave );
 							}
+						}
+
+						$sms = $this->checkFirebase($c->contact_term);
+
+						if ( $sms && $sms['success']) {
+							$user_data = !empty($sms['data']) ? $sms['data'] : [];
+							$dataToSave['subscription_type']   = 1;
+							$dataToSave['subscription_status'] = 1;
+							if(!empty($user_data['disabled'])){
+								$dataToSave['subscription_status'] = 12;
+							}
+							if ( $invoice_id ) {
+								$dataToSave['invoice_id'] = $invoice_id;
+							}
+							$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $c->id )->where( 'subscription_type', 1 )->get();
+
+							if ( $if_record_exist && $if_record_exist->count() ) {
+								foreach ( $if_record_exist as $r ) {
+									$dataToSaveForUpdate = [
+										'subscription_status' => $dataToSave['subscription_status']
+									];
+									CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSaveForUpdate );
+								}
+							} else {
+								CustomersContactSubscriptions::create( $dataToSave );
+							}
+
+
+
+							//check stripe
+							if(!empty($user_data['subscriptionId'])) {
+								$sms = $this->checkStripe( $user_data['subscriptionId'], $c->contact_term );
+
+								if ( $sms && $sms['success'] ) {
+									$sms['data']  = ! empty( $sms['data'] ) ? $sms['data'] : 0;
+									$subscription_price_id = (!empty($sms['data']->plan) && !empty($sms['data']->plan->id)) ? $sms['data']->plan->id : '';
+									$prod_id = 0;
+									$subscription_type = false;
+									if($subscription_price_id){
+										if(config('app.env') == 'local') {
+											$prod_id = Products::where('dev_stripe_price_id', $subscription_price_id)->value('id');
+										}
+										else{
+											$prod_id = Products::where('stripe_price_id', $subscription_price_id)->value('id');
+										}
+									}
+									if($prod_id) {
+										switch ( $prod_id ) {
+											case 1:
+												$subscription_type   = 6;
+												break;
+											case 2:
+												$subscription_type   = 7;
+												break;
+											case 3:
+												$subscription_type   = 8;
+												break;
+										}
+									}
+
+									if($subscription_type){
+										$dataToSave['subscription_type']   = $subscription_type;
+										$dataToSave['subscription_status'] = Invoices::STRIPE_STATUSES[$sms['data']->status];
+										if ( $invoice_id ) {
+											$dataToSave['invoice_id'] = $invoice_id;
+										}
+										$if_record_exist = CustomersContactSubscriptions::where( 'customers_contact_id', $c->id )->where( 'subscription_type', $subscription_type )->get();
+
+										if ( $if_record_exist && $if_record_exist->count() ) {
+											foreach ( $if_record_exist as $r ) {
+												$dataToSaveForUpdate = [
+													'subscription_status' => $dataToSave['subscription_status']
+												];
+												CustomersContactSubscriptions::where( 'id', $r->id )->update( $dataToSaveForUpdate );
+											}
+										} else {
+											CustomersContactSubscriptions::create( $dataToSave );
+										}
+									}
+
+								}
+							}
+
+
+
+
 						}
 					}
 				}

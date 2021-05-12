@@ -30,7 +30,9 @@ class CustomersContactSubscriptions extends Model
 		8 => 'Canceled',
 		9 => 'Incomplete',
 		10 => 'Incomplete Expired',
-		11 => 'Trialing'
+		11 => 'Trialing',
+		// for firebase
+		12 => 'Disabled'
 	];
 
 	public const SUBSCRIPTION_TYPES = [
@@ -41,7 +43,8 @@ class CustomersContactSubscriptions extends Model
 		4 => 'SMS System: Prime email',
 		5 => 'Stripe: User',
 		6 => 'Stripe: Lifetime',
-		7 => 'Stripe: Annual'
+		7 => 'Stripe: Annual',
+		8 => 'Stripe: Daily'
 	];
 
 	public function user()

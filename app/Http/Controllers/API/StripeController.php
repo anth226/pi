@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 use App\Errors;
+use Stripe\Exception\SignatureVerificationException;
 use Stripe\Stripe;
 use Stripe\Webhook;
 
@@ -26,7 +27,7 @@ class StripeController extends BaseController
 		    $event = Webhook::constructEvent(
 			    $payload, $sig_header, $endpoint_secret
 		    );
-	    } catch(\UnexpectedValueException $e) {
+	    } catch(SignatureVerificationException $e) {
 		    // Invalid payload
 		    http_response_code(400);
 		    exit();
