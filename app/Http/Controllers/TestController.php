@@ -191,6 +191,7 @@ class TestController extends BaseController
 //		$this->contactsFromPipedrive();
 //		$this->smsSubsCheck();
 //		dd($this->updateAllAnnualSubscriptions());
+		dd(config( 'stripe.endpointSecret' ));
 
 	}
 
