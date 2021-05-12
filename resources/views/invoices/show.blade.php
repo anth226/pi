@@ -294,13 +294,14 @@
                                 {{ $invoice->stripe_current_period_end }}
                             </div>
                         @endif
-                        @if(!empty($invoice->stripe_current_period_start))
-                            <div>
-                                <strong>Stripe Subscription Status:</strong>
-                                <span class="status_{{ $invoice->stripe_subscription_status }}">{{ \App\Invoices::SUBSCRIPTION_SUBS_STATUS[$invoice->stripe_subscription_status] }}</span>
-                            </div>
-                        @endif
                     @endif
+                    @if(!empty($invoice->stripe_subscription_status))
+                        <div>
+                            <strong>Stripe Subscription Status:</strong>
+                            <span class="status_{{ $invoice->stripe_subscription_status }}">{{ \App\Invoices::SUBSCRIPTION_SUBS_STATUS[$invoice->stripe_subscription_status] }}</span>
+                        </div>
+                    @endif
+
 
                 </div>
                 <div class="col-md-6">
