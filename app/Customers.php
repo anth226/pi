@@ -36,7 +36,7 @@ class Customers extends Model
 	}
 
 	public function invoices()	{
-		return $this->hasOne('App\Invoices', 'customer_id','id');
+		return $this->hasMany('App\Invoices', 'customer_id','id');
 	}
 
 	public function pipedriveData()	{

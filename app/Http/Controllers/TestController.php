@@ -190,6 +190,8 @@ class TestController extends BaseController
 //		$this->contacts();
 //		$this->contactsFromPipedrive();
 //		$this->smsSubsCheck();
+//		dd($this->updateAllAnnualSubscriptions());
+
 	}
 
 	public function getPersonsSources(){
@@ -614,6 +616,28 @@ class TestController extends BaseController
 			}
 		}
 		echo "Done!";
+	}
+
+
+	public function updateAllAnnualSubscriptions(){
+		$annual_invoices = Invoices::where('pdftemplate_id', 4)->get();
+		foreach($annual_invoices as $i){
+			$this->updateInvoiceToAnnual($i);
+		}
+	}
+
+	public function updateInvoiceToAnnual(Invoices $invoice){
+		try{
+
+		}
+		catch (Exception $ex){
+			Errors::create([
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersController',
+				'function' => 'checkFirebaseAndStripe'
+			]);
+			return $this->sendError($ex->getMessage(),'',404, false);
+		}
 	}
 
 }

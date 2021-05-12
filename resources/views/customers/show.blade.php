@@ -100,12 +100,14 @@
                 </div>
                 <div class="col-md-12 mt-2">
                     <div class="form-group">
-                        @if(!empty($customer->invoices))
+                        @if(!empty($customer->invoices) && $customer->invoices->count())
                             <strong>Invoices:</strong>
-                            <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$customer->invoices->id}}"><span class="badge badge-success">{{ $customer->invoices->invoice_number }}</span></a>
+                            @foreach($customer->invoices as $invoice)
+                            <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$invoice->id}}"><span class="badge badge-success">{{ $invoice->invoice_number }}</span></a>
                             {{--@if(isset($user_id) && $user_id == 1)--}}
                                 {{--<button class="btn btn-danger mt-2" id="delete_all">Delete Invoice and customer <small>beta</small></button>--}}
                             {{--@endif--}}
+                            @endforeach
                         @endif
                     </div>
                 </div>
@@ -291,11 +293,13 @@
                 const KlaviyoPrimeSmsButton = '<div class="mt-2"><button data-subscription_type="2" data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-primary subscribe_subs" >Subscribe email to Klaviyo Prime daily</button></div>';
                 const smsSystemPrimePhoneButton = '<div class="mt-2"><button data-subscription_type="3" data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-primary subscribe_subs" >Subscribe phone to SmsSystem:Prime</button></div>';
                 const smsSystemPrimeEmailButton = '<div class="mt-2"><button data-subscription_type="4" data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-primary subscribe_subs" >Subscribe email to SmsSystem:Prime</button></div>';
+                const firebaseEmailButton = '<div class="mt-2"><button data-subscription_type="1" data-contact_id="'+row.id+'" type="button" class="btn btn-sm btn-primary subscribe_subs" >Create new Firebase user for the same subscription</button></div>';
 
 
                 let ifHaveSMSPrimePhone = false;
                 let ifHaveSMSPrimeEmail = false;
                 let ifHaveSMSPrimeKlaviyo = false;
+                let ifHaveFirebaseEmail = false;
 
                 let ret_html = '';
                 if(isSet(subscriptions) && subscriptions.length){
@@ -306,7 +310,9 @@
                         ret_html += '<div>Status: '+subscription_status[value.subscription_status]+'</div>';
                         ret_html += '<div><small>Created At: '+value.created_at+'</small></div>';
                         ret_html += '<div><small>Created By:'+value.user.name+'</small></div>';
-                        ret_html += '<div><button data-subsid="'+value.id+'" class="btn btn-sm btn-danger mt-2 unsubscribe_subs" >Unsubscribe</button></div>';
+                        if(value.subscription_type != 1 && value.subscription_type < 5 ) {
+                            ret_html += '<div><button data-subsid="' + value.id + '" class="btn btn-sm btn-danger mt-2 unsubscribe_subs" >Unsubscribe</button></div>';
+                        }
                         ret_html += '</div></div>';
                         if(isSet(value.subscription_type)){
                             if(value.subscription_type == 2){ //Klaviyo: Daily Prime
@@ -318,10 +324,17 @@
                             if(value.subscription_type == 4){ //SMS System: Prime email
                                 ifHaveSMSPrimeEmail = true;
                             }
+                            if(value.subscription_type == 1){ //Firebase
+                                ifHaveFirebaseEmail = true;
+                            }
                         }
                     });
                 }
 
+
+                if(!ifHaveFirebaseEmail && row.contact_type == 0){
+                    // ret_html += firebaseEmailButton;
+                }
                 if(!ifHaveSMSPrimeKlaviyo && row.contact_type == 0){
                     ret_html += KlaviyoPrimeSmsButton;
                 }
