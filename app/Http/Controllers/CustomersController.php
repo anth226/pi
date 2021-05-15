@@ -118,7 +118,7 @@ class CustomersController extends BaseController
 			$this->sendDataToSMSSystem( $dataToSend );
 		}
 
-        $this->sendDataToPISystem($customer->toArray(), 'user');
+        $this->sendDataToPISystem($customer->toArray(), '/user');
 
 		return redirect()->route('customers.show', ['customer_id' => $customer->id])
 		                 ->with('success','Customer created successfully');
