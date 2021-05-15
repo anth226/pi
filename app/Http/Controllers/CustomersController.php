@@ -52,7 +52,6 @@ class CustomersController extends BaseController
 	public function index(Request $request)
 	{
 		$customers = Customers::with('invoices')->with('invoices.salespersone')->with('invoices.salespeople.salespersone')->orderBy('customers.id','DESC')->paginate(10);
-//		dd($customers->toArray());
 		return view('customers.index',compact('customers'))
 			->with('i', ($request->input('page', 1) - 1) * 10);
 	}
@@ -119,6 +118,7 @@ class CustomersController extends BaseController
 			$this->sendDataToSMSSystem( $dataToSend );
 		}
 
+        $this->sendDataToPISystem($customer->toArray(), 'user');
 
 		return redirect()->route('customers.show', ['customer_id' => $customer->id])
 		                 ->with('success','Customer created successfully');
@@ -277,6 +277,22 @@ class CustomersController extends BaseController
 		}
 	}
 
+    public function sendDataToPISystem($input, $action_path = 'user')
+    {
+        try{
+            $result = Http::post();
+            return $this->sendResponse($customer->id, '', false);
+        }
+        catch (Exception $ex){
+            $error = $ex->getMessage();
+            Errors::create([
+                'error' => $error,
+                'controller' => 'CustomersController',
+                'function' => 'createStripeCustomer'
+            ]);
+            return $this->sendError($error, [], 404, false);
+        }
+	}
 
 	public function createStripeCustomer($input){
 		try{
