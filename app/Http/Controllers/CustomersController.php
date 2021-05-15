@@ -277,20 +277,28 @@ class CustomersController extends BaseController
 		}
 	}
 
-    public function sendDataToPISystem($input, $action_path = 'user')
+    public function sendDataToPISystem($input, $actionPath = '/user')
     {
         try{
-            $result = Http::post();
-            return $this->sendResponse($customer->id, '', false);
+            $piUrl = config('pi.url');
+            $result = send_http_request($piUrl.$actionPath, 'POST', $input);
+
+            if (is_array($result)) {
+                if(isset($result['status_code']) && $result['status_code'] == 200) {
+                    return $this->sendResponse('', 'Success to send customer data to PI system', false);
+                }
+            }
+
+            return $this->sendError('Failed to send user_id to PI system', [], 400, false);
         }
         catch (Exception $ex){
             $error = $ex->getMessage();
             Errors::create([
                 'error' => $error,
                 'controller' => 'CustomersController',
-                'function' => 'createStripeCustomer'
+                'function' => 'sendDataToPISystem'
             ]);
-            return $this->sendError($error, [], 404, false);
+            return $this->sendError($error, [], 400, false);
         }
 	}
 
