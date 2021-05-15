@@ -62,7 +62,7 @@ Route::get("/invoices/show-all", 'InvoicesController@showAll');
 Route::resource('/roles','RoleController');
 Route::resource('/users','UserController');
 Route::resource('/levels','SalespeopleLevelsController', ['only' => ['store', 'create', 'update', 'edit', 'index']]);
-Route::resource('/customers','CustomersController', ['only' => ['show']]);
+Route::resource('/customers','CustomersController');
 Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['store', 'create']]);
 Route::resource('/salespeople','SalespeopleController');
 Route::resource('/invoices','InvoicesController', ['only' => ['show', 'index']]);

@@ -103,7 +103,11 @@
                                         {{ __('Email Templates') }}
                                     </a>
                                 @endif
-
+                                @if( Gate::check('customer-list') || Gate::check('customer-edit') || Gate::check('customer-delete') || Gate::check('customer-list'))
+                                    <a class="dropdown-item" href="/customers" >
+                                        {{ __('Customers') }}
+                                    </a>
+                                @endif
                                 @if( Gate::check('user-create') || Gate::check('user-edit') || Gate::check('user-delete') || Gate::check('user-list'))
                                     <a class="dropdown-item" href="/users" >
                                         {{ __('Users') }}

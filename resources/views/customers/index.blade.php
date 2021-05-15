@@ -4,13 +4,17 @@
 @section('content')
     <div class="container">
         <div class="col-lg-12 m-auto">
-            <div class="row">
+            <div class="row table-responsive">
                 <div class="col-lg-12 margin-tb">
                     <div class="pull-left">
                         @can('invoice-create')
                             <a class="btn btn-success mb-4 mt-2" href="{{ route('customers-invoices.create') }}"> Create User & Email Invoice</a>
                         @endcan
-                        <h2>Dashboard</h2>
+
+                            @can('customer-create')
+                                <a class="btn btn-primary mb-4 mt-2 pull-right" href="{{ route('customers.create') }}"> Create Customer</a>
+                            @endcan
+                        <h2>Customers</h2>
                     </div>
                     <div class="pull-right">
                         {{--@can('customer-create')--}}
@@ -28,7 +32,7 @@
             @endif
 
 
-            <table class="table table-responsive">
+            <table class="table">
                 <tr>
                     {{--<th>Id</th>--}}
                     <th>Date</th>
@@ -37,6 +41,9 @@
                     <th>Salesperson</th>
                     <th>Email</th>
                     <th>Phone</th>
+                    <th>Address</th>
+                    <th>City</th>
+                    <th>State</th>
                     <th></th>
                 </tr>
 
@@ -66,19 +73,20 @@
                         <td>{{ $user->email }}</td>
                         <td>@php echo \App\KmClasses\Sms\FormatUsPhoneNumber::nicePhoneNumberFormat($user->phone_number, $user->formated_phone_number); @endphp</td>
                         <td>
+                            {{ $user->address_1 }}
+                        </td>
+                        <td>{{ $user->city }}</td>
+                        <td>{{ $user->state }}</td>
+                        <td>
                             <div style="max-width: 300px;">
                                 @if(!empty($user->invoices) && !empty($user->invoices->id))
-                                        <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$user->invoices->id}}"><span class="badge badge-success">View</span></a>
+                                    <a title="Open invoice in a new tab" target="_blank" href="/invoices/{{$user->invoices->id}}"><span class="badge badge-success">View</span></a>
                                 @endif
                             </div>
-                        </td>
-
-                        <td>
-
-                            {{--<a class="btn btn-info mb-1" href="{{ route('customers.show',$user->id) }}">Show</a>--}}
-                            {{--@can('customer-edit')--}}
-                                {{--<a class="btn btn-primary mb-1" href="{{ route('customers.edit',$user->id) }}">Edit</a>--}}
-                            {{--@endcan--}}
+                                <a class="btn btn-info mb-1" href="{{ route('customers.show',$user->id) }}">Show</a>
+                                @can('customer-edit')
+                                    <a class="btn btn-primary mb-1" href="{{ route('customers.edit',$user->id) }}">Edit</a>
+                                @endcan
                             {{--@can('invoice-edit')--}}
                                 {{--<a class="btn btn-success mb-1" href="{{ route('invoices.create',['customer_id' => $user->id]) }}">Create Invoice</a>--}}
                             {{--@endcan--}}
