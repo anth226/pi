@@ -27,6 +27,10 @@
             <div class="row">
                 <div class="col-md-6">
                     <div>
+                        <strong>UserID:</strong>
+                        {{ $customer->id }}
+                    </div>
+                    <div>
                         <strong>Name:</strong>
                         {{ $customer->first_name }} {{ $customer->last_name }}
                     </div>
@@ -45,7 +49,7 @@
                         {{ $customer->email }}
                     </div>
                     <div>
-                        <strong>Pnone Number:</strong>
+                        <strong>Phone Number:</strong>
                         @php
                             use App\KmClasses\Sms\FormatUsPhoneNumber;
                             echo FormatUsPhoneNumber::nicePhoneNumberFormat($customer->phone_number, $customer->formated_phone_number);
@@ -107,6 +111,9 @@
                             {{--@if(isset($user_id) && $user_id == 1)--}}
                                 {{--<button class="btn btn-danger mt-2" id="delete_all">Delete Invoice and customer <small>beta</small></button>--}}
                             {{--@endif--}}
+                                <p>
+                                    StripeID: {{ $invoice->stripe_subscription_id ?? '-' }}
+                                </p>
                             @endforeach
                         @endif
                     </div>
