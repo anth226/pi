@@ -4,6 +4,13 @@ namespace App\Helpers;
 
 class SMSHelper extends HttpHelper
 {
+    /**
+     * Send request to SMS
+     *
+     * @param $data
+     * @param string $action_path
+     * @return array
+     */
     public static function sendData($data, $action_path = 'ulpi')
     {
         if($smsUrl = config( 'smssystem.url' )) {

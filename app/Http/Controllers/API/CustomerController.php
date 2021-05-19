@@ -6,8 +6,10 @@ use App\Customers;
 use App\Helpers\SMSHelper;
 use App\Helpers\KlaviyouHelper;
 use App\Http\Requests\CustomerRequest;
+use App\Http\Resources\CustomerCollection;
 use App\Http\Resources\CustomerResource;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class CustomerController extends BaseController
 {
@@ -20,7 +22,7 @@ class CustomerController extends BaseController
     {
         $customers = Customers::with('invoices')->with('invoices.salespersone')->with('invoices.salespeople.salespersone')->orderBy('customers.id','DESC')->paginate(10);
 
-        return $this->sendResponse(CustomerResource::collection($customers), 'Sample message');
+        return response()->json(new CustomerCollection($customers));
     }
 
     /**
@@ -31,6 +33,7 @@ class CustomerController extends BaseController
         $customer = Customers::create(array_merge($request->all(), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'))]));
         if ($customer) {
             // send to klaviyou
+            $response = SMSHelper::sendData($request->all());
 
             // send to sms
             $dataToSend = [
@@ -43,11 +46,13 @@ class CustomerController extends BaseController
                 'tags' => 'portfolioinsider,portfolio-insider-prime'
             ];
             if(config('app.env') == 'production') {
-                SMSHelper::sendData($dataToSend);
+                $response = SMSHelper::sendData($dataToSend);
             }
-            // send to pipedrive
 
             // After creating a user in the invoice system it should send User_id to the PI System with the success message(if success) else error message.
+            return $this->sendResponse([
+                'user_id' => $customer->id,
+            ], $response['message']);
         }
     }
 
