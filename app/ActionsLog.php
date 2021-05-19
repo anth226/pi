@@ -26,7 +26,8 @@ class ActionsLog extends Model
 		5 => 'InvoiceGenerator',
 		6 => 'EmailTemplates',
 		7 => 'Role',
-		8 => 'Contact'
+		8 => 'Contact',
+        9 => 'Product'
 	];
 
 	public const ACTION = [

@@ -141,6 +141,7 @@ class CustomerController extends CustomersController
                             'stripe_price_id' => $priceId,
                             'dev_stripe_price_id' => $priceId,
                         ]);
+                        $this->logAction(9, 0, $product->id);
                     }
 
                     // save to invoices table
