@@ -176,9 +176,13 @@ class CustomerController extends CustomersController
      *
      * @param Customers $customer
      */
-    public function detail(Customers $customer)
+    public function detail($id)
     {
-        return $this->sendResponse(new CustomerResource($customer), 'Retrieve the customer detail successfully.');
+        if ($customer = Customers::find($id))
+            return $this->sendResponse(new CustomerResource($customer), 'Retrieve the customer detail successfully.');
+        else {
+            return $this->sendError([], 'Customer not found.', 400);
+        }
     }
 
     /**
@@ -188,7 +192,7 @@ class CustomerController extends CustomersController
      * @param CustomerRequest $request
      * @return array|\Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function postUpdate(Request $request, $id)
     {
         $request->validate([
             'first_name' => 'required|max:120',
