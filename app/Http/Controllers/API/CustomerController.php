@@ -14,6 +14,8 @@ use App\Products;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Klaviyo\Klaviyo;
+use Klaviyo\Model\ProfileModel as KlaviyoProfile;
 use Stripe\StripeClient;
 
 class CustomerController extends CustomersController
@@ -63,7 +65,7 @@ class CustomerController extends CustomersController
             'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id', 'country'
         ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'))]));
         if ($customer) {
-            // send to
+            // send to Klaviyo
             $resq = $this->subscribeKlaviyo($request->email, $request->phone_number, $request->first_name, $request->last_name);
             $res = json_decode($resq->getContent(), true);
             if (!isset($res['success']) || !$res['success'])
@@ -151,6 +153,7 @@ class CustomerController extends CustomersController
                         'paid' => $request->input('sales_price'),
                         'own' => 0,
                         'paid_at' => Carbon::now(),
+                        'deal_type' => 1,
                         'pdftemplate_id' => request('pdf_template_id', 1),
                     ];
 
@@ -210,6 +213,41 @@ class CustomerController extends CustomersController
 
         $customer = Customers::find($id);
 
+        // check if update first name last name, update Klaviyo also
+        if (
+            $customer->first_name !== $request->input('first_name') ||
+            $customer->last_name !==  $request->input('last_name')
+        ) {
+            // TODO: send update to Klaviyo
+            try {
+                $client = new Klaviyo( config( 'klaviyo.apiKey'), config( 'klaviyo.pubKey'));
+                if ($client) {
+                    // get Profile ID
+                    $profileID = $client->profiles->getProfileIdByEmail($customer->email); // this require Klaviyo Lib ver 2.3.0
+
+                    // update info
+                    $properties = [
+                        '$email' => $request->email,
+                        '$first_name' => $request->first_name,
+                        '$last_name' => $request->last_name,
+                        '$phone_number' => $request->phone_number,
+                    ];
+
+                    $client->profiles->updateProfile( $profileID['id'], $properties );
+                }
+            } catch (\Exception $e) {
+                return $this->sendError($e->getMessage(), []);
+            }
+        }
+
+        // check if update phone number, unsubscribe old phone and subscribe new one
+        if (
+            $customer->phone_number !== $request->input('phone_number')
+        ) {
+            // TODO: send update to SMS
+
+        }
+
         if (!$customer) {
             return $this->sendError([], 'Customer not found');
         }
@@ -240,7 +278,12 @@ class CustomerController extends CustomersController
      */
     public function delete(Customers $customer)
     {
+        // remove invoice record
         Invoices::where('customer_id', $customer->id)->delete();
+
+        // TODO: unsubscribe customer from Klaviyou and sms system.
+
+        // remove customer record
         $customer->delete();
         return $this->sendResponse([], 'Customer has been deleted.');
     }

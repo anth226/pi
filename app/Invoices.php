@@ -31,7 +31,8 @@ class Invoices extends Model
 		'stripe_customer_id',
 		'stripe_current_period_end',
 		'stripe_current_period_start',
-		'stripe_subscription_status'
+		'stripe_subscription_status',
+        'deal_type'
 	];
 
 	public const STATUS = [
