@@ -216,9 +216,10 @@ class CustomerController extends CustomersController
         // check if update first name last name, update Klaviyo also
         if (
             $customer->first_name !== $request->input('first_name') ||
-            $customer->last_name !==  $request->input('last_name')
+            $customer->last_name !==  $request->input('last_name') ||
+            $customer->phone_number !==  $request->input('phone_number')
         ) {
-            // TODO: send update to Klaviyo
+            // send update to Klaviyo
             try {
                 $client = new Klaviyo( config( 'klaviyo.apiKey'), config( 'klaviyo.pubKey'));
                 if ($client) {
@@ -244,8 +245,9 @@ class CustomerController extends CustomersController
         if (
             $customer->phone_number !== $request->input('phone_number')
         ) {
-            // TODO: send update to SMS
-
+            // send update to SMS, unsubscribe old phone and subscribe new one
+            $this->unsubscribeSmsSystem(json_encode($customer->email), json_encode($customer->phone_number), false);
+            $this->subscribeSmsSystem($customer->email, $request->phone_number, $customer->first_name, $customer->last_name);
         }
 
         if (!$customer) {
@@ -282,6 +284,8 @@ class CustomerController extends CustomersController
         Invoices::where('customer_id', $customer->id)->delete();
 
         // TODO: unsubscribe customer from Klaviyou and sms system.
+        $this->unsubscribeKlaviyo($customer->email);
+        $this->unsubscribeSmsSystem(json_encode($customer->email), json_encode($customer->phone_number));
 
         // remove customer record
         $customer->delete();
