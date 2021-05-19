@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\ActionsLog;
 use App\Customers;
 use App\Http\Controllers\CustomersController;
 use App\Http\Requests\CustomerRequest;
@@ -65,6 +66,7 @@ class CustomerController extends CustomersController
             'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id', 'country'
         ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'))]));
         if ($customer) {
+            $this->logAction(2, 0, $customer->id);
             // send to Klaviyo
             $resq = $this->subscribeKlaviyo($request->email, $request->phone_number, $request->first_name, $request->last_name);
             $res = json_decode($resq->getContent(), true);
@@ -163,9 +165,11 @@ class CustomerController extends CustomersController
                     $invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s", $currentPeriodStart);
                     $invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$stripeStatus];
 
-                    Invoices::updateOrCreate([
+                    $invoice = Invoices::updateOrCreate([
                         'stripe_subscription_id' => $item->id
                     ], $invoice_data_to_save);
+
+                    $this->logAction(1, 1, $invoice->id);
                 }
             } catch (\Exception $exception) {
                 return $this->sendError([], $exception->getMessage());
@@ -266,7 +270,10 @@ class CustomerController extends CustomersController
         $customer->formated_phone_number = FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'));
 
         if ($customer->save())
+        {
+            $this->logAction(2, 1, $customer->id);
             return $this->sendResponse((new CustomerResource($customer)), 'Update customer successfully.');
+        }
 
         return $this->sendError([], 'Can not update Customer');
     }
@@ -281,14 +288,28 @@ class CustomerController extends CustomersController
     public function delete(Customers $customer)
     {
         // remove invoice record
-        Invoices::where('customer_id', $customer->id)->delete();
+        $invoice = Invoices::where('customer_id', $customer->id)->first();
+        if ($invoice) {
+            $this->logAction(1, 2, $invoice->id);
+            $invoice->delete();
+        }
 
         // TODO: unsubscribe customer from Klaviyou and sms system.
         $this->unsubscribeKlaviyo($customer->email);
         $this->unsubscribeSmsSystem(json_encode($customer->email), json_encode($customer->phone_number));
 
         // remove customer record
+        $this->logAction(2, 2, $customer->id);
         $customer->delete();
         return $this->sendResponse([], 'Customer has been deleted.');
+    }
+
+    private function logAction($model, $action, $relatedId){
+        return ActionsLog::create([
+            'user_id' => 0,
+            'model' => $model,
+            'action' => $action,
+            'related_id' => $relatedId
+        ]);
     }
 }
