@@ -8,7 +8,9 @@ use App\Http\Requests\CustomerRequest;
 use App\Http\Resources\CustomerCollection;
 use App\Http\Resources\CustomerResource;
 use App\Invoices;
+use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
@@ -128,21 +130,47 @@ class CustomerController extends CustomersController
                 $dataToSend['customerId'] = $stripe_res['data']['customer'];
                 $dataToSend['subscriptionId'] = $stripe_res['data']['id'];
 
-                $firebase_res = $this->sendDataToFirebase($dataToSend);
-                if (!$firebase_res['success']) {
-                    $message = 'Error! Can\'t send data to firebase';
-                    if (!empty($firebase_res['message'])) {
-                        $message = $firebase_res['message'];
-                    }
+                $salespeople_id = 1; // should be param from input
+                $pdftemplate_id = 1;
+                // store in invoices table
+                $invoice_data_to_save = [
+                    'customer_id' => $customer->id,
+                    'salespeople_id' => $salespeople_id,
+                    'product_id' => $request->input('product_id'),
+                    'sales_price' => $request->input('sales_price'),
+                    'qty' => $request->input('qty'),
+                    'access_date' => Elements::createDateTime($request->input('access_date')),
+                    'cc_number' => $request->input('cc'),
+                    'paid' => $request->input('paid'),
+                    'own' => $request->input('sales_price') - $request->input('paid'),
+                    'paid_at' => Carbon::now(),
+                    'pdftemplate_id' => $pdftemplate_id,
+                ];
 
-                    return $this->sendError($message);
+                if(!empty($stripe_res) && !empty($stripe_res['data'])){
+                    if(!empty($stripe_res['data']['id'])){
+                        $invoice_data_to_save['stripe_subscription_id'] = $stripe_res['data']['id'];
+                    }
+                    if(!empty($stripe_res['data']['customer'])){
+                        $invoice_data_to_save['stripe_customer_id'] = $stripe_res['data']['customer'];
+                    }
+                    if(!empty($stripe_res['data']['current_period_end'])){
+                        $invoice_data_to_save['stripe_current_period_end'] = date("Y-m-d H:i:s",$stripe_res['data']['current_period_end']);
+                    }
+                    if(!empty($stripe_res['data']['current_period_start'])){
+                        $invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s",$stripe_res['data']['current_period_start']);
+                    }
+                    if(!empty($stripe_res['data']['status'])){
+                        $invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$stripe_res['data']['status']];
+                    }
                 }
+                Invoices::create($invoice_data_to_save);
             }
 
             // After creating a user in the invoice system it should send User_id to the PI System with the success message(if success) else error message.
             return $this->sendResponse([
                 'user_id' => $customer->id,
-            ], 'Success to create customer');
+            ], 'Success to create customer!');
         }
     }
 
