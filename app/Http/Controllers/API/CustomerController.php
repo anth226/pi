@@ -54,7 +54,7 @@ class CustomerController extends CustomersController
 
         $customer = Customers::create(array_merge($request->only([
             'first_name', 'last_name', 'address_1', 'address_2',
-            'zip', 'city', 'state', 'email', 'phone_number'
+            'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id'
         ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'))]));
         if ($customer) {
             // send to
@@ -127,11 +127,8 @@ class CustomerController extends CustomersController
                 }
                 return $this->sendError($message);
             } else {
-                $dataToSend['customerId'] = $stripe_res['data']['customer'];
-                $dataToSend['subscriptionId'] = $stripe_res['data']['id'];
-
-                $salespeople_id = 1; // should be param from input
-                $pdftemplate_id = 1;
+                $salespeople_id = request('sale_person_id', 1); // should be param from input
+                $pdftemplate_id = request('pdf_template_id', 1);;
                 // store in invoices table
                 $invoice_data_to_save = [
                     'customer_id' => $customer->id,
@@ -215,6 +212,8 @@ class CustomerController extends CustomersController
         $customer->address_2 =  !empty($request->input('address_2')) ? $request->input('address_2') : '';
         $customer->zip = $request->input('zip');
         $customer->state = $request->input('state');
+        $customer->country = $request->input('country');
+        $customer->pi_user_id = $request->input('pi_user_id');
         $customer->phone_number = $request->input('phone_number');
         $customer->formated_phone_number = FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'));
 
