@@ -44,12 +44,22 @@ class CustomerController extends CustomersController
             'state' => 'required||max:20',
             'email' => 'required|unique:customers,email,NULL,id,deleted_at,NULL|email|max:120',
             'phone_number' => 'required|max:120|min:10',
+            'sales_price' => 'required',
+//            'qty' => 'required|numeric|min:1',
+            'access_date' => 'required',
+            'cc_number' => 'required|digits:4'
         ]);
 
-        $customer = Customers::create(array_merge($request->all(), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'))]));
+        $customer = Customers::create(array_merge($request->only([
+            'first_name', 'last_name', 'address_1', 'address_2',
+            'zip', 'city', 'state', 'email', 'phone_number'
+        ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'))]));
         if ($customer) {
             // send to
-            $this->subscribeKlaviyo($request->email, $request->phone_number, $request->first_name, $request->last_name);
+            $resq = $this->subscribeKlaviyo($request->email, $request->phone_number, $request->first_name, $request->last_name);
+            $res = json_decode($resq->getContent(), true);
+            if (!isset($res['success']) || !$res['success'])
+                return $this->sendError($res['message']);
 
             // send to sms
             $dataToSend = [
@@ -63,15 +73,76 @@ class CustomerController extends CustomersController
             ];
 
             if(config('app.env') == 'production') {
-                $this->sendDataToSMSSystem( $dataToSend);
+                $res = $this->sendDataToSMSSystem( $dataToSend);
+                if (!$res['success'])
+                    return $this->sendError($res['message']);
             }
 
+            // send data to pipedrive
+            $dataToSend = [
+                'first_name' => $request->input('first_name'),
+                'last_name' => $request->input('last_name'),
+                'full_name' => $request->input('first_name').' '.$request->input('last_name'),
+                'email' => strtolower($request->input('email')),
+                'phone' => $request->input('phone_number'),
+                'source' => 'portfolio-insider-prime',
+                'tags' => 'portfolio-insider-prime',
+                'address_1' => $request->input('address_1'),
+                'address_2' => !empty($request->input('address_2')) ? $request->input('address_2') : '',
+                'city' => $request->input('city'),
+                'state' => $request->input('state'),
+                'zip' => $request->input('zip'),
+                'phone_number' => $request->input('phone_number'),
+                'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
+                'sales_price' => $request->input('sales_price'),
+                'paid' => $request->input('paid'),
+                'stripe_product_id' => $request->input('product_id')
+            ];
+            $pipedrive_person = $this->checkPipedrive( $dataToSend );
+            if ( ! $pipedrive_person['success'] ) {
+                $message = 'Error! Can\'t send data to Pipedrive';
+                if ( ! empty( $pipedrive_res['message'] ) ) {
+                    $message = $pipedrive_res['message'];
+                }
+                return $this->sendError($message);
+            }
+            if ($pipedrive_person['data']) {
+                $pipedrive_res = $this->updateOrAddPipedriveDeal( $pipedrive_person['data'], $request->input('paid') );
+                if ( ! $pipedrive_res['success'] ) {
+                    $message = 'Error! Can\'t send data to Pipedrive';
+                    if ( ! empty( $pipedrive_res['message'] ) ) {
+                        $message = $pipedrive_res['message'];
+                    }
+                    return $this->sendError($message);
+                }
+            }
             // query Stripe and update invoice table with stripe information
+            $stripe_res = $this->sendDataToStripe($dataToSend);
+            if(!$stripe_res['success']){
+                $message = 'Error! Can\'t send data to stripe';
+                if(!empty($stripe_res['message'])){
+                    $message = $stripe_res['message'];
+                }
+                return $this->sendError($message);
+            } else {
+                $dataToSend['customerId'] = $stripe_res['data']['customer'];
+                $dataToSend['subscriptionId'] = $stripe_res['data']['id'];
+
+                $firebase_res = $this->sendDataToFirebase($dataToSend);
+                if (!$firebase_res['success']) {
+                    $message = 'Error! Can\'t send data to firebase';
+                    if (!empty($firebase_res['message'])) {
+                        $message = $firebase_res['message'];
+                    }
+
+                    return $this->sendError($message);
+                }
+            }
 
             // After creating a user in the invoice system it should send User_id to the PI System with the success message(if success) else error message.
             return $this->sendResponse([
                 'user_id' => $customer->id,
-            ], 'Success');
+            ], 'Success to create customer');
         }
     }
 
