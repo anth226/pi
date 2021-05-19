@@ -10,15 +10,21 @@ use App\Http\Resources\CustomerResource;
 use App\Invoices;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
+use App\Products;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Stripe\StripeClient;
 
 class CustomerController extends CustomersController
 {
+    protected $stripeClient;
+
     public function __construct()
     {
+        $stripeAPIKey = config('stripe.stripeKey');
 
+        $this->stripeClient = new StripeClient($stripeAPIKey);
     }
 
     /**
@@ -47,14 +53,14 @@ class CustomerController extends CustomersController
             'email' => 'required|unique:customers,email,NULL,id,deleted_at,NULL|email|max:120',
             'phone_number' => 'required|max:120|min:10',
             'sales_price' => 'required',
-//            'qty' => 'required|numeric|min:1',
+            'subscription_id' => 'required',
             'access_date' => 'required',
             'cc_number' => 'required|digits:4'
         ]);
 
         $customer = Customers::create(array_merge($request->only([
             'first_name', 'last_name', 'address_1', 'address_2',
-            'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id'
+            'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id', 'country'
         ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'))]));
         if ($customer) {
             // send to
@@ -63,7 +69,7 @@ class CustomerController extends CustomersController
             if (!isset($res['success']) || !$res['success'])
                 return $this->sendError($res['message']);
 
-            // send to sms
+            // send to sms cal
             $dataToSend = [
                 'first_name' => $request->input('first_name'),
                 'last_name' => $request->input('last_name'),
@@ -74,11 +80,9 @@ class CustomerController extends CustomersController
                 'tags' => 'portfolioinsider,portfolio-insider-prime'
             ];
 
-            if(config('app.env') == 'production') {
-                $res = $this->sendDataToSMSSystem( $dataToSend);
-                if (!$res['success'])
-                    return $this->sendError($res['message']);
-            }
+            $res = $this->sendDataToSMSSystem( $dataToSend);
+            if (!$res['success'])
+                return $this->sendError($res['message']);
 
             // send data to pipedrive
             $dataToSend = [
@@ -100,15 +104,9 @@ class CustomerController extends CustomersController
                 'paid' => $request->input('paid'),
                 'stripe_product_id' => $request->input('product_id')
             ];
+
             $pipedrive_person = $this->checkPipedrive( $dataToSend );
-            if ( ! $pipedrive_person['success'] ) {
-                $message = 'Error! Can\'t send data to Pipedrive';
-                if ( ! empty( $pipedrive_res['message'] ) ) {
-                    $message = $pipedrive_res['message'];
-                }
-                return $this->sendError($message);
-            }
-            if ($pipedrive_person['data']) {
+            if (isset($pipedrive_person['success']) && $pipedrive_person['success'] && isset($pipedrive_person['data']) && $pipedrive_person['data']) {
                 $pipedrive_res = $this->updateOrAddPipedriveDeal( $pipedrive_person['data'], $request->input('paid') );
                 if ( ! $pipedrive_res['success'] ) {
                     $message = 'Error! Can\'t send data to Pipedrive';
@@ -118,50 +116,56 @@ class CustomerController extends CustomersController
                     return $this->sendError($message);
                 }
             }
-            // query Stripe and update invoice table with stripe information
-            $stripe_res = $this->sendDataToStripe($dataToSend);
-            if(!$stripe_res['success']){
-                $message = 'Error! Can\'t send data to stripe';
-                if(!empty($stripe_res['message'])){
-                    $message = $stripe_res['message'];
-                }
-                return $this->sendError($message);
-            } else {
-                $salespeople_id = request('sale_person_id', 1); // should be param from input
-                $pdftemplate_id = request('pdf_template_id', 1);;
-                // store in invoices table
-                $invoice_data_to_save = [
-                    'customer_id' => $customer->id,
-                    'salespeople_id' => $salespeople_id,
-                    'product_id' => $request->input('product_id'),
-                    'sales_price' => $request->input('sales_price'),
-                    'qty' => $request->input('qty'),
-                    'access_date' => Elements::createDateTime($request->input('access_date')),
-                    'cc_number' => $request->input('cc'),
-                    'paid' => $request->input('paid'),
-                    'own' => $request->input('sales_price') - $request->input('paid'),
-                    'paid_at' => Carbon::now(),
-                    'pdftemplate_id' => $pdftemplate_id,
-                ];
 
-                if(!empty($stripe_res) && !empty($stripe_res['data'])){
-                    if(!empty($stripe_res['data']['id'])){
-                        $invoice_data_to_save['stripe_subscription_id'] = $stripe_res['data']['id'];
+            // query Stripe subscription object by subscription_id
+            try {
+                $stripeRes =  $this->stripeClient->subscriptions->retrieve($request->subscription_id);
+                $dataArr = $stripeRes->items->data;
+                $customerId = $stripeRes->customer;
+                $currentPeriodEnd = $stripeRes->current_period_end;
+                $currentPeriodStart = $stripeRes->current_period_start;
+                $stripeStatus = $stripeRes->status;
+
+                foreach ($dataArr as $item) {
+                    $priceId = $item->price->id;
+                    // check if priceId is exist on product table
+                    if (!$product = Products::where('stripe_price_id', $priceId)->first()) {
+                        // create new product based on the subscription detail
+                        $product = Products::create([
+                            'title' => $item->price->product,
+                            'price' => $item->price->unit_amount,
+                            'stripe_price_id' => $priceId,
+                            'dev_stripe_price_id' => $priceId,
+                        ]);
                     }
-                    if(!empty($stripe_res['data']['customer'])){
-                        $invoice_data_to_save['stripe_customer_id'] = $stripe_res['data']['customer'];
-                    }
-                    if(!empty($stripe_res['data']['current_period_end'])){
-                        $invoice_data_to_save['stripe_current_period_end'] = date("Y-m-d H:i:s",$stripe_res['data']['current_period_end']);
-                    }
-                    if(!empty($stripe_res['data']['current_period_start'])){
-                        $invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s",$stripe_res['data']['current_period_start']);
-                    }
-                    if(!empty($stripe_res['data']['status'])){
-                        $invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$stripe_res['data']['status']];
-                    }
+
+                    // save to invoices table
+                    $invoice_data_to_save = [
+                        'customer_id' => $customer->id,
+                        'salespeople_id' => $request->input('sale_person_id'),
+                        'product_id' => $product->id,
+                        'sales_price' => $request->input('sales_price'),
+                        'qty' => request('qty', 0),
+                        'access_date' => Carbon::make($request->input('access_date'))->format('Y-m-d'),
+                        'cc_number' => $request->input('cc'),
+                        'paid' => $request->input('sales_price'),
+                        'own' => 0,
+                        'paid_at' => Carbon::now(),
+                        'pdftemplate_id' => request('pdf_template_id', 1),
+                    ];
+
+                    $invoice_data_to_save['stripe_subscription_id'] = $item->id;
+                    $invoice_data_to_save['stripe_customer_id'] = $customerId;
+                    $invoice_data_to_save['stripe_current_period_end'] = date("Y-m-d H:i:s", $currentPeriodEnd);
+                    $invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s", $currentPeriodStart);
+                    $invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$stripeStatus];
+
+                    Invoices::updateOrCreate([
+                        'stripe_subscription_id' => $item->id
+                    ], $invoice_data_to_save);
                 }
-                Invoices::create($invoice_data_to_save);
+            } catch (\Exception $exception) {
+                return $this->sendError([], $exception->getMessage());
             }
 
             // After creating a user in the invoice system it should send User_id to the PI System with the success message(if success) else error message.
