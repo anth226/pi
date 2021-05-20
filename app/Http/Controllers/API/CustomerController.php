@@ -62,10 +62,68 @@ class CustomerController extends CustomersController
             'cc_number' => 'required|digits:4'
         ]);
 
-        $customer = Customers::create(array_merge($request->only([
-            'first_name', 'last_name', 'address_1', 'address_2',
-            'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id', 'country'
-        ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'))]));
+        // query Stripe subscription object by subscription_id
+        try {
+            $stripeRes =  $this->stripeClient->subscriptions->retrieve($request->subscription_id);
+            $dataArr = $stripeRes->items->data;
+            $customerId = $stripeRes->customer;
+            $currentPeriodEnd = $stripeRes->current_period_end;
+            $currentPeriodStart = $stripeRes->current_period_start;
+            $stripeStatus = $stripeRes->status;
+
+            $customer = Customers::create(array_merge($request->only([
+                'first_name', 'last_name', 'address_1', 'address_2',
+                'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id', 'country'
+            ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')), 'stripe_customer_id' => $customerId]));
+
+            foreach ($dataArr as $item) {
+                $priceId = $item->price->id;
+                // check if priceId is exist on product table
+                if (!$product = Products::where('stripe_price_id', $priceId)->first()) {
+                    // create new product based on the subscription detail
+                    $product = Products::create([
+                        'title' => $item->price->product,
+                        'price' => $item->price->unit_amount,
+                        'stripe_price_id' => $priceId,
+                        'dev_stripe_price_id' => $priceId,
+                    ]);
+                    $this->logAction(9, 0, $product->id);
+                }
+
+                // save to invoices table
+                $invoice_data_to_save = [
+                    'customer_id' => $customer->id,
+                    'salespeople_id' => $request->input('sale_person_id'),
+                    'product_id' => $product->id,
+                    'sales_price' => $request->input('sales_price'),
+                    'qty' => request('qty', 0),
+                    'access_date' => Carbon::make($request->input('access_date'))->format('Y-m-d'),
+                    'cc_number' => $request->input('cc'),
+                    'paid' => $request->input('sales_price'),
+                    'own' => 0,
+                    'paid_at' => Carbon::now(),
+                    'deal_type' => 1,
+                    'pdftemplate_id' => request('pdf_template_id', 1),
+                ];
+
+                $invoice_data_to_save['stripe_subscription_id'] = $item->id;
+                $invoice_data_to_save['stripe_customer_id'] = $customerId;
+                $invoice_data_to_save['stripe_current_period_end'] = date("Y-m-d H:i:s", $currentPeriodEnd);
+                $invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s", $currentPeriodStart);
+                $invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$stripeStatus];
+
+                $invoice = Invoices::updateOrCreate([
+                    'stripe_subscription_id' => $item->id
+                ], $invoice_data_to_save);
+
+                $this->logAction(1, 1, $invoice->id);
+            }
+        } catch (\Exception $exception) {
+            $this->logError( $exception->getMessage(), 'store');
+            return $this->sendError($exception->getMessage());
+        }
+
+
         if ($customer) {
             $this->logAction(2, 0, $customer->id);
             // send to Klaviyo
@@ -128,62 +186,6 @@ class CustomerController extends CustomersController
                     $this->logError($message, 'store');
                     return $this->sendError($message);
                 }
-            }
-
-            // query Stripe subscription object by subscription_id
-            try {
-                $stripeRes =  $this->stripeClient->subscriptions->retrieve($request->subscription_id);
-                $dataArr = $stripeRes->items->data;
-                $customerId = $stripeRes->customer;
-                $currentPeriodEnd = $stripeRes->current_period_end;
-                $currentPeriodStart = $stripeRes->current_period_start;
-                $stripeStatus = $stripeRes->status;
-
-                foreach ($dataArr as $item) {
-                    $priceId = $item->price->id;
-                    // check if priceId is exist on product table
-                    if (!$product = Products::where('stripe_price_id', $priceId)->first()) {
-                        // create new product based on the subscription detail
-                        $product = Products::create([
-                            'title' => $item->price->product,
-                            'price' => $item->price->unit_amount,
-                            'stripe_price_id' => $priceId,
-                            'dev_stripe_price_id' => $priceId,
-                        ]);
-                        $this->logAction(9, 0, $product->id);
-                    }
-
-                    // save to invoices table
-                    $invoice_data_to_save = [
-                        'customer_id' => $customer->id,
-                        'salespeople_id' => $request->input('sale_person_id'),
-                        'product_id' => $product->id,
-                        'sales_price' => $request->input('sales_price'),
-                        'qty' => request('qty', 0),
-                        'access_date' => Carbon::make($request->input('access_date'))->format('Y-m-d'),
-                        'cc_number' => $request->input('cc'),
-                        'paid' => $request->input('sales_price'),
-                        'own' => 0,
-                        'paid_at' => Carbon::now(),
-                        'deal_type' => 1,
-                        'pdftemplate_id' => request('pdf_template_id', 1),
-                    ];
-
-                    $invoice_data_to_save['stripe_subscription_id'] = $item->id;
-                    $invoice_data_to_save['stripe_customer_id'] = $customerId;
-                    $invoice_data_to_save['stripe_current_period_end'] = date("Y-m-d H:i:s", $currentPeriodEnd);
-                    $invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s", $currentPeriodStart);
-                    $invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$stripeStatus];
-
-                    $invoice = Invoices::updateOrCreate([
-                        'stripe_subscription_id' => $item->id
-                    ], $invoice_data_to_save);
-
-                    $this->logAction(1, 1, $invoice->id);
-                }
-            } catch (\Exception $exception) {
-                $this->logError( $exception->getMessage(), 'store');
-                return $this->sendError($exception->getMessage());
             }
 
             // After creating a user in the invoice system it should send User_id to the PI System with the success message(if success) else error message.
