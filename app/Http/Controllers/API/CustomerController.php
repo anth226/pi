@@ -76,16 +76,19 @@ class CustomerController extends CustomersController
                 'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id', 'country'
             ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')), 'stripe_customer_id' => $customerId]));
 
+            $this->logAction(2, 0, $customer->id);
+
             foreach ($dataArr as $item) {
                 $priceId = $item->price->id;
                 // check if priceId is exist on product table
                 if (!$product = Products::where('stripe_price_id', $priceId)->first()) {
                     // create new product based on the subscription detail
+                    $isProduction = config('app.env') === 'production';
                     $product = Products::create([
                         'title' => $item->price->product,
                         'price' => $item->price->unit_amount,
-                        'stripe_price_id' => $priceId,
-                        'dev_stripe_price_id' => $priceId,
+                        'stripe_price_id' => $isProduction ? $priceId : null,
+                        'dev_stripe_price_id' => !$isProduction ? $priceId : null,
                     ]);
                     $this->logAction(9, 0, $product->id);
                 }
@@ -125,10 +128,8 @@ class CustomerController extends CustomersController
 
 
         if ($customer) {
-            $this->logAction(2, 0, $customer->id);
             // send to Klaviyo
-            $resq = $this->subscribeKlaviyo($request->email, $request->phone_number, $request->first_name, $request->last_name);
-            $res = json_decode($resq->getContent(), true);
+            $res = $this->subscribeKlaviyo($request->email, $request->phone_number, $request->first_name, $request->last_name, false);
             if (!isset($res['success']) || !$res['success'])
             {
                 $this->logError($res['message'], 'store');
@@ -203,7 +204,9 @@ class CustomerController extends CustomersController
     public function detail($id)
     {
         if ($customer = Customers::find($id))
-            return $this->sendResponse(new CustomerResource($customer), 'Retrieve the customer detail successfully.');
+        {
+            return $this->sendResponse($customer->with(['invoices', 'contacts'])->get()->toArray(), 'Retrieve the customer detail successfully.');
+        }
         else {
             $this->logError('Customer not found.', 'detail');
             return $this->sendError([], 'Customer not found.', 400);
