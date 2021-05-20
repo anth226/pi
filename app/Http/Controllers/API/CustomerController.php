@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\ActionsLog;
 use App\Customers;
+use App\Errors;
 use App\Http\Controllers\CustomersController;
 use App\Http\Requests\CustomerRequest;
 use App\Http\Resources\CustomerCollection;
@@ -71,7 +72,10 @@ class CustomerController extends CustomersController
             $resq = $this->subscribeKlaviyo($request->email, $request->phone_number, $request->first_name, $request->last_name);
             $res = json_decode($resq->getContent(), true);
             if (!isset($res['success']) || !$res['success'])
+            {
+                $this->logError($res['message'], 'store');
                 return $this->sendError($res['message']);
+            }
 
             // send to sms cal
             $dataToSend = [
@@ -86,7 +90,10 @@ class CustomerController extends CustomersController
 
             $res = $this->sendDataToSMSSystem( $dataToSend);
             if (!$res['success'])
+            {
+                $this->logError($res['message'], 'store');
                 return $this->sendError($res['message']);
+            }
 
             // send data to pipedrive
             $dataToSend = [
@@ -117,6 +124,8 @@ class CustomerController extends CustomersController
                     if ( ! empty( $pipedrive_res['message'] ) ) {
                         $message = $pipedrive_res['message'];
                     }
+
+                    $this->logError($message, 'store');
                     return $this->sendError($message);
                 }
             }
@@ -173,7 +182,8 @@ class CustomerController extends CustomersController
                     $this->logAction(1, 1, $invoice->id);
                 }
             } catch (\Exception $exception) {
-                return $this->sendError([], $exception->getMessage());
+                $this->logError( $exception->getMessage(), 'store');
+                return $this->sendError($exception->getMessage());
             }
 
             // After creating a user in the invoice system it should send User_id to the PI System with the success message(if success) else error message.
@@ -193,6 +203,7 @@ class CustomerController extends CustomersController
         if ($customer = Customers::find($id))
             return $this->sendResponse(new CustomerResource($customer), 'Retrieve the customer detail successfully.');
         else {
+            $this->logError('Customer not found.', 'detail');
             return $this->sendError([], 'Customer not found.', 400);
         }
     }
@@ -242,6 +253,7 @@ class CustomerController extends CustomersController
                     $client->profiles->updateProfile( $profileID['id'], $properties );
                 }
             } catch (\Exception $e) {
+                $this->logError($e->getMessage(), 'postUpdate');
                 return $this->sendError($e->getMessage(), []);
             }
         }
@@ -256,7 +268,8 @@ class CustomerController extends CustomersController
         }
 
         if (!$customer) {
-            return $this->sendError([], 'Customer not found');
+            $this->logError('Customer not found.', 'postUpdate');
+            return $this->sendError([], 'Customer not found.');
         }
 
         $customer->first_name = $request->input('first_name');
@@ -276,6 +289,7 @@ class CustomerController extends CustomersController
             return $this->sendResponse((new CustomerResource($customer)), 'Update customer successfully.');
         }
 
+        $this->logError('Can not update Customer', 'postUpdate');
         return $this->sendError([], 'Can not update Customer');
     }
 
@@ -311,6 +325,14 @@ class CustomerController extends CustomersController
             'model' => $model,
             'action' => $action,
             'related_id' => $relatedId
+        ]);
+    }
+
+    private function logError($err, $function){
+        return Errors::create([
+            'error' => $err,
+            'controller' => 'CustomerController',
+            'function' => $function
         ]);
     }
 }
