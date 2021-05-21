@@ -95,8 +95,14 @@ class CustomerController extends CustomersController
                     $stripeProductId = $item->price->product;
                     $stripeProduct = $this->stripeClient->products->retrieve($stripeProductId, []);
 
+                    // Please increment sku in products table for new product
+                    // Get latest product sku
+                    $latestPro = Products::latest()->first();
+                    $latestSku = $latestPro->sku;
+
                     $product = Products::create([
                         'title' => $stripeProduct ? $stripeProduct->name : 'Product ID '.$stripeProductId,
+                        'sku' => intval($latestSku) + 1,
                         'price' => $item->price->unit_amount,
                         'stripe_price_id' => $isProduction ? $priceId : null,
                         'dev_stripe_price_id' => !$isProduction ? $priceId : null,
