@@ -71,6 +71,11 @@ class CustomerController extends CustomersController
             $currentPeriodStart = $stripeRes->current_period_start;
             $stripeStatus = $stripeRes->status;
 
+            // 1. Customer should be created only if ALL stripe queries finish successfully.
+            if (!$stripeRes) {
+                return $this->sendError('Stripe queries failed to finish successfully. Can not create customer');
+            }
+
             $customer = Customers::create(array_merge($request->only([
                 'first_name', 'last_name', 'address_1', 'address_2',
                 'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id', 'country'
