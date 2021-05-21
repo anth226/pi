@@ -74,7 +74,7 @@ class CustomerController extends CustomersController
             $customer = Customers::create(array_merge($request->only([
                 'first_name', 'last_name', 'address_1', 'address_2',
                 'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id', 'country'
-            ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')), 'stripe_customer_id' => $customerId]));
+            ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')), 'stripe_customer_id' => $customerId, 'created_from' => 'api']));
 
             $this->logAction(2, 0, $customer->id);
 
@@ -82,10 +82,16 @@ class CustomerController extends CustomersController
                 $priceId = $item->price->id;
                 // check if priceId is exist on product table
                 if (!$product = Products::where('stripe_price_id', $priceId)->first()) {
+
                     // create new product based on the subscription detail
                     $isProduction = config('app.env') === 'production';
+
+                    // query for product name
+                    $stripeProductId = $item->price->product;
+                    $stripeProduct = $this->stripeClient->products->retrieve($stripeProductId, []);
+
                     $product = Products::create([
-                        'title' => $item->price->product,
+                        'title' => $stripeProduct ? $stripeProduct->name : 'Product ID '.$stripeProductId,
                         'price' => $item->price->unit_amount,
                         'stripe_price_id' => $isProduction ? $priceId : null,
                         'dev_stripe_price_id' => !$isProduction ? $priceId : null,
@@ -233,6 +239,17 @@ class CustomerController extends CustomersController
         ]);
 
         $customer = Customers::find($id);
+
+        // check if that email has already assigned to other user
+        if ($email = $request->email) {
+            if (Customers::where('email', $email)->where('id', '!=', $id)->first()) {
+                return $this->sendError('Email is already assigned to other user.');
+            }
+
+            if ($customer->created_from !== 'api') {
+                return $this->sendError('Only allow update email with account created form API.');
+            }
+        }
 
         // check if update first name last name, update Klaviyo also
         if (
