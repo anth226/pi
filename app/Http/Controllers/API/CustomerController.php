@@ -145,8 +145,7 @@ class CustomerController extends CustomersController
                 $invoice = Invoices::updateOrCreate([
                     'stripe_subscription_id' => $item->id
                 ], $invoice_data_to_save);
-
-
+                $this->logAction(1, 1, $invoice->id);
 
                 // generate invoice PDF
                 $invoice_instance = new InvoicesController();
@@ -155,8 +154,6 @@ class CustomerController extends CustomersController
 
                 // send email
                 $this->sendInvoiceEmail($invoice->id, 3, $customer->email);
-
-                $this->logAction(1, 1, $invoice->id);
             }
         } catch (\Exception $exception) {
             $this->logError( $exception->getMessage(), 'store');
@@ -389,19 +386,30 @@ class CustomerController extends CustomersController
         ]);
     }
 
-    protected function sendInvoiceEmail($invoiceId, $emailTemplateID, $to){
+    protected function sendInvoiceEmail($invoiceId, $emailTemplateID, $to, $salePersonEmail = null){
         try {
             $error = 'Error! No input data.';
+//            $input      = $request->all();
             $invoice_id = $invoiceId ?? 0;
             $email_template_id = $emailTemplateID ?? 0;
-            $to         = $to ?? '';
+            $bcc        = 'corporate@portfolioinsider.com';
+            $cc        = $salePersonEmail;
 
 			$from_name           = 'Support Portfolio Insider';
 			$from_email          = 'support@portfolioinsider.com';
 
             if ( $to && $invoice_id && $email_template_id) {
                 $to = array_map('trim', explode(',', $to));
-                $user = Auth::user();
+                if($bcc) {
+                    $bcc = array_map( 'trim', explode( ',', $bcc ) );
+                    $bcc = array_unique( $bcc );
+                }
+                if($cc) {
+                    $cc = array_map( 'trim', explode( ',', $cc ) );
+                    $cc = array_unique( $cc );
+                }
+
+//                $user = Auth::user();
 
                 if(count($to)) {
                     foreach ($to as $t) {
@@ -409,7 +417,7 @@ class CustomerController extends CustomersController
                             $dataToLog[] = [
                                 'invoice_id'        => $invoice_id,
                                 'email_template_id' => $email_template_id,
-                                'user_id'           => $user->id,
+                                'user_id'           => 1,
                                 'from'              => $from_email,
                                 'to'                => $t,
                                 'created_at'        => date( 'Y-m-d H:i:s' ),
@@ -421,7 +429,42 @@ class CustomerController extends CustomersController
                         }
                     }
                 }
-
+                if($bcc && count($bcc)) {
+                    foreach ($bcc as $t) {
+                        if($this->validateEMAIL($t)) {
+                            $dataToLog[] = [
+                                'invoice_id'        => $invoice_id,
+                                'email_template_id' => $email_template_id,
+                                'user_id'           => 1,
+                                'from'              => $from_email,
+                                'to'                => $t,
+                                'created_at'        => date( 'Y-m-d H:i:s' ),
+                                'updated_at'        => date( 'Y-m-d H:i:s' )
+                            ];
+                        }
+                        else{
+                            return $this->sendError( $t." is not valid address. please fix and try again." );
+                        }
+                    }
+                }
+                if($cc && count($cc)) {
+                    foreach ( $cc as $t ) {
+                        if($this->validateEMAIL($t)) {
+                            $dataToLog[] = [
+                                'invoice_id'        => $invoice_id,
+                                'email_template_id' => $email_template_id,
+                                'user_id'           => 1,
+                                'from'              => $from_email,
+                                'to'                => $t,
+                                'created_at'        => date( 'Y-m-d H:i:s' ),
+                                'updated_at'        => date( 'Y-m-d H:i:s' )
+                            ];
+                        }
+                        else{
+                            return $this->sendError( $t." is not valid address. please fix and try again." );
+                        }
+                    }
+                }
                 $invoice = Invoices::with('customer')->with('salespeople.salespersone')
                     ->with('product')
                     ->find($invoice_id);
@@ -445,7 +488,7 @@ class CustomerController extends CustomersController
                             $pdfFilename         = $invoiceController->generateFileName( $invoice );
                             $path_to_file        = $invoiceController->pdf_path . $pdfFilename;
                             $customer_email      = $invoice->customer->email;
-                            $res                 = $sender->sendEmail( $to, '', '', $from_email, $template, $subject, $from_name, $customer_first_name, $salesperson, $path_to_file, $customer_email );
+                            $res                 = $sender->sendEmail( $to, $bcc, $cc, $from_email, $template, $subject, $from_name, $customer_first_name, $salesperson, $path_to_file, $customer_email );
                             if ( $res && $res['success'] ) {
                                 EmailLogs::insert( $dataToLog );
                                 $logs = EmailLogs::where( 'invoice_id', $invoice_id )->get();
@@ -471,7 +514,7 @@ class CustomerController extends CustomersController
             }
             Errors::create([
                 'error' => $error,
-                'controller' => 'SendEmailController',
+                'controller' => 'CustomerController',
                 'function' => 'sendInvoiceEmail'
             ]);
             return $this->sendError( $error );
@@ -480,7 +523,7 @@ class CustomerController extends CustomersController
         catch (Exception $ex){
             Errors::create([
                 'error' => $ex->getMessage(),
-                'controller' => 'SendEmailController',
+                'controller' => 'CustomerController',
                 'function' => 'sendInvoiceEmail'
             ]);
             return $this->sendError( $ex->getMessage() );
