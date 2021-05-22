@@ -133,7 +133,7 @@ class CustomerController extends CustomersController
                     'own' => 0,
                     'paid_at' => Carbon::now(),
                     'deal_type' => 1,
-                    'pdftemplate_id' => request('pdf_template_id', 1),
+                    'pdftemplate_id' => request('pdf_template_id', 4),
                 ];
 
                 $invoice_data_to_save['stripe_subscription_id'] = $item->id;
@@ -153,7 +153,10 @@ class CustomerController extends CustomersController
                 $invoice_instance->generatePDF($invoice->id, $pdfTemplate);
 
                 // send email
-                $this->sendInvoiceEmail($invoice->id, 3, $customer->email);
+                $mailSent = $this->sendInvoiceEmail($invoice->id, 3, $customer->email);
+                if (!isset($mailSent['success']) || !$mailSent['success'] ){
+                    return $this->sendError($mailSent['message']);
+                }
             }
         } catch (\Exception $exception) {
             $this->logError( $exception->getMessage(), 'store');
@@ -371,7 +374,7 @@ class CustomerController extends CustomersController
 
     private function logAction($model, $action, $relatedId){
         return ActionsLog::create([
-            'user_id' => 0,
+            'user_id' => 1, // change to 1 because 0 is invalid with foreign key
             'model' => $model,
             'action' => $action,
             'related_id' => $relatedId
@@ -389,7 +392,6 @@ class CustomerController extends CustomersController
     protected function sendInvoiceEmail($invoiceId, $emailTemplateID, $to, $salePersonEmail = null){
         try {
             $error = 'Error! No input data.';
-//            $input      = $request->all();
             $invoice_id = $invoiceId ?? 0;
             $email_template_id = $emailTemplateID ?? 0;
             $bcc        = 'corporate@portfolioinsider.com';
@@ -409,8 +411,6 @@ class CustomerController extends CustomersController
                     $cc = array_unique( $cc );
                 }
 
-//                $user = Auth::user();
-
                 if(count($to)) {
                     foreach ($to as $t) {
                         if($this->validateEMAIL($t)) {
@@ -425,7 +425,7 @@ class CustomerController extends CustomersController
                             ];
                         }
                         else{
-                            return $this->sendError( $t." is not valid address. please fix and try again." );
+                            return $this->sendError( $t." is not valid address. please fix and try again.", [], 200, false );
                         }
                     }
                 }
@@ -443,7 +443,7 @@ class CustomerController extends CustomersController
                             ];
                         }
                         else{
-                            return $this->sendError( $t." is not valid address. please fix and try again." );
+                            return $this->sendError( $t." is not valid address. please fix and try again." , [], 200, false);
                         }
                     }
                 }
@@ -461,7 +461,7 @@ class CustomerController extends CustomersController
                             ];
                         }
                         else{
-                            return $this->sendError( $t." is not valid address. please fix and try again." );
+                            return $this->sendError( $t." is not valid address. please fix and try again." , [], 200, false);
                         }
                     }
                 }
@@ -493,7 +493,7 @@ class CustomerController extends CustomersController
                                 EmailLogs::insert( $dataToLog );
                                 $logs = EmailLogs::where( 'invoice_id', $invoice_id )->get();
 
-                                return $this->sendResponse( json_encode( $logs ), 'Success! Message has been sent' );
+                                return $this->sendResponse( json_encode( $logs ), 'Success! Message has been sent' , false);
                             } else {
                                 if ( $res && ! empty( $res['message'] ) ) {
                                     $error = $res['message'];
@@ -517,7 +517,7 @@ class CustomerController extends CustomersController
                 'controller' => 'CustomerController',
                 'function' => 'sendInvoiceEmail'
             ]);
-            return $this->sendError( $error );
+            return $this->sendError( $error, [], 200, false );
 
         }
         catch (Exception $ex){
@@ -526,7 +526,7 @@ class CustomerController extends CustomersController
                 'controller' => 'CustomerController',
                 'function' => 'sendInvoiceEmail'
             ]);
-            return $this->sendError( $ex->getMessage() );
+            return $this->sendError( $ex->getMessage() , [], 200, false);
         }
     }
 
