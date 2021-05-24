@@ -346,32 +346,6 @@ class CustomerController extends CustomersController
         return $this->sendError([], 'Can not update Customer');
     }
 
-    /**
-     * Delete customer
-     *
-     * @param Customers $customer
-     * @return array|\Illuminate\Http\Response
-     * @throws \Exception
-     */
-    public function delete(Customers $customer)
-    {
-        // remove invoice record
-        $invoice = Invoices::where('customer_id', $customer->id)->first();
-        if ($invoice) {
-            $this->logAction(1, 2, $invoice->id);
-            $invoice->delete();
-        }
-
-        // TODO: unsubscribe customer from Klaviyou and sms system.
-        $this->unsubscribeKlaviyo($customer->email);
-        $this->unsubscribeSmsSystem(json_encode($customer->email), json_encode($customer->phone_number));
-
-        // remove customer record
-        $this->logAction(2, 2, $customer->id);
-        $customer->delete();
-        return $this->sendResponse([], 'Customer has been deleted.');
-    }
-
     private function logAction($model, $action, $relatedId){
         return ActionsLog::create([
             'user_id' => 1, // change to 1 because 0 is invalid with foreign key

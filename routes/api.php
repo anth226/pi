@@ -30,7 +30,6 @@ use Illuminate\Http\Request;
             Route::post('/', 'CustomerController@store');
             Route::get('/{customer}', 'CustomerController@detail');
             Route::put('/{customer}', 'CustomerController@postUpdate');
-            Route::delete('/{customer}', 'CustomerController@delete');
         });
     });
 //});
