@@ -30,7 +30,6 @@ Route::namespace('API')->group(function(){
             Route::post('/', 'CustomerController@store');
             Route::get('/{customer}', 'CustomerController@detail');
             Route::put('/{customer}', 'CustomerController@postUpdate');
-            Route::delete('/{customer}', 'CustomerController@delete');
         });
     });
     Route::prefix('auth')->group(function(){
