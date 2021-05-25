@@ -244,7 +244,7 @@ class CustomerController extends CustomersController
     {
         if ($customer = Customers::find($id))
         {
-            return $this->sendResponse($customer->with(['invoices', 'contacts'])->get()->toArray(), 'Retrieve the customer detail successfully.');
+            return $this->sendResponse($customer->toArray(), 'Retrieve the customer detail successfully.');
         }
         else {
             $this->logError('Customer not found.', 'detail');
