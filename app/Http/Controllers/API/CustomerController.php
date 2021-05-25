@@ -64,7 +64,7 @@ class CustomerController extends CustomersController
             'zip' => 'required|max:120',
             'city' => 'required|max:120',
             'state' => 'required||max:20',
-            'email' => 'required|unique:customers,email,NULL,id,deleted_at,NULL|email|max:120',
+            'email' => 'email|max:120',
             'phone_number' => 'required|max:120|min:10',
             'sales_price' => 'required',
             'subscription_id' => 'required',
@@ -86,9 +86,11 @@ class CustomerController extends CustomersController
                 return $this->sendError('Stripe queries failed to finish successfully. Can not create customer');
             }
 
-            $customer = Customers::create(array_merge($request->only([
+            $customer = Customers::updateOrCreate([
+                'email' => $request->email,
+            ], array_merge($request->only([
                 'first_name', 'last_name', 'address_1', 'address_2',
-                'zip', 'city', 'state', 'email', 'phone_number', 'pi_user_id', 'country'
+                'zip', 'city', 'state', 'phone_number', 'pi_user_id', 'country'
             ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')), 'stripe_customer_id' => $customerId, 'created_from' => 'api']));
 
             $this->logAction(2, 0, $customer->id);
