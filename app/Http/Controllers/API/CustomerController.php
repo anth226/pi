@@ -150,7 +150,7 @@ class CustomerController extends CustomersController
                 // generate invoice PDF
                 $invoice_instance = new InvoicesController();
                 $pdfTemplate = PdfTemplates::where('id', 4)->value('slug');
-                $invoice_instance->generatePDF($invoice->id, $pdfTemplate);
+                $invoice_instance->generatePDF($invoice->id);
 
                 // send email
                 $mailSent = $this->sendInvoiceEmail($invoice->id, 3, $customer->email);
