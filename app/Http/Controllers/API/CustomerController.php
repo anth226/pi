@@ -88,6 +88,7 @@ class CustomerController extends CustomersController
 
             $customer = Customers::updateOrCreate([
                 'email' => $request->email,
+                'pi_user_id' => $request->pi_user_id
             ], array_merge($request->only([
                 'first_name', 'last_name', 'address_1', 'address_2',
                 'zip', 'city', 'state', 'phone_number', 'pi_user_id', 'country'
@@ -240,9 +241,9 @@ class CustomerController extends CustomersController
      *
      * @param Customers $customer
      */
-    public function detail($id)
+    public function detail()
     {
-        if ($customer = Customers::find($id))
+        if ($customer = Customers::where('email', request('email'))->first())
         {
             return $this->sendResponse($customer->toArray(), 'Retrieve the customer detail successfully.');
         }
@@ -259,7 +260,7 @@ class CustomerController extends CustomersController
      * @param CustomerRequest $request
      * @return array|\Illuminate\Http\Response
      */
-    public function postUpdate(Request $request, $id)
+    public function postUpdate(Request $request)
     {
         $request->validate([
             'first_name' => 'required|max:120',
@@ -271,16 +272,16 @@ class CustomerController extends CustomersController
             'phone_number' => 'required|max:120|min:10'
         ]);
 
-        $customer = Customers::find($id);
+        $customer = Customers::where('pi_user_id', $request->pi_user_id)->first();
 
         // check if that email has already assigned to other user
         if ($email = $request->email) {
-            if (Customers::where('email', $email)->where('id', '!=', $id)->first()) {
+            if (Customers::where('email', $email)->where('pi_user_id', '!=', $request->pi_user_id)->first()) {
                 return $this->sendError('Email is already assigned to other user.');
             }
 
             if ($customer->created_from !== 'api') {
-                return $this->sendError('Only allow update email with account created form API.');
+                return $this->sendError('Only allow update email with account created form API.', [], 400);
             }
         }
 
