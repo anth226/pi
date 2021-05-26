@@ -299,11 +299,14 @@ class CustomerController extends CustomersController
 
                     // update info
                     $properties = [
-                        '$email' => $request->email,
                         '$first_name' => $request->first_name,
                         '$last_name' => $request->last_name,
                         '$phone_number' => $request->phone_number,
                     ];
+
+                    if ($customer->email !== $request->email) {
+                        $properties = array_merge($properties, ['$email' => $request->email,]);
+                    }
 
                     $client->profiles->updateProfile( $profileID['id'], $properties );
                 }
