@@ -261,16 +261,6 @@ class CustomerController extends CustomersController
      */
     public function postUpdate(Request $request)
     {
-        $request->validate([
-            'first_name' => 'required|max:120',
-            'last_name' => 'required|max:120',
-            'address_1' => 'required|max:120',
-            'zip' => 'required|digits:5',
-            'city' => 'required|max:120',
-            'state' => 'required||max:20',
-            'phone_number' => 'required|max:120|min:10'
-        ]);
-
         $customer = Customers::where('pi_user_id', $request->pi_user_id)->first();
 
         // check if that email has already assigned to other user
