@@ -228,11 +228,15 @@ class CustomerController extends CustomersController
                 }
             }
 
+            $this->getPipedriveLeadSources($customer);
+
             // After creating a user in the invoice system it should send User_id to the PI System with the success message(if success) else error message.
             return $this->sendResponse([
                 'user_id' => $customer->id,
             ], 'Success');
         }
+
+        return $this->sendError("Customer is invalid");
     }
 
     /**
