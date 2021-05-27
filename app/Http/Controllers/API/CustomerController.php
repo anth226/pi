@@ -20,8 +20,10 @@ use App\Invoices;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\EmailSender;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
+use App\LevelsSalespeople;
 use App\PdfTemplates;
 use App\Products;
+use App\SecondarySalesPeople;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -111,9 +113,10 @@ class CustomerController extends CustomersController
                     // Get latest product sku
                     $latestPro = Products::latest()->first();
                     $latestSku = $latestPro->sku;
+                    $stripeProduct = $this->stripeClient->products->retrieve($stripeProductId, []);
 
                     $product = Products::create([
-                        'title' => 'Product ID '.$stripeProductId,
+                        'title' => $stripeProduct ? $stripeProduct->name : 'Product ID '.$stripeProductId,
                         'sku' => intval($latestSku) + 1,
                         'price' => $item->price->unit_amount,
                         'stripe_price_id' => $isProduction ? $priceId : null,
@@ -122,10 +125,15 @@ class CustomerController extends CustomersController
                     $this->logAction(9, 0, $product->id);
                 }
 
+                $salePeopleId = $request->input('salespeople_id') ?? null;
+
+                if ($salePeopleId)
+                    $salespeople = LevelsSalespeople::getSalespersonInfo($salePeopleId);
+
                 // save to invoices table
                 $invoice_data_to_save = [
                     'customer_id' => $customer->id,
-                    'salespeople_id' => $request->input('sale_person_id'),
+                    'salespeople_id' => $salePeopleId,
                     'product_id' => $product->id,
                     'sales_price' => $request->input('sales_price'),
                     'qty' => request('qty', 0),
@@ -149,10 +157,24 @@ class CustomerController extends CustomersController
                 ], $invoice_data_to_save);
                 $this->logAction(1, 1, $invoice->id);
 
+                $this->addContacts($customer, 1,  $invoice->id);
+
                 // generate invoice PDF
                 $invoice_instance = new InvoicesController();
+                SecondarySalesPeople::create( [
+                    'salespeople_id' => $salespeople->salespeople_id,
+                    'invoice_id'     => $invoice->id,
+                    'sp_type' => 1,
+                    'earnings'=> 0,
+                    'percentage' => $salespeople->level->percentage,
+                    'level_id' => $salespeople->level_id
+                ] );
                 $pdfTemplate = PdfTemplates::where('id', 4)->value('slug');
-                $invoice_instance->generatePDF($invoice->id);
+                $invoice_instance->generatePDF($invoice->id, $pdfTemplate ?? 'pdfviewmain');
+
+                //calculate salespeople commission on new deal creation
+                $invoice_percentages = $invoice_instance->calcEarning($invoice);
+                $invoice_instance->savePercentages($invoice_percentages, $invoice->id);
 
                 // send email
                 $mailSent = $this->sendInvoiceEmail($invoice->id, 3, $customer->email);
