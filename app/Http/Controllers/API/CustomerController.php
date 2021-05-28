@@ -17,16 +17,13 @@ use App\Http\Resources\CustomerCollection;
 use App\Http\Resources\CustomerResource;
 use App\InvoiceGenerator;
 use App\Invoices;
-use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\EmailSender;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\LevelsSalespeople;
 use App\PdfTemplates;
 use App\Products;
-use App\Salespeople;
 use App\SecondarySalesPeople;
-use App\SentData;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -172,14 +169,6 @@ class CustomerController extends CustomersController
                     'percentage' => $salespeople->level->percentage,
                     'level_id' => $salespeople->level_id
                 ] );
-
-                $vp_salespeople = [];
-                $biz_dev_salespeople = [];
-                $invoice_salespeople = [];
-
-                $invoice_salespeople[] = Salespeople::where('id', $salespeople->salespeople_id)->withTrashed()->value('name_for_invoice');
-                $vp_salespeople[] = Salespeople::where('id', $salespeople->salespeople_id)->withTrashed()->value('pipedrive_user_id');
-
                 $pdfTemplate = PdfTemplates::where('id', 4)->value('slug');
                 $invoice_instance->generatePDF($invoice->id, $pdfTemplate ?? 'pdfviewmain');
 
@@ -260,18 +249,6 @@ class CustomerController extends CustomersController
                     return $this->sendError($message);
                 }
             }
-
-            $dataToUpdatePipedriveSalespeople = [];
-            if (count($vp_salespeople)) {
-                $dataToUpdatePipedriveSalespeople[config('pipedrive.vp_field_id')] = $vp_salespeople;
-            }
-            if (count($biz_dev_salespeople)) {
-                $dataToUpdatePipedriveSalespeople[config('pipedrive.biz_dev_field_id')] = $biz_dev_salespeople;
-            }
-            if (count($dataToUpdatePipedriveSalespeople)) {
-                Pipedrive::executeCommand(config('pipedrive.api_key'), new Pipedrive\Commands\UpdatePerson($pipedrive_person['data']->id, $dataToUpdatePipedriveSalespeople));
-            }
-            Pipedrive::executeCommand(config('pipedrive.api_key'), new Pipedrive\Commands\AddNote($pipedrive_res['data'], implode(', ', $invoice_salespeople)));
 
             $this->getPipedriveLeadSources($customer);
 

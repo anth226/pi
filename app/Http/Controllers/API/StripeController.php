@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\API;
 
-use App\ActionsLog;
-use App\Http\Controllers\CustomersController;
 use App\Invoices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -88,12 +86,6 @@ class StripeController extends BaseController
 						    $dataToUpdate['stripe_current_period_end'] = date( "Y-m-d H:i:s", $subscription->current_period_end );
 					    }
 					    $invoice->update( $dataToUpdate );
-					    if(Invoices::STRIPE_STATUSES[ $subscription->status ] != 1 || Invoices::STRIPE_STATUSES[ $subscription->status ] != 11) { //not active or trialing
-					        $in = Invoices::where( 'stripe_subscription_id', $subscription->id )->with('customer.contacts')->first();
-					        if($in && $in->count() && !empty($in->customer)){
-                                $this->unsunscribeEmailsAndPhones($in->customer);
-                            }
-                        }
 					    return $this->sendResponse($subscription, 'done');
 				    } else {
 					    $err_mess = 'Can not get subscription status for ' . $subscription->id;
@@ -114,80 +106,5 @@ class StripeController extends BaseController
 		    ]);
 		    return $this->sendError($error);
 	    }
-    }
-
-    public function unsunscribeEmailsAndPhones($customer){
-        try{
-            $user_id = 41; // Stripe API Webhook
-            $cc = new CustomersController();
-            $phones = [];
-            $emails = [];
-            $emailToContact = [];
-            $contacts = $customer->contacts;
-            if($contacts && $contacts->count()){
-                foreach($contacts as $contact){
-                    if($contact->contact_type){
-                        $phones[] = $contact->formated_contact_term;
-                    }
-                    else{
-                        $emails[] = $contact->formated_contact_term;
-                        $emailToContact[$contact->formated_contact_term] = $contact->id;
-                    }
-                }
-            }
-
-            if($emails && count($emails)){
-                foreach($emails as $email) {//
-                    // unsubscribe klavio customer
-                    $res_klaviyo = $cc->unsubscribeKlaviyo($email, false);
-                    if (!$res_klaviyo || !$res_klaviyo['success']) {
-                        $error = "Can not unsubscribe " . $email . " from Klaviyo. ";
-                        Errors::create([
-                            'error' => $error,
-                            'controller' => 'API/StripeController',
-                            'function' => 'unsunscribeEmailsAndPhones'
-                        ]);
-                    } else {
-                        ActionsLog::create([
-                            'user_id' => $user_id,
-                            'model' => 8,
-                            'action' => 8,
-                            'related_id' => $emailToContact[$email] //contact_id
-                        ]);
-                    }
-                }
-
-                $res_smssystem = $cc->unsubscribeSmsSystem(json_encode($emails), json_encode($phones), false);
-                if(!$res_smssystem || !$res_smssystem['success']){
-                    $error = !empty($res_smssystem['message']) ? $res_smssystem['message'] : "Can not unsubscribe from SMS System";
-                    Errors::create([
-                        'error' => $error,
-                        'controller' => 'API/StripeController',
-                        'function' => 'unsunscribeEmailsAndPhones'
-                    ]);
-                }
-                else{
-                    ActionsLog::create([
-                        'user_id' => $user_id,
-                        'model' => 2,
-                        'action' => 10,
-                        'related_id' => $customer->id
-                    ]);
-                }
-            }
-
-            $cc->subscriptionsCheck($customer->id, 1);
-
-        }
-        catch (Exception $ex){
-            $err_message = $ex->getMessage();
-            $errors[] = $err_message;
-            Errors::create([
-                'error' => $err_message,
-                'controller' => 'API/StripeController',
-                'function' => 'unsunscribeEmailsAndPhones'
-            ]);
-            return $this->sendError( $err_message, $errors, 404, false );
-        }
     }
 }

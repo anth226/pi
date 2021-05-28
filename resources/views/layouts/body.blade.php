@@ -103,11 +103,6 @@
                                         {{ __('Email Templates') }}
                                     </a>
                                 @endif
-                                @if( Gate::check('unsubscribe_nonprime_customer_from_text'))
-                                    <a class="dropdown-item" href="/unsubscribe" >
-                                        {{ __('Unsubscribe SMS') }}
-                                    </a>
-                                @endif
 
                                 @if( Gate::check('user-create') || Gate::check('user-edit') || Gate::check('user-delete') || Gate::check('user-list'))
                                     <a class="dropdown-item" href="/users" >

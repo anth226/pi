@@ -521,60 +521,6 @@ class PersonsController extends BaseController
 		return CamelCaseHelper::keysToCamelCase($response->body);
 	}
 
-	public function updateAPersonCustomFields(
-		$options
-	) {
-		//check or get oauth token
-		OAuthManager::getInstance()->checkAuthorization();
-
-		//prepare query string for API call
-		$_queryBuilder = '/persons/{id}';
-
-		//process optional query parameters
-		$_queryBuilder = APIHelper::appendUrlWithTemplateParameters($_queryBuilder, array (
-			'id'         => $this->val($options, 'id'),
-		));
-
-		//validate and preprocess url
-		$_queryUrl = APIHelper::cleanUrl(Configuration::getBaseUri() . $_queryBuilder);
-
-		//prepare headers
-		$_headers = array (
-			'user-agent'    => BaseController::USER_AGENT,
-			'Authorization' => sprintf('Bearer %1$s', Configuration::$oAuthToken->accessToken)
-		);
-
-		//prepare parameters
-		$_parameters = array ();
-        if(!empty($this->val($options, 'custom_fields')) && is_array($this->val($options, 'custom_fields')) && count($this->val($options, 'custom_fields'))) {
-            foreach($this->val($options, 'custom_fields') as $i => $v){
-                $_parameters[$i] = $v;
-            }
-        }
-
-		//call on-before Http callback
-		$_httpRequest = new HttpRequest(HttpMethod::PUT, $_headers, $_queryUrl, $_parameters);
-		if ($this->getHttpCallBack() != null) {
-			$this->getHttpCallBack()->callOnBeforeRequest($_httpRequest);
-		}
-
-		//and invoke the API call request to fetch the response
-		$response = Request::put($_queryUrl, $_headers, Request\Body::Form($_parameters));
-
-		$_httpResponse = new HttpResponse($response->code, $response->headers, $response->raw_body);
-		$_httpContext = new HttpContext($_httpRequest, $_httpResponse);
-
-		//call on-after Http callback
-		if ($this->getHttpCallBack() != null) {
-			$this->getHttpCallBack()->callOnAfterRequest($_httpContext);
-		}
-
-		//handle errors defined at the API level
-		$this->validateResponse($_httpResponse, $_httpContext);
-
-		return CamelCaseHelper::keysToCamelCase($response->body);
-	}
-
 	/**
 	 * Lists activities associated with a person.
 	 *

@@ -34,7 +34,6 @@
                     <th>Action</th>
                 </tr>
                 @foreach ($data as $key => $user)
-                    @if(!$user->hasRole('API USER'))
                     <tr>
                         <td>{{ ++$i }}</td>
                         <td>{{ $user->name }}</td>
@@ -58,7 +57,6 @@
                             {{--@endcan--}}
                         </td>
                     </tr>
-                    @endif
                 @endforeach
             </table>
             {!! $data->render() !!}
