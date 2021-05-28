@@ -23,3 +23,16 @@ use Illuminate\Http\Request;
 //});
 
 
+Route::namespace('API')->group(function(){
+    Route::middleware('auth:api')->group(function(){
+        Route::prefix('customers')->group(function(){
+            Route::get('/', 'CustomerController@index');
+            Route::post('/', 'CustomerController@store');
+        });
+        Route::get('customers-edit', 'CustomerController@detail');
+        Route::put('customers-update', 'CustomerController@postUpdate');
+    });
+    Route::prefix('auth')->group(function(){
+        Route::post('/', 'AuthController@check');
+    });
+});
