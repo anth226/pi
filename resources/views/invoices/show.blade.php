@@ -54,12 +54,16 @@
         .status_7, .status_8, .status_9, .status_10{
             color:#dc3545!important;
         }
+        .borderless td, .borderless th {
+            border: none;
+        }
     </style>
 @endsection
 
 @section('popup')
     @include('popups.editinvoice')
     @include('popups.createtask')
+    @include('popups.deletedeal')
 @endsection
 
 @section('content')
@@ -91,6 +95,25 @@
                                             {{ $invoice->created_at }}
                                         </small>
                                     </div>
+                                    <form id="recheck_subscriptions">
+                                        <div class="form-row align-items-center">
+                                            <div class="col-auto">
+                                                <input type="hidden" name="customer_id" value="{{$invoice->customer->id}}">
+                                                <button type="submit" class="btn btn-sm btn-primary mb-2 submit" >Recheck Subscriptions</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <table class="table borderless table-responsive-sm w-100" id="contacts_table">
+                                        <thead class="d-none">
+                                        <tr>
+                                            <th>Subscriptions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+
+                                        </tbody>
+                                    </table>
+                                    <div class="d-none">
                                     @if($sentLog && count($sentLog))
                                         @foreach($sentLog as $d)
                                                 <div>
@@ -107,6 +130,7 @@
                                                 </div>
                                         @endforeach
                                     @endif
+                                    </div>
                                     @if (count($errors) > 0)
                                         <div class="alert alert-danger">
                                             <strong>Whoops!</strong> There were some problems.<br><br>
@@ -131,20 +155,21 @@
                                 <button class="btn btn-info mt-2" data-toggle="modal" data-target="#editinvoice">Edit Invoice</button>
                             @endif
                             @if($invoice->status != 3)
-                                <button class="btn btn-info mt-2" id="refunded">Set as {{ \App\Invoices::STATUS[3] }}</button>
+                                <button class="btn btn-info mt-2" id="refunded">Set as {{ \App\Invoices::STATUS[3] }} And Unsubscribe</button>
                             @endif
                             @if($invoice->status != 2 && $invoice->status != 3)
                                 <button class="btn btn-outline-primary mt-2" id="refund_requested">Set as {{ \App\Invoices::STATUS[2] }}</button>
                             @endif
-                            @if(isset($user_id) && $user_id == 1)
-                                <button class="btn btn-danger mt-2" id="unsubscribe_all">Unsubscribe from Everywhere <small>beta</small></button>
-                            @endif
+{{--                            @if(isset($user_id) && $user_id == 1)--}}
+{{--                                <button class="btn btn-danger mt-2" id="unsubscribe_all">Unsubscribe from Everywhere <small>beta</small></button>--}}
+{{--                            @endif--}}
                         @endcan
-                        {{--@can('invoice-delete')--}}
-                            {{--{!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline;']) !!}--}}
-                            {{--{!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}--}}
-                            {{--{!! Form::close() !!}--}}
-                        {{--@endcan--}}
+                        @can('invoice-delete')
+                            <button class="btn btn-danger mt-2" data-toggle="modal" data-target="#deletedeal">Delete Deal</button>
+{{--                            {!! Form::open(['method' => 'DELETE','route' => ['invoices.destroy', $invoice->id],'style'=>'display:inline;']) !!}--}}
+{{--                            {!! Form::submit('Delete', ['class' => 'btn btn-danger mt-2']) !!}--}}
+{{--                            {!! Form::close() !!}--}}
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -532,6 +557,10 @@
             var task_type = jQuery.parseJSON('{!! $task_type !!}');
             var task_status = jQuery.parseJSON('{!! $task_status !!}');
             var invoice_status = jQuery.parseJSON('{!! $invoice_status !!}');
+            var contact_type = jQuery.parseJSON('{!! $contact_type !!}');
+            var contact_subtype = jQuery.parseJSON('{!! $contact_subtype !!}');
+            var subscription_type = jQuery.parseJSON('{!! $subscription_type !!}');
+            var subscription_status = jQuery.parseJSON('{!! $subscription_status !!}');
 
             var table = $('table#invoices_table');
             var table_dt = table.DataTable({
@@ -867,6 +896,9 @@
                     },
                     success: function (response) {
                         location.reload();
+                        // current_button.prop('disabled', '');
+                        // current_button.html(button_content);
+                        // current_button.after('<div class="text-success">'+response.message+'</div>');
                     },
                     error: function (response) {
                         current_button.prop('disabled', '');
@@ -940,6 +972,7 @@
                         submitButton.html(button_text);
                         $('#editinvoice').find('button').prop('disabled', false);
                     },
+
                     error: function (response) {
                         if (response && response.responseJSON) {
                             if (response.responseJSON.message) {
@@ -1038,6 +1071,32 @@
             });
 
 
+            $(document).on('click', '#delete_deal_and_customer', function (event) {
+                const current_button = $(this);
+                current_button.next('.error').remove();
+                const button_content = current_button.html();
+                var ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                $('button').prop('disabled', 'disabled');
+                current_button.append(ajax_img);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: '/invoices/{{$invoice->id}}',
+                    type: "DELETE",
+                    success: function (response) {
+                        window.location.href = "/";
+                    },
+                    error: function (response) {
+                        $('button').prop('disabled', '');
+                        current_button.html(button_content);
+                        current_button.after('<div class="error">'+response.responseJSON.message+'</div>');
+                    }
+                });
+            })
+
             $(document).on('click', '#unsubscribe_all', function (event) {
                 const current_button = $(this);
                 current_button.next('.error').remove();
@@ -1060,7 +1119,8 @@
                     success: function (response) {
                         current_button.prop('disabled', '');
                         current_button.html(button_content);
-                        current_button.after('<div class="text-success">'+response.message+'</div>');
+                        current_button.after('<div class="text-success">'+response.message+'</div>' +
+                            '<div><button class="btn btn-danger mt-2" id="delete_deal_and_customer">Delete Deal and Customer</button></div>');
                     },
                     error: function (response) {
                         current_button.prop('disabled', '');
@@ -1076,6 +1136,98 @@
                     return true;
                 }
                 return false;
+            }
+
+
+
+
+            var cont_table = $('table#contacts_table');
+            var cont_table_dt = cont_table.DataTable({
+
+                processing: true,
+                serverSide: true,
+                searching: false,
+                "paging":   false,
+                "ordering": false,
+                "info":     false,
+                order: [
+                    [ 0, "desc" ]
+                ],
+                ajax: {
+                    url: "/customers-contacts",
+                    data: function ( d ) {
+                        return $.extend( {}, d, {
+                            customer_id: {{$invoice->customer->id}}
+                        } );
+                    }
+                },
+                pageLength: 100,
+
+                columns: [
+
+                    { data: 'subscriptions', name: 'subscriptions', "sortable": false,"searchable": false, render: function ( data, type, row ){
+                            return generateSubs(data, row);
+                        }},
+
+                ]
+            });
+
+            function generateSubs(subscriptions, row){
+                let ret_html ='';
+                if(isSet(subscriptions) && subscriptions.length){
+                    ret_html += '<div class="h6">Contact: <span class="h4">' + row.contact_term + '</span></div></hr> ';
+                    $.each(subscriptions, function( index, value ) {
+                        if(value.subscription_type != 4 ) {
+                            // ret_html += '<div class=card><div class="card-body">';
+                            ret_html += '<div><strong>' + subscription_type[value.subscription_type] + '</strong> ';
+                            ret_html += '<span>Status: ' + subscription_status[value.subscription_status] + '</span></div>';
+                            // ret_html += '<div><small>Created At: ' + value.created_at + '</small></div>';
+                            // ret_html += '<div><small>Created By:' + value.user.name + '</small></div>';
+                            // ret_html += '</div></div>';
+                        }
+                    });
+                }
+
+                return ret_html;
+            }
+
+            $(document).on('submit', '#recheck_subscriptions', function (event) {
+                makeAjaxCall($(this),'/customers-contacts/recheck_subscriptions');
+            });
+
+            function makeAjaxCall(current_form, url){
+                event.preventDefault();
+                const current_button = current_form.find('.submit');
+                const $form = current_form;
+                const submitData = $form.serialize();
+
+                current_form.prev('.error').remove();
+                const button_content = current_button.html();
+                console.log(button_content);
+                const ajax_img = '<img width="40" src="{{ url('/img/ajax.gif') }}" alt="ajax loader">';
+                current_button.prop('disabled', 'disabled').append(ajax_img);
+
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    dataType: "json",
+                    data: submitData,
+                    success: function (response) {
+                        cont_table_dt.draw();
+                        current_button.prop('disabled', '');
+                        current_button.html(button_content);
+                    },
+                    error: function (response) {
+                        current_button.prop('disabled', '');
+                        current_button.html(button_content);
+                        current_form.before('<div class="error">'+response.responseJSON.message+'</div>');
+                    }
+                });
             }
 
         });
