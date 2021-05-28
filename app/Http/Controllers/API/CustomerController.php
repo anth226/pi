@@ -262,12 +262,15 @@ class CustomerController extends CustomersController
             }
 
             $dataToUpdatePipedriveSalespeople = [];
+
             if (count($vp_salespeople)) {
                 $dataToUpdatePipedriveSalespeople[config('pipedrive.vp_field_id')] = $vp_salespeople;
             }
+
             if (count($biz_dev_salespeople)) {
                 $dataToUpdatePipedriveSalespeople[config('pipedrive.biz_dev_field_id')] = $biz_dev_salespeople;
             }
+
             if (count($dataToUpdatePipedriveSalespeople)) {
                 Pipedrive::executeCommand(config('pipedrive.api_key'), new Pipedrive\Commands\UpdatePerson($pipedrive_person['data']->id, $dataToUpdatePipedriveSalespeople));
             }
