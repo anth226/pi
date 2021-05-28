@@ -715,7 +715,7 @@ class CustomersController extends BaseController
 		}
 	}
 
-	protected function createFirebase(){
+	public function createFirebase(){
 		try{
 			if(config( 'firebase.file_name' )) {
 				$this->firebase = ( new Factory )->withServiceAccount( storage_path( config( 'firebase.file_name' ) ) );
@@ -742,7 +742,7 @@ class CustomersController extends BaseController
 		}
 	}
 
-	protected function createStripe(){
+	public function createStripe(){
 		try{
 			if(config( 'stripe.stripeKey' )) {
 				$this->stripe = new StripeClient( config( 'stripe.stripeKey' ) );
@@ -1340,11 +1340,19 @@ class CustomersController extends BaseController
 
 
 							//check stripe
+                            $subscription_id = 0;
 							if(!empty($user_data['subscriptionId'])) {
 								$subscription_id = $user_data['subscriptionId'];
 							}
 							else {
-								$subscription_id = Invoices::where('customer_id', $customer_id)->value('stripe_subscription_id');
+							    $inv = Invoices::where('customer_id', $customer_id)->with('customer')->get();
+							    if($inv && $inv->count()){
+							        foreach($inv as $in){
+							            if($in->customer->email == $c->contact_term){
+                                            $subscription_id = $in->stripe_subscription_id;
+                                        }
+                                    }
+                                }
 							}
 							if($subscription_id){
 								$sms = $this->checkStripe( $subscription_id, $c->contact_term );
@@ -1657,6 +1665,61 @@ class CustomersController extends BaseController
 			return $this->sendError( $err_message, '', 404, $is_response_json );
 		}
 
+	}
+
+	public function updateFirebase($uid, $updateData,  $collection = 'users'){
+		try {
+			$this->createFirebase();
+			if($this->firebase) {
+
+					$firestore = $this->firebase->createFirestore();
+					$database  = $firestore->database();
+					$data      = [
+						'subscriptionId'     => $updateData,
+					];
+					$res = $database->collection( $collection )->document( $uid )->set( $data, ['merge' => true]);
+
+				return $this->sendResponse( $res, '', false );
+			}
+			$error = "No Firebase API Key found";
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'sendDataToStripe'
+			]);
+			return $this->sendError($error, [], 404, false);
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'updateFirebase'
+			]);
+			return $this->sendError($error, [], 404, false);
+		}
+	}
+
+	public function updateFirebaseAuth($uid, $subs_id, $customer_id){	
+		try {
+			$this->createFirebase();
+			if($this->firebase) {		
+				$auth  = $this->firebase->createAuth();
+				return $auth->setCustomUserClaims( $uid, [
+					'customer_id'     => $customer_id,
+					'subscription_id' => $subs_id,
+				] );
+			}
+		}
+		catch (Exception $ex){
+			$error = $ex->getMessage();
+			Errors::create([
+				'error' => $error,
+				'controller' => 'CustomersController',
+				'function' => 'updateFirebaseAuth'
+			]);
+			return $this->sendError($error, [], 404, false);
+		}
 	}
 
 }
