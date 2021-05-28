@@ -7,9 +7,7 @@ namespace App\Http\Controllers;
 use App\Customers;
 use App\CustomersContacts;
 use App\CustomersContactSubscriptions;
-use App\Errors;
 use App\Http\Controllers\API\BaseController;
-use App\Http\Controllers\API\StripeController;
 use App\Invoices;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\LevelsSalespeople;
@@ -25,7 +23,6 @@ use Exception;
 use DB;
 use Klaviyo\Klaviyo as Klaviyo;
 use Klaviyo\Model\ProfileModel as KlaviyoProfile;
-use Kreait\Firebase\Factory;
 
 class TestController extends BaseController
 {
@@ -194,41 +191,8 @@ class TestController extends BaseController
 //		$this->contactsFromPipedrive();
 //		$this->smsSubsCheck();
 //		dd($this->updateAllAnnualSubscriptions());
-		// $i = Invoices::with('customer')->find(1893); 
+//		dd(config( 'stripe.endpointSecret' ));
 
-		// echo "<pre>";
-		// var_export( $this->getFirebaseUserData($i->customer->email)->customClaims);
-		// echo "</pre><br><hr>";
-
-		// echo "<pre>";
-		// var_export($this->updateInvoiceToAnnual($i));
-		// echo "</pre><br><hr>";
-
-		// echo "<pre>";
-		// var_export( $this->getFirebaseUserData($i->customer->email)->customClaims);
-		// echo "</pre>";
-
-		// $cc = new CustomersController();
-		// dd($cc->updateFirebaseAuth('bd9Ta96ATUMWnGa7fRWRTBgoim33', 'fffffffffff'));
-		// dd($cc->updateFirebase('VOxoHr2oIJSikNMYwajxfG4hnkL2', "sub_JTiWV9ElPveXgH"));
-		// die;
-//		dd($this->updateAllAnnualSubscriptions());
-//        $sc = new StripeController();
-//        dd($sc->unsunscribeEmailsAndPhones(Customers::where('id',1901)->with('contacts')->first()));
-//        $in = Invoices::where( 'id', 11 )->with('customer.contacts')->first();
-//        if($in && $in->count() && !empty($in->customer) && !empty($in->customer->contacts)){
-//            dd($in->customer->contacts);
-//        }
-//        $data      = [
-//            'first_name'          => 'John',
-//            'last_name'           => 'Turek',
-//            'email'              => 'turek2168@gmail.com',
-//            'phone'        => '+1 (732) 771-1691',
-//            'customerId'         => 'cus_JAf1i5AQzpdD4J',
-//            'subscriptionId'     => 'sub_JAf1VAd9DvZkLK',
-//        ];
-//        $res = $this->sendDataToFirebase($data);
-//        dd($res);
 	}
 
 	public function getPersonsSources(){
@@ -657,194 +621,24 @@ class TestController extends BaseController
 
 
 	public function updateAllAnnualSubscriptions(){
-		$annual_invoices = Invoices::where('pdftemplate_id', 4)->where('product_id', 1)->with('customer')->orderBy('id', 'desc')->limit(20)->get();
-		$result = [];
+		$annual_invoices = Invoices::where('pdftemplate_id', 4)->get();
 		foreach($annual_invoices as $i){
-			$result[] = $this->updateInvoiceToAnnual($i);
+			$this->updateInvoiceToAnnual($i);
 		}
-		echo "<pre>";
-		var_export($result);
-		echo "</pre>";die;
 	}
 
 	public function updateInvoiceToAnnual(Invoices $invoice){
 		try{
-			$cc = new CustomersController();
-			$res = $cc->getFirebaseUserData($invoice->customer->email);
-			$err_mess = '';
-			if(!empty($res['uid']) && !empty($res['subscriptionId']) && !empty($res['customerId'])){
-			
-					$cc->createStripe();
-					$res_subs = $cc->createStripeSubscription($res['customerId'], 2);
-					if($res_subs['success'] && !empty($res_subs['data']->id)){
-						$res_upd = $cc->updateFirebase($res['uid'], $res_subs['data']->id);
-						if(!empty($res_upd) && !empty($res_upd['success'])){
-                                $invoice_data_to_save = [
-                                    'product_id' => 2,
-                                    'old_prime_subs_id' => $res['subscriptionId'],
-                                ];
-                                if(!empty($res_subs['data']['id'])){
-                                    $invoice_data_to_save['stripe_subscription_id'] = $res_subs['data']['id'];
-                                }
 
-                                if(!empty($res_subs['data']['current_period_end'])){
-                                    $invoice_data_to_save['stripe_current_period_end'] = date("Y-m-d H:i:s",$res_subs['data']['current_period_end']);
-                                }
-                                if(!empty($res_subs['data']['current_period_start'])){
-                                    $invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s",$res_subs['data']['current_period_start']);
-                                }
-                                if(!empty($res_subs['data']['status'])){
-                                    $invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$res_subs['data']['status']];
-                                }
-
-							$res_invoice_update = Invoices::where('id', $invoice->id)->update($invoice_data_to_save);
-							if($res_invoice_update){
-								$cc->updateFirebaseAuth($res['uid'], $res_subs['data']->id, $res['customerId']);
-								$cc->subscriptionsCheck($invoice->customer_id, 1 );
-								return $invoice->customer->email;
-							}
-							else {
-								$err_mess = 'Can not update invoice for ' . $invoice->customer->email;
-							}
-						}
-						else {
-							$err_mess = 'Can not update firebase for ' . $invoice->customer->email;
-						}
-					
-					}
-					else {
-						$err_mess = 'Can not find stripe customer for ' . $invoice->customer->email;
-					}
-			}
-			else {
-				$err_mess = 'No subscription Id or no user on Firebase for ' . $invoice->customer->email;
-			}
-			Errors::create([
-				'error' => $err_mess,
-				'controller' => 'TestController',
-				'function' => 'updateInvoiceToAnnual'
-			]);
-			return $err_mess;
 		}
 		catch (Exception $ex){
-			$err_mess = $ex->getMessage();
 			Errors::create([
-				'error' => $err_mess,
-				'controller' => 'TestController',
-				'function' => 'updateInvoiceToAnnual'
+				'error' => $ex->getMessage(),
+				'controller' => 'CustomersController',
+				'function' => 'checkFirebaseAndStripe'
 			]);
-			return $err_mess . ' email: '.$invoice->customer->email;
+			return $this->sendError($ex->getMessage(),'',404, false);
 		}
 	}
-
-	public function getFirebaseUserData($email){
-		try {
-			$cc = new CustomersController();
-			$firebase = $cc->findFirebaseUser( $email );
-			if ( !empty($firebase) && !empty($firebase->uid) ) {
-				return $firebase;				
-			}
-			return false;
-		} catch (Exception $ex){
-			$error = $ex->getMessage();
-			Errors::create([
-				'error' => $error,
-				'controller' => 'TestController',
-				'function' => 'getFirebaseUserData'
-			]);
-			return false;
-		}
-	}
-
-
-
-
-
-    public function sendDataToFirebase($user, $collection = 'users') {
-        try {
-            $this->createFirebase();
-            if($this->firebase) {
-                $auth           = $this->firebase->createAuth();
-                $userProperties = [
-                    'email'         => $user['email'],
-                    'password'      => 'warrenbuffett1',
-                    'emailVerified' => false,
-                    'disabled'      => false,
-                    'metadata'      => [
-                        'lastSignInDate' => date( 'D M d Y H:i:s O' ),
-                    ],
-                ];
-                $createdUser    = $auth->createUser( $userProperties );
-                if ( $createdUser && $createdUser->uid ) {
-                    $firestore = $this->firebase->createFirestore();
-                    $database  = $firestore->database();
-                    $data      = [
-                        'firstName'          => $user['first_name'],
-                        'lastName'           => $user['last_name'],
-                        'email'              => $user['email'],
-                        'phoneNumber'        => $user['phone'],
-                        'userId'             => $createdUser->uid,
-                        'customerId'         => $user['customerId'],
-                        'subscriptionId'     => $user['subscriptionId'],
-                        'isPrime'            => true,
-                        'subscriptionStatus' => "active",
-                    ];
-                    $database->collection( $collection )->document( $createdUser->uid )->set( $data );
-
-                    $auth->setCustomUserClaims( $createdUser->uid, [
-                        'customer_id'     => $user['customerId'],
-                        'subscription_id' => $user['subscriptionId'],
-                    ] );
-                }
-
-                return $this->sendResponse( $createdUser, '', false );
-            }
-            $error = "No Firebase API Key found";
-            Errors::create([
-                'error' => $error,
-                'controller' => 'CustomersController',
-                'function' => 'sendDataToStripe'
-            ]);
-            return $this->sendError($error, [], 404, false);
-        }
-        catch (Exception $ex){
-            $error = $ex->getMessage();
-            Errors::create([
-                'error' => $error,
-                'controller' => 'CustomersController',
-                'function' => 'sendDataToFirebase'
-            ]);
-            return $this->sendError($error, [], 404, false);
-        }
-
-    }
-    public function createFirebase(){
-        try{
-            if(config( 'firebase.file_name' )) {
-//                $conf = 'portfolio-insider-18e90e011d22.json';
-                $conf = config( 'firebase.file_name' );
-                $this->firebase = ( new Factory )->withServiceAccount( storage_path( $conf ) );
-                return $this->firebase;
-            }
-            $this->firebase = '';
-            $error = "No Firebase Configuration Found";
-            Errors::create([
-                'error' => $error,
-                'controller' => 'CustomersController',
-                'function' => 'createFirebase'
-            ]);
-            return false;
-        }
-        catch (Exception $ex){
-            $error = $ex->getMessage();
-            Errors::create([
-                'error' => $error,
-                'controller' => 'CustomersController',
-                'function' => 'createFirebase'
-            ]);
-            $this->firebase = '';
-            return false;
-        }
-    }
 
 }

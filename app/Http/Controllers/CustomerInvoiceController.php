@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\ActionsLog;
 use App\Customers;
-use App\CustomersContacts;
-use App\Errors;
 use App\Invoices;
 use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\Elements;
@@ -17,7 +15,7 @@ use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
 use App\SentData;
-use Exception;
+use App\SentDataLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -66,351 +64,306 @@ class CustomerInvoiceController extends CustomersController
 	 */
 	public function store(Request $request)
 	{
-	    try {
-            $this->validate($request, [
-                'first_name' => 'required|max:120',
-                'last_name' => 'required|max:120',
-                'address_1' => 'required|max:120',
-                'zip' => 'required|max:120',
-                'city' => 'required|max:120',
-                'state' => 'required|max:20',
-                'email' => 'required|unique:customers,email,NULL,id,deleted_at,NULL|email|max:120',
-                'phone_number' => 'required|max:120|min:10',
-                'salespeople_id' => 'required|numeric|min:1',
-                'product_id' => 'required|numeric|min:1',
-                'pdftemplate_id' => 'required|numeric|min:1',
-                'sales_price' => 'required',
-                'qty' => 'required|numeric|min:1',
-                'access_date' => 'required',
-                'cc' => 'required|digits:4'
-            ]);
+		$this->validate($request, [
+			'first_name' => 'required|max:120',
+			'last_name' => 'required|max:120',
+			'address_1' => 'required|max:120',
+			'zip' => 'required|max:120',
+			'city' => 'required|max:120',
+			'state' => 'required|max:20',
+			'email' => 'required|unique:customers,email,NULL,id,deleted_at,NULL|email|max:120',
+			'phone_number' => 'required|max:120|min:10',
+			'salespeople_id' => 'required|numeric|min:1',
+			'product_id' => 'required|numeric|min:1',
+			'pdftemplate_id' => 'required|numeric|min:1',
+			'sales_price' => 'required',
+			'qty' => 'required|numeric|min:1',
+			'access_date' => 'required',
+			'cc' => 'required|digits:4'
+		]);
 
-            $test_mode = !empty($request->input('test_mode')) ? $request->input('test_mode') : 0;
-            $ignore_pipedrive = !empty($request->input('ignore_pipedrive')) ? $request->input('ignore_pipedrive') : 0;
+		$test_mode = !empty($request->input('test_mode')) ? $request->input('test_mode') : 0;
+		$ignore_pipedrive = !empty($request->input('ignore_pipedrive')) ? $request->input('ignore_pipedrive') : 0;
 
-            $sales_price = !empty($request->input('sales_price')) ? Elements::moneyToDecimal($request->input('sales_price')) : 0;
-            if (!$sales_price) {
-                return $this->sendError('Please enter correct price.');
-            }
+		$sales_price = !empty($request->input('sales_price')) ? Elements::moneyToDecimal($request->input('sales_price')) : 0;
+		if(!$sales_price){
+			return $this->sendError('Please enter correct price.');
+		}
 
-            $paid = !empty($request->input('paid')) ? Elements::moneyToDecimal($request->input('paid')) : $sales_price;
-            if (($sales_price - $paid) < 0) {
-                return $this->sendError('Paid amount must be less than Sales Price.');
-            }
+		$paid = !empty($request->input('paid')) ? Elements::moneyToDecimal($request->input('paid')) : $sales_price;
+		if(($sales_price - $paid) < 0){
+			return $this->sendError('Paid amount must be less than Sales Price.');
+		}
 
-            $dataToSend = [
-                'first_name' => $request->input('first_name'),
-                'last_name' => $request->input('last_name'),
-                'full_name' => $request->input('first_name') . ' ' . $request->input('last_name'),
-                'email' => strtolower($request->input('email')),
-                'phone' => $request->input('phone_number'),
-                'source' => 'portfolio-insider-prime',
-                'tags' => 'portfolio-insider-prime',
-                'address_1' => $request->input('address_1'),
-                'address_2' => !empty($request->input('address_2')) ? $request->input('address_2') : '',
-                'city' => $request->input('city'),
-                'state' => $request->input('state'),
-                'zip' => $request->input('zip'),
-                'phone_number' => $request->input('phone_number'),
-                'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
-                'sales_price' => $sales_price,
-                'paid' => $paid,
-                'stripe_product_id' => $request->input('product_id')
-            ];
+		$dataToSend = [
+			'first_name' => $request->input('first_name'),
+			'last_name' => $request->input('last_name'),
+			'full_name' => $request->input('first_name').' '.$request->input('last_name'),
+			'email' => strtolower($request->input('email')),
+			'phone' => $request->input('phone_number'),
+			'source' => 'portfolio-insider-prime',
+			'tags' => 'portfolio-insider-prime',
+			'address_1' => $request->input('address_1'),
+			'address_2' => !empty($request->input('address_2')) ? $request->input('address_2') : '',
+			'city' => $request->input('city'),
+			'state' => $request->input('state'),
+			'zip' => $request->input('zip'),
+			'phone_number' => $request->input('phone_number'),
+			'formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')),
+			'sales_price' => $sales_price,
+			'paid' => $paid,
+			'stripe_product_id' => $request->input('product_id')
+		];
 
-            if ($dataToSend['formated_phone_number']) {
-                $err_message = "Phone number already exist.";
-                $total_customers = Customers::where('formated_phone_number', $dataToSend['formated_phone_number'])->count();
-                $total_contacts = CustomersContacts::where('formated_contact_term', $dataToSend['formated_phone_number'])->count();
-                if($total_customers || $total_contacts){
-                    return $this->sendError($err_message);
-                }
-            }
-
-            if (!$test_mode) {
-                if (!$ignore_pipedrive) {
-                    //////////// sending data to pipidrive
-                    $pipedrive_person = $this->checkPipedrive($dataToSend);
-                    if (!$pipedrive_person['success']) {
-                        $message = 'Error! Can\'t send data to Pipedrive';
-                        if (!empty($pipedrive_res['message'])) {
-                            $message = $pipedrive_res['message'];
-                        }
-                        return $this->sendError($message);
-                    } else {
-                        if ($pipedrive_person['message']) {
-                            return $this->sendResponse($pipedrive_person['data'], $pipedrive_person['message']);
-                        }
-                    }
-                }
+		if(!$test_mode) {
+			if(!$ignore_pipedrive) {
+				//////////// sending data to pipidrive
+				$pipedrive_person = $this->checkPipedrive( $dataToSend );
+				if ( ! $pipedrive_person['success'] ) {
+					$message = 'Error! Can\'t send data to Pipedrive';
+					if ( ! empty( $pipedrive_res['message'] ) ) {
+						$message = $pipedrive_res['message'];
+					}
+					return $this->sendError($message);
+				}
+				else{
+					if($pipedrive_person['message']){
+						return $this->sendResponse($pipedrive_person['data'], $pipedrive_person['message']);
+					}
+				}
+			}
 
 
-                //////////// sending data
-                $stripe_res = $this->sendDataToStripe($dataToSend);
-                if (!$stripe_res['success']) {
-                    $message = 'Error! Can\'t send data to stripe';
-                    if (!empty($stripe_res['message'])) {
-                        $message = $stripe_res['message'];
-                    }
-                    return $this->sendError($message);
-                } else {
-                    $dataToSend['customerId'] = $stripe_res['data']['customer'];
-                    $dataToSend['subscriptionId'] = $stripe_res['data']['id'];
+			//////////// sending data
+			$stripe_res = $this->sendDataToStripe($dataToSend);
+			if(!$stripe_res['success']){
+				$message = 'Error! Can\'t send data to stripe';
+				if(!empty($stripe_res['message'])){
+					$message = $stripe_res['message'];
+				}
+				return $this->sendError($message);
+			}
+			else {
+				$dataToSend['customerId']     = $stripe_res['data']['customer'];
+				$dataToSend['subscriptionId'] = $stripe_res['data']['id'];
 
-                    $firebase_res = $this->sendDataToFirebase($dataToSend);
-                    if (!$firebase_res['success']) {
-                        $message = 'Error! Can\'t send data to firebase';
-                        if (!empty($firebase_res['message'])) {
-                            $message = $firebase_res['message'];
-                        }
+				$firebase_res = $this->sendDataToFirebase( $dataToSend );
+				if ( ! $firebase_res['success'] ) {
+					$message = 'Error! Can\'t send data to firebase';
+					if ( ! empty( $firebase_res['message'] ) ) {
+						$message = $firebase_res['message'];
+					}
 
-                        return $this->sendError($message);
-                    }
+					return $this->sendError($message);
+				}
 
-                    $klaviyo_res = $this->sendDataToKlaviyo($dataToSend);
-                    if (!$klaviyo_res['success']) {
-                        $message = 'Error! Can\'t send data to klaviyo';
-                        if (!empty($stripe_res['message'])) {
-                            $message = $stripe_res['message'];
-                        }
+				$klaviyo_res = $this->sendDataToKlaviyo( $dataToSend );
+				if ( ! $klaviyo_res['success'] ) {
+					$message = 'Error! Can\'t send data to klaviyo';
+					if ( ! empty( $stripe_res['message'] ) ) {
+						$message = $stripe_res['message'];
+					}
 
-                        return $this->sendError($message);
-                    }
-                }
+					return $this->sendError($message);
+				}
+			}
 
-                $smssystem_res = $this->sendDataToSMSSystem($dataToSend);
-                if (!$smssystem_res['success']) {
-                    $message = 'Error! Can\'t send data to SMS System';
-                    if (!empty($smssystem_res['message'])) {
-                        $message = $smssystem_res['message'];
-                    }
-                    return $this->sendError($message);
-                }
+			$smssystem_res = $this->sendDataToSMSSystem($dataToSend);
+			if(!$smssystem_res['success']){
+				$message = 'Error! Can\'t send data to SMS System';
+				if(!empty($smssystem_res['message'])){
+					$message = $smssystem_res['message'];
+				}
+				return $this->sendError($message);
+			}
 
-            } else {
-                switch ($test_mode) {
-                    case 2:
-                        dd($dataToSend);
-                        break;
-                }
-            }
+		}
+		else{
+			switch($test_mode){
+				case 2:
+					dd($dataToSend);
+					break;
+			}
+		}
 
-            $customer = Customers::create($dataToSend);
+		$customer = Customers::create($dataToSend);
 
-            if ($customer && !empty($customer->id)) {
+		if($customer && !empty($customer->id)){
 
-                /////////////////////saving data to log
-                if (!empty($stripe_res) && !empty($stripe_res['data']) && !empty($stripe_res['data']['id']) && !empty($stripe_res['data']['customer'])) {
-                    SentData::create([
-                        'customer_id' => $customer->id,
-                        'value' => $stripe_res['data']['id'],
-                        'field' => 'subscriber_id',
-                        'service_type' => 1, // stripe
-                    ]);
-                    SentData::create([
-                        'customer_id' => $customer->id,
-                        'value' => $stripe_res['data']['customer'],
-                        'field' => 'customer_id',
-                        'service_type' => 1 // stripe
-                    ]);
-                }
-                if (!empty($firebase_res) && !empty($firebase_res['data']) && !empty($firebase_res['data']->uid)) {
-                    SentData::create([
-                        'customer_id' => $customer->id,
-                        'value' => $firebase_res['data']->uid,
-                        'field' => 'uid',
-                        'service_type' => 2 // firebase,
-                    ]);
-                }
-                if (!empty($klaviyo_res) && !empty($klaviyo_res['data']) && !empty($klaviyo_res['data'][0]) && !empty($klaviyo_res['data'][0]['id'])) {
-                    SentData::create([
-                        'customer_id' => $customer->id,
-                        'value' => $klaviyo_res['data'][0]['id'],
-                        'field' => 'id',
-                        'service_type' => 3 // klaviyo,
-                    ]);
-                }
-                if (!empty($smssystem_res) && !empty($smssystem_res['data']) && !empty($smssystem_res['data']->id)) {
-                    SentData::create([
-                        'customer_id' => $customer->id,
-                        'value' => $smssystem_res['data']->id,
-                        'field' => 'lead_id',
-                        'service_type' => 4 // sms_system
-                    ]);
-                }
+			/////////////////////saving data to log
+			if(!empty($stripe_res) && !empty($stripe_res['data']) && !empty($stripe_res['data']['id']) && !empty($stripe_res['data']['customer'])){
+				SentData::create([
+					'customer_id' => $customer->id,
+					'value' => $stripe_res['data']['id'],
+					'field' => 'subscriber_id',
+					'service_type' => 1, // stripe
+				]);
+				SentData::create([
+					'customer_id' => $customer->id,
+					'value' => $stripe_res['data']['customer'],
+					'field' => 'customer_id',
+					'service_type' => 1 // stripe
+				]);
+			}
+			if(!empty($firebase_res) && !empty($firebase_res['data']) && !empty($firebase_res['data']->uid)){
+				SentData::create([
+					'customer_id' => $customer->id,
+					'value' => $firebase_res['data']->uid,
+					'field' => 'uid',
+					'service_type' => 2 // firebase,
+				]);
+			}
+			if(!empty($klaviyo_res) && !empty($klaviyo_res['data']) && !empty($klaviyo_res['data'][0]) && !empty($klaviyo_res['data'][0]['id'])){
+				SentData::create([
+					'customer_id' => $customer->id,
+					'value' => $klaviyo_res['data'][0]['id'],
+					'field' => 'id',
+					'service_type' => 3 // klaviyo,
+				]);
+			}
+			if(!empty($smssystem_res) && !empty($smssystem_res['data']) && !empty($smssystem_res['data']->id)){
+				SentData::create([
+					'customer_id' => $customer->id,
+					'value' => $smssystem_res['data']->id,
+					'field' => 'lead_id',
+					'service_type' => 4 // sms_system
+				]);
+			}
 
-                ////////////////////////////////////////////
+			////////////////////////////////////////////
 
-                $salespeople_id = LevelsSalespeople::getSalespersonInfo($request->input('salespeople_id'));
+			$salespeople_id = LevelsSalespeople::getSalespersonInfo($request->input('salespeople_id'));
 
-                $pdftemplate = 'pdfviewmain';
-                $pdftemplate_id = 1;
-                if (!empty($request->input('pdftemplate_id'))) {
-                    $pdftemplate_id = $request->input('pdftemplate_id');
-                    $pdftemplate = PdfTemplates::where('id', $pdftemplate_id)->value('slug');
-                }
+			$pdftemplate = 'pdfviewmain';
+			$pdftemplate_id = 1;
+			if(!empty($request->input('pdftemplate_id'))){
+				$pdftemplate_id = $request->input('pdftemplate_id');
+				$pdftemplate = PdfTemplates::where('id', $pdftemplate_id)->value('slug');
+			}
 
-                $invoice_data_to_save = [
-                    'customer_id' => $customer->id,
-                    'salespeople_id' => $salespeople_id->salespeople_id,
-                    'product_id' => $request->input('product_id'),
-                    'sales_price' => $sales_price,
-                    'qty' => $request->input('qty'),
-                    'access_date' => Elements::createDateTime($request->input('access_date')),
-                    'cc_number' => $request->input('cc'),
-                    'paid' => $paid,
-                    'own' => $sales_price - $paid,
-                    'paid_at' => Carbon::now(),
-                    'pdftemplate_id' => $pdftemplate_id,
-                ];
+			$invoice_data_to_save = [
+				'customer_id' => $customer->id,
+				'salespeople_id' => $salespeople_id->salespeople_id,
+				'product_id' => $request->input('product_id'),
+				'sales_price' => $sales_price,
+				'qty' => $request->input('qty'),
+				'access_date' => Elements::createDateTime($request->input('access_date')),
+				'cc_number' => $request->input('cc'),
+				'paid' => $paid,
+				'own' => $sales_price - $paid,
+				'paid_at' => Carbon::now(),
+				'pdftemplate_id' => $pdftemplate_id,
+			];
 
-                if (!empty($stripe_res) && !empty($stripe_res['data'])) {
-                    if (!empty($stripe_res['data']['id'])) {
-                        $invoice_data_to_save['stripe_subscription_id'] = $stripe_res['data']['id'];
-                    }
-                    if (!empty($stripe_res['data']['customer'])) {
-                        $invoice_data_to_save['stripe_customer_id'] = $stripe_res['data']['customer'];
-                    }
-                    if (!empty($stripe_res['data']['current_period_end'])) {
-                        $invoice_data_to_save['stripe_current_period_end'] = date("Y-m-d H:i:s", $stripe_res['data']['current_period_end']);
-                    }
-                    if (!empty($stripe_res['data']['current_period_start'])) {
-                        $invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s", $stripe_res['data']['current_period_start']);
-                    }
-                    if (!empty($stripe_res['data']['status'])) {
-                        $invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$stripe_res['data']['status']];
-                    }
-                }
+			if(!empty($stripe_res) && !empty($stripe_res['data'])){
+				if(!empty($stripe_res['data']['id'])){
+					$invoice_data_to_save['stripe_subscription_id'] = $stripe_res['data']['id'];
+				}
+				if(!empty($stripe_res['data']['customer'])){
+					$invoice_data_to_save['stripe_customer_id'] = $stripe_res['data']['customer'];
+				}
+				if(!empty($stripe_res['data']['current_period_end'])){
+					$invoice_data_to_save['stripe_current_period_end'] = date("Y-m-d H:i:s",$stripe_res['data']['current_period_end']);
+				}
+				if(!empty($stripe_res['data']['current_period_start'])){
+					$invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s",$stripe_res['data']['current_period_start']);
+				}
+				if(!empty($stripe_res['data']['status'])){
+					$invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$stripe_res['data']['status']];
+				}
+			}
 
-                $invoice = Invoices::create($invoice_data_to_save);
-
-
-                $user = Auth::user();
-                ActionsLog::create([
-                    'user_id' => $user->id,
-                    'model' => 1,
-                    'action' => 0,
-                    'related_id' => $invoice->id
-                ]);
-
-                $this->addContacts($customer, $user->id, $invoice->id);
-
-                $invoice_instance = new InvoicesController();
-                $invoice_instance->generatePDF($invoice->id, $pdftemplate);
-
-                $vp_salespeople = [];
-                $biz_dev_salespeople = [];
-                $invoice_salespeople = [];
-
-                SecondarySalesPeople::create([
-                    'salespeople_id' => $salespeople_id->salespeople_id,
-                    'invoice_id' => $invoice->id,
-                    'sp_type' => 1,
-                    'earnings' => 0,
-                    'percentage' => $salespeople_id->level->percentage,
-                    'level_id' => $salespeople_id->level_id
-                ]);
-
-                $invoice_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('name_for_invoice');
-                $vp_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('pipedrive_user_id');
-
-                if (!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
-                    foreach ($request->input('second_salespeople_id') as $val) {
-
-                        $salespeople_id = LevelsSalespeople::getSalespersonInfo($val);
-
-                        SecondarySalesPeople::create([
-                            'salespeople_id' => $salespeople_id->salespeople_id,
-                            'invoice_id' => $invoice->id,
-                            'earnings' => 0,
-                            'percentage' => $salespeople_id->level->percentage,
-                            'level_id' => $salespeople_id->level_id
-                        ]);
-
-                        $invoice_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('name_for_invoice');
-                        $biz_dev_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('pipedrive_user_id');
-                    }
-                }
+			$invoice = Invoices::create($invoice_data_to_save);
 
 
-                if (!$test_mode) {
-                    if (!$ignore_pipedrive) {
-                        //////////// sending data to pipidrive
-                        $pipedrive_res = $this->updateOrAddPipedriveDeal($pipedrive_person['data'], $paid);
-                        if (!$pipedrive_res['success']) {
-                            $message = 'Error! Can\'t send data to Pipedrive';
-                            if (!empty($pipedrive_res['message'])) {
-                                $message = $pipedrive_res['message'];
-                            }
+			$user = Auth::user();
+			ActionsLog::create([
+				'user_id' => $user->id,
+				'model' => 1,
+				'action' => 0,
+				'related_id' => $invoice->id
+			]);
+
+			$this->addContacts($customer, $user->id,  $invoice->id);
+
+			$invoice_instance = new InvoicesController();
+			$invoice_instance->generatePDF($invoice->id, $pdftemplate);
+
+			$invoice_salespeople = [];
+
+			SecondarySalesPeople::create( [
+				'salespeople_id' => $salespeople_id->salespeople_id,
+				'invoice_id'     => $invoice->id,
+				'sp_type' => 1,
+				'earnings'=> 0,
+				'percentage' => $salespeople_id->level->percentage,
+				'level_id' => $salespeople_id->level_id
+			] );
+
+			$invoice_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('name_for_invoice');
+
+			if(!empty($request->input('second_salespeople_id')) && count($request->input('second_salespeople_id'))) {
+				foreach ($request->input('second_salespeople_id') as $val){
+
+					$salespeople_id = LevelsSalespeople::getSalespersonInfo($val);
+
+					SecondarySalesPeople::create( [
+						'salespeople_id' => $salespeople_id->salespeople_id,
+						'invoice_id'     => $invoice->id,
+						'earnings'=> 0,
+						'percentage' => $salespeople_id->level->percentage,
+						'level_id' => $salespeople_id->level_id
+					] );
+
+					$invoice_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('name_for_invoice');
+				}
+			}
+
+
+			if(!$test_mode) {
+				if ( ! $ignore_pipedrive ) {
+					//////////// sending data to pipidrive
+					$pipedrive_res = $this->updateOrAddPipedriveDeal( $pipedrive_person['data'], $paid );
+					if ( ! $pipedrive_res['success'] ) {
+						$message = 'Error! Can\'t send data to Pipedrive';
+						if ( ! empty( $pipedrive_res['message'] ) ) {
+							$message = $pipedrive_res['message'];
+						}
 //						return $this->sendResponse($invoice->id, $message);
-                            $request->session()->flash('error', $message);
-                        } else {
-                            SentData::create([
-                                'customer_id' => $customer->id,
-                                'value' => $pipedrive_res['data'],
-                                'field' => 'deal_id',
-                                'service_type' => 5 // pipedrive,
-                            ]);
+						$request->session()->flash('error', $message);
+					}
+					else{
+						SentData::create([
+							'customer_id' => $customer->id,
+							'value' => $pipedrive_res['data'],
+							'field' => 'deal_id',
+							'service_type' => 5 // pipedrive,
+						]);
+						$note = Pipedrive::executeCommand( config( 'pipedrive.api_key' ), new Pipedrive\Commands\AddNote( $pipedrive_res['data'], implode(', ', $invoice_salespeople) ) );
+						if($note && !empty($note->data) && !empty($note->data->id)){
+							SentData::create([
+								'customer_id' => $customer->id,
+								'value' => $note->data->id,
+								'field' => 'note_id',
+								'service_type' => 5 // pipedrive,
+							]);
+						}
+					}
+				}
+			}
 
-                            if (
-                                !empty($pipedrive_person['data']) &&
-                                !empty($pipedrive_person['data']->id)
-                            ) {
-                                $dataToUpdatePipedriveSalespeople = [];
-                                if (count($vp_salespeople)) {
-                                    $dataToUpdatePipedriveSalespeople[config('pipedrive.vp_field_id')] = $vp_salespeople;
-                                }
-                                if (count($biz_dev_salespeople)) {
-                                    $dataToUpdatePipedriveSalespeople[config('pipedrive.biz_dev_field_id')] = $biz_dev_salespeople;
-                                }
-                                if (count($dataToUpdatePipedriveSalespeople)) {
-                                    $res_upd = Pipedrive::executeCommand(config('pipedrive.api_key'), new Pipedrive\Commands\UpdatePerson($pipedrive_person['data']->id, $dataToUpdatePipedriveSalespeople));
-                                    if ($res_upd && !empty($res_upd->data) && !empty($res_upd->data->id)) {
-                                        SentData::create([
-                                            'customer_id' => $customer->id,
-                                            'value' => $res_upd->data->id,
-                                            'field' => 'person_id',
-                                            'service_type' => 5 // pipedrive,
-                                        ]);
-                                    }
-                                }
-                            }
+			$invoice_percentages = $invoice_instance->calcEarning(Invoices::find($invoice->id));
+			$invoice_instance->savePercentages($invoice_percentages, $invoice->id);
 
-                            $note = Pipedrive::executeCommand(config('pipedrive.api_key'), new Pipedrive\Commands\AddNote($pipedrive_res['data'], implode(', ', $invoice_salespeople)));
-                            if ($note && !empty($note->data) && !empty($note->data->id)) {
-                                SentData::create([
-                                    'customer_id' => $customer->id,
-                                    'value' => $note->data->id,
-                                    'field' => 'note_id',
-                                    'service_type' => 5 // pipedrive,
-                                ]);
-                            }
-                        }
-                    }
-                }
+			$this->getPipedriveLeadSources($customer);
 
-                $invoice_percentages = $invoice_instance->calcEarning(Invoices::find($invoice->id));
-                $invoice_instance->savePercentages($invoice_percentages, $invoice->id);
+			$this->subscriptionsCheck($customer->id, $user->id, $invoice->id );
 
-                $this->getPipedriveLeadSources($customer);
-
-                $this->subscriptionsCheck($customer->id, $user->id, $invoice->id);
-
-                return $this->sendResponse($invoice->id);
-            }
+			return $this->sendResponse($invoice->id);
+		}
 
 
-            return $this->sendError('Something went wrong.');
-        }
-        catch (Exception $ex){
-            $error = $ex->getMessage();
-            Errors::create([
-                'error' => $error,
-                'controller' => 'CustomersInvoiceController',
-                'function' => 'save'
-            ]);
-            return $this->sendError($error);
-        }
+		return $this->sendError('Something went wrong.');
 	}
 
 }

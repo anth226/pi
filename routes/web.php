@@ -31,8 +31,6 @@ Route::get('/support-reps', 'SupportRepController@index');
 Route::get('/support-reps/{id}', 'SupportRepController@show');
 Route::get('/support/tasks', 'SupportRepController@showAllTasks');
 
-Route::get('/unsubscribe', 'UnsubscribeController@index');
-
 
 //Ajax
 
@@ -57,8 +55,6 @@ Route::post('/support/complete-task', 'SupportTasksController@completeTask' ,  [
 Route::get('/users/{user_id}/support/show-tasks', 'SupportTasksController@showTasks' ,  ['middleware' => 'csrf']);
 Route::get('/invoices/{invoice_id}/support/show-tasks', 'SupportTasksController@showInvoicesTasks' ,  ['middleware' => 'csrf']);
 Route::get('/support/show-tasks', 'SupportTasksController@showAllTasks' ,  ['middleware' => 'csrf']);
-
-Route::post('/unsubscribe/none-prime-phone', 'UnsubscribeController@unsubscribe' ,  ['middleware' => 'csrf']);
 //
 
 Route::get("/invoices/show-all", 'InvoicesController@showAll');
@@ -69,7 +65,7 @@ Route::resource('/levels','SalespeopleLevelsController', ['only' => ['store', 'c
 Route::resource('/customers','CustomersController', ['only' => ['show']]);
 Route::resource('/customers-invoices','CustomerInvoiceController', ['only' => ['store', 'create']]);
 Route::resource('/salespeople','SalespeopleController');
-Route::resource('/invoices','InvoicesController', ['only' => ['show', 'index', 'destroy']]);
+Route::resource('/invoices','InvoicesController', ['only' => ['show', 'index']]);
 
 Route::resource('/invoice-generator', 'InvoiceGeneratorController');
 
