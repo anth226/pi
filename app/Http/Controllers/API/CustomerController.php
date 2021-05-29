@@ -76,7 +76,7 @@ class CustomerController extends CustomersController
                 'zip', 'city', 'state', 'phone_number', 'pi_user_id', 'country'
             ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')), 'stripe_customer_id' => $customerId, 'created_from' => 'api']));
 
-            $this->logAction(2, 0, $customer->id);
+            log_action(2, 0, $customer->id);
 
             foreach ($dataArr as $item) {
                 $priceId = $item->price->id;
@@ -102,7 +102,7 @@ class CustomerController extends CustomersController
                         'stripe_price_id' => $isProduction ? $priceId : null,
                         'dev_stripe_price_id' => !$isProduction ? $priceId : null,
                     ]);
-                    $this->logAction(9, 0, $product->id);
+                    log_action(9, 0, $product->id);
                 }
 
                 $salePeopleId = $request->input('salespeople_id') ?? null;
@@ -135,7 +135,7 @@ class CustomerController extends CustomersController
                 $invoice = Invoices::updateOrCreate([
                     'stripe_subscription_id' => $item->id
                 ], $invoice_data_to_save);
-                $this->logAction(1, 1, $invoice->id);
+                log_action(1, 1, $invoice->id);
 
                 $this->addContacts($customer, 1,  $invoice->id);
 
@@ -365,21 +365,12 @@ class CustomerController extends CustomersController
 
         if ($customer->save())
         {
-            $this->logAction(2, 1, $customer->id);
+            log_action(2, 1, $customer->id);
             return $this->sendResponse((new CustomerResource($customer)), 'Update customer successfully.');
         }
 
         $this->logError('Can not update Customer', 'postUpdate');
         return $this->sendError([], 'Can not update Customer');
-    }
-
-    private function logAction($model, $action, $relatedId){
-        return ActionsLog::create([
-            'user_id' => 1, // change to 1 because 0 is invalid with foreign key
-            'model' => $model,
-            'action' => $action,
-            'related_id' => $relatedId
-        ]);
     }
 
     private function logError($err, $function){
