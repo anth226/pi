@@ -27,7 +27,7 @@ Route::namespace('API')->group(function(){
     Route::middleware('auth:api')->group(function(){
         Route::prefix('customers')->group(function(){
             Route::get('/', 'CustomerController@index');
-            Route::post('/', 'CustomerController@store');
+            Route::post('/', 'CustomerController@postStore');
         });
         Route::get('customers-edit', 'CustomerController@detail');
         Route::put('customers-update', 'CustomerController@postUpdate');

@@ -10,6 +10,7 @@ use App\Errors;
 use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\InvoicesController;
 use App\Http\Requests\CustomerRequest;
+use App\Http\Requests\CustomerStoreRequest;
 use App\Http\Resources\CustomerCollection;
 use App\Http\Resources\CustomerResource;
 use App\Invoices;
@@ -51,23 +52,8 @@ class CustomerController extends CustomersController
     /**
      * Store customer
      */
-    public function store(Request $request)
+    public function postStore(CustomerStoreRequest $request)
     {
-        $request->validate([
-            'first_name' => 'required|max:120',
-            'last_name' => 'required|max:120',
-            'address_1' => 'required|max:120',
-            'zip' => 'required|max:120',
-            'city' => 'required|max:120',
-            'state' => 'required||max:20',
-            'email' => 'email|max:120',
-            'phone_number' => 'required|max:120|min:10',
-            'sales_price' => 'required',
-            'subscription_id' => 'required',
-            'access_date' => 'required',
-            'cc_number' => 'required|digits:4'
-        ]);
-
         // query Stripe subscription object by subscription_id
         try {
             $stripeRes =  $this->stripeClient->subscriptions->retrieve($request->subscription_id);
