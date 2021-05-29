@@ -7,6 +7,7 @@ use App\Customers;
 use App\EmailLogs;
 use App\EmailTemplates;
 use App\Errors;
+use App\Helpers\StripeHelper;
 use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\InvoicesController;
 use App\Http\Requests\CustomerRequest;
@@ -29,15 +30,6 @@ use Stripe\StripeClient;
 
 class CustomerController extends CustomersController
 {
-    protected $stripeClient;
-
-    public function __construct()
-    {
-        $stripeAPIKey = config('stripe.stripeKey');
-
-        $this->stripeClient = new StripeClient($stripeAPIKey);
-    }
-
     /**
      * Get list of customers
      * @return \Illuminate\Http\JsonResponse
@@ -56,9 +48,9 @@ class CustomerController extends CustomersController
     {
         // query Stripe subscription object by subscription_id
         try {
-            $stripeRes =  $this->stripeClient->subscriptions->retrieve($request->subscription_id);
+            $stripeRes =  (new StripeHelper())->retrieveSubscription($request->subscription_id);
             $dataArr = $stripeRes->items->data;
-            $customerId = $stripeRes->customer;
+            $stripeCustomerId = $stripeRes->customer;
             $currentPeriodEnd = $stripeRes->current_period_end;
             $currentPeriodStart = $stripeRes->current_period_start;
             $stripeStatus = $stripeRes->status;
@@ -68,13 +60,7 @@ class CustomerController extends CustomersController
                 return $this->sendError('Stripe queries failed to finish successfully. Can not create customer');
             }
 
-            $customer = Customers::updateOrCreate([
-                'email' => $request->email,
-                'pi_user_id' => $request->pi_user_id
-            ], array_merge($request->only([
-                'first_name', 'last_name', 'address_1', 'address_2',
-                'zip', 'city', 'state', 'phone_number', 'pi_user_id', 'country'
-            ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')), 'stripe_customer_id' => $customerId, 'created_from' => 'api']));
+            $customer = $this->createCustomer($request, $stripeCustomerId);
 
             log_action(2, 0, $customer->id);
 
@@ -93,7 +79,7 @@ class CustomerController extends CustomersController
                     // Get latest product sku
                     $latestPro = Products::latest()->first();
                     $latestSku = $latestPro->sku;
-                    $stripeProduct = $this->stripeClient->products->retrieve($stripeProductId, []);
+                    $stripeProduct = (new StripeHelper())->retrieveSubscription($stripeProductId);
 
                     $product = Products::create([
                         'title' => $stripeProduct ? $stripeProduct->name : 'Product ID '.$stripeProductId,
@@ -127,7 +113,7 @@ class CustomerController extends CustomersController
                 ];
 
                 $invoice_data_to_save['stripe_subscription_id'] = $item->id;
-                $invoice_data_to_save['stripe_customer_id'] = $customerId;
+                $invoice_data_to_save['stripe_customer_id'] = $stripeCustomerId;
                 $invoice_data_to_save['stripe_current_period_end'] = date("Y-m-d H:i:s", $currentPeriodEnd);
                 $invoice_data_to_save['stripe_current_period_start'] = date("Y-m-d H:i:s", $currentPeriodStart);
                 $invoice_data_to_save['stripe_subscription_status'] = Invoices::STRIPE_STATUSES[$stripeStatus];
@@ -173,7 +159,7 @@ class CustomerController extends CustomersController
                 }
             }
         } catch (\Exception $exception) {
-            $this->logError( $exception->getMessage(), 'store');
+            log_error( $exception->getMessage(), 'API\CustomerController', 'postStore');
             return $this->sendError($exception->getMessage());
         }
 
@@ -183,7 +169,7 @@ class CustomerController extends CustomersController
             $res = $this->subscribeKlaviyo($request->email, $request->phone_number, $request->first_name, $request->last_name, false);
             if (!isset($res['success']) || !$res['success'])
             {
-                $this->logError($res['message'], 'store');
+                log_error($res['message'], 'API\CustomerController', 'postStore');
                 return $this->sendError($res['message']);
             }
 
@@ -201,7 +187,7 @@ class CustomerController extends CustomersController
             $res = $this->sendDataToSMSSystem( $dataToSend);
             if (!$res['success'])
             {
-                $this->logError($res['message'], 'store');
+                log_error($res['message'], 'API\CustomerController', 'postStore');
                 return $this->sendError($res['message']);
             }
 
@@ -235,7 +221,7 @@ class CustomerController extends CustomersController
                         $message = $pipedrive_res['message'];
                     }
 
-                    $this->logError($message, 'store');
+                    log_error($message,'API\CustomerController',  'postStore');
                     return $this->sendError($message);
                 }
             }
@@ -275,7 +261,7 @@ class CustomerController extends CustomersController
             return $this->sendResponse($customer->toArray(), 'Retrieve the customer detail successfully.');
         }
         else {
-            $this->logError('Customer not found.', 'detail');
+            log_error('Customer not found.', 'API\CustomerController', 'detail');
             return $this->sendError([], 'Customer not found.', 400);
         }
     }
@@ -333,7 +319,7 @@ class CustomerController extends CustomersController
                     $client->profiles->updateProfile( $profileID['id'], $properties );
                 }
             } catch (\Exception $e) {
-                $this->logError($e->getMessage(), 'postUpdate');
+                log_error($e->getMessage(), 'API\CustomerController', 'postUpdate');
                 return $this->sendError($e->getMessage(), []);
             }
         }
@@ -348,7 +334,7 @@ class CustomerController extends CustomersController
         }
 
         if (!$customer) {
-            $this->logError('Customer not found.', 'postUpdate');
+            log_error('Customer not found.', 'API/CustomerController', 'postUpdate');
             return $this->sendError([], 'Customer not found.');
         }
 
@@ -369,16 +355,19 @@ class CustomerController extends CustomersController
             return $this->sendResponse((new CustomerResource($customer)), 'Update customer successfully.');
         }
 
-        $this->logError('Can not update Customer', 'postUpdate');
+        log_error('Can not update Customer', 'API\CustomerController', 'postUpdate');
         return $this->sendError([], 'Can not update Customer');
     }
 
-    private function logError($err, $function){
-        return Errors::create([
-            'error' => $err,
-            'controller' => 'CustomerController',
-            'function' => $function
-        ]);
+    private function createCustomer(Request $request, $customerId){
+        return Customers::updateOrCreate([
+                'email' => $request->email,
+                'pi_user_id' => $request->pi_user_id
+            ], array_merge($request->only([
+                'first_name', 'last_name', 'address_1', 'address_2',
+                'zip', 'city', 'state', 'phone_number', 'pi_user_id', 'country'
+            ]), ['formated_phone_number' => FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')), 'stripe_customer_id' => $customerId, 'created_from' => 'api']));
+
     }
 
     protected function sendInvoiceEmail($invoiceId, $emailTemplateID, $to, $salePersonEmail = null){
