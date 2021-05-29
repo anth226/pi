@@ -5,20 +5,15 @@ namespace App\Http\Controllers\API;
 use App\ActionsLog;
 use App\Customers;
 use App\EmailLogs;
-use App\EmailLogsGeneratedInvoices;
 use App\EmailTemplates;
 use App\Errors;
 use App\Http\Controllers\CustomersController;
-use App\Http\Controllers\InvoiceGeneratorController;
 use App\Http\Controllers\InvoicesController;
-use App\Http\Controllers\SendEmailController;
 use App\Http\Requests\CustomerRequest;
 use App\Http\Resources\CustomerCollection;
 use App\Http\Resources\CustomerResource;
-use App\InvoiceGenerator;
 use App\Invoices;
 use App\KmClasses\Pipedrive;
-use App\KmClasses\Sms\Elements;
 use App\KmClasses\Sms\EmailSender;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\LevelsSalespeople;
@@ -26,13 +21,9 @@ use App\PdfTemplates;
 use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
-use App\SentData;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
-use Illuminate\Support\Facades\Auth;
 use Klaviyo\Klaviyo;
-use Klaviyo\Model\ProfileModel as KlaviyoProfile;
 use Stripe\StripeClient;
 
 class CustomerController extends CustomersController
@@ -164,21 +155,23 @@ class CustomerController extends CustomersController
 
                 // generate invoice PDF
                 $invoice_instance = new InvoicesController();
-                SecondarySalesPeople::create( [
-                    'salespeople_id' => $salespeople->salespeople_id,
-                    'invoice_id'     => $invoice->id,
-                    'sp_type' => 1,
-                    'earnings'=> 0,
-                    'percentage' => $salespeople->level->percentage,
-                    'level_id' => $salespeople->level_id
-                ] );
+                if ($salespeople) {
+                    SecondarySalesPeople::create( [
+                        'salespeople_id' => $salespeople->salespeople_id,
+                        'invoice_id'     => $invoice->id,
+                        'sp_type' => 1,
+                        'earnings'=> 0,
+                        'percentage' => $salespeople->level->percentage,
+                        'level_id' => $salespeople->level_id
+                    ] );
+
+                    $invoice_salespeople[] = Salespeople::where('id', $salespeople->salespeople_id)->withTrashed()->value('name_for_invoice');
+                    $vp_salespeople[] = Salespeople::where('id', $salespeople->salespeople_id)->withTrashed()->value('pipedrive_user_id');
+                }
 
                 $vp_salespeople = [];
                 $biz_dev_salespeople = [];
                 $invoice_salespeople = [];
-
-                $invoice_salespeople[] = Salespeople::where('id', $salespeople->salespeople_id)->withTrashed()->value('name_for_invoice');
-                $vp_salespeople[] = Salespeople::where('id', $salespeople->salespeople_id)->withTrashed()->value('pipedrive_user_id');
 
                 $pdfTemplate = PdfTemplates::where('id', 4)->value('slug');
                 $invoice_instance->generatePDF($invoice->id, $pdfTemplate ?? 'pdfviewmain');
