@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\API;
 
-use App\ActionsLog;
 use App\Customers;
 use App\EmailLogs;
 use App\EmailTemplates;
@@ -26,7 +25,6 @@ use App\SecondarySalesPeople;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Klaviyo\Klaviyo;
-use Stripe\StripeClient;
 
 class CustomerController extends CustomersController
 {
