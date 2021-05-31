@@ -15,7 +15,7 @@ class AuthController extends BaseController
             $user->setNewApiToken();
             return $this->sendResponse(['api_token' => $user->api_token], 'Success');
         } else {
-            $this->sendError(['user' => ['email' => $request->email]], 'Invalid account credentials!');
+            return $this->sendError('Invalid account credentials!', ['user' => ['email' => $request->email]]);
         }
     }
 }
