@@ -14,6 +14,8 @@ class AuthController extends BaseController
             $user = auth()->user();
             $user->setNewApiToken();
             return $this->sendResponse(['api_token' => $user->api_token], 'Success');
+        } else {
+            $this->sendError(['user' => ['email' => $request->email]], 'User not found!');
         }
     }
 }
