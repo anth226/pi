@@ -14,7 +14,7 @@ class AddColumnsToCustomersTable extends Migration
     public function up()
     {
         Schema::table('customers', function (Blueprint $table) {
-            $table->string('pi_user_id')->nullable()->index();
+            $table->string('pi_user_id')->nullable()->unique->index();
             $table->string('country')->nullable();
         });
     }
