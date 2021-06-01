@@ -144,7 +144,8 @@ class CustomerController extends CustomersController
                 $invoice_salespeople = [];
 
                 $pdfTemplate = PdfTemplates::where('id', 4)->value('slug');
-                $invoice_instance->generatePDF($invoice->id, $pdfTemplate ?? 'pdfviewmain');
+
+                $invoice_instance->generatePDF($invoice->id,  'pdfviewmain');
 
                 //calculate salespeople commission on new deal creation
                 $invoice_percentages = $invoice_instance->calcEarning($invoice);
@@ -210,6 +211,7 @@ class CustomerController extends CustomersController
                 'stripe_product_id' => $request->input('product_id')
             ];
 
+            $pipedrive_res = [];
             $pipedrive_person = $this->checkPipedrive( $dataToSend );
             if (isset($pipedrive_person['success']) && $pipedrive_person['success'] && isset($pipedrive_person['data']) && $pipedrive_person['data']) {
                 $pipedrive_res = $this->updateOrAddPipedriveDeal( $pipedrive_person['data'], $request->input('paid') );
@@ -234,7 +236,9 @@ class CustomerController extends CustomersController
             if (count($dataToUpdatePipedriveSalespeople)) {
                 Pipedrive::executeCommand(config('pipedrive.api_key'), new Pipedrive\Commands\UpdatePerson($pipedrive_person['data']->id, $dataToUpdatePipedriveSalespeople));
             }
-            Pipedrive::executeCommand(config('pipedrive.api_key'), new Pipedrive\Commands\AddNote($pipedrive_res['data'], implode(', ', $invoice_salespeople)));
+
+            if ($pipedrive_res && isset($pipedrive_res['data']))
+                Pipedrive::executeCommand(config('pipedrive.api_key'), new Pipedrive\Commands\AddNote($pipedrive_res['data'], implode(', ', $invoice_salespeople)));
 
             $this->getPipedriveLeadSources($customer);
 
@@ -279,6 +283,10 @@ class CustomerController extends CustomersController
 
         $customer = Customers::where('pi_user_id', $request->pi_user_id)->first();
 
+        if (!$customer) {
+            return $this->sendError('User not found with pi_userId: '.$request->pi_user_id);
+        }
+
         // check if that email has already assigned to other user
         if ($email = $request->email) {
             if (Customers::where('email', $email)->where('pi_user_id', '!=', $request->pi_user_id)->first()) {
@@ -286,7 +294,7 @@ class CustomerController extends CustomersController
             }
 
             if ($customer->created_from !== 'api') {
-                return $this->sendError('Only allow update email with account created form API.', [], 400);
+                return $this->sendError('Can not proceed because this user was not created from API', [], 400);
             }
         }
 
