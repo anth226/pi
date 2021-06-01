@@ -17,7 +17,7 @@
         "google/protobuf": "^3.3.0",
         "grpc/grpc": "^1.27.0",
         "intervention/image": "2.4",
-        "klaviyo/php-sdk": "^2.2",
+        "klaviyo/php-sdk": "^2.3.0",
         "kreait/firebase-php": "^5.12",
         "kriswallsmith/buzz": "^1.0",
         "kyslik/column-sortable": "^5.8",
@@ -62,6 +62,9 @@
         "classmap": [
             "database/seeds",
             "database/factories"
+        ],
+        "files": [
+            "app/helpers.php"
         ]
     },
     "autoload-dev": {
