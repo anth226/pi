@@ -284,7 +284,7 @@ class CustomerController extends CustomersController
         $customer = Customers::where('pi_user_id', $request->pi_user_id)->first();
 
         if (!$customer) {
-            return $this->sendError('User not found with pi_userId: '.$request->pi_user_id);
+            return $this->sendError('User not found with pi_user_id: '.$request->pi_user_id);
         }
 
         // check if that email has already assigned to other user
@@ -300,9 +300,9 @@ class CustomerController extends CustomersController
 
         // check if update first name last name, update Klaviyo also
         if (
-            $customer->first_name !== $request->input('first_name') ||
-            $customer->last_name !==  $request->input('last_name') ||
-            $customer->phone_number !==  $request->input('phone_number')
+            ($request->input('first_name') && $customer->first_name !== $request->input('first_name')) ||
+            ($request->input('last_name') && $customer->last_name !==  $request->input('last_name')) ||
+            ($request->input('phone_number') && $customer->phone_number !==  $request->input('phone_number'))
         ) {
             // send update to Klaviyo
             try {
@@ -331,7 +331,7 @@ class CustomerController extends CustomersController
         }
 
         // check if update phone number, unsubscribe old phone and subscribe new one
-        if (
+        if ($request->input('phone_number') &&
             $customer->phone_number !== $request->input('phone_number')
         ) {
             // send update to SMS, unsubscribe old phone and subscribe new one
@@ -344,16 +344,15 @@ class CustomerController extends CustomersController
             return $this->sendError([], 'Customer not found.');
         }
 
-        $customer->first_name = $request->input('first_name');
-        $customer->last_name =  $request->input('last_name');
-        $customer->address_1 = $request->input('address_1');
-        $customer->address_2 =  !empty($request->input('address_2')) ? $request->input('address_2') : '';
-        $customer->zip = $request->input('zip');
-        $customer->state = $request->input('state');
-        $customer->country = $request->input('country');
-        $customer->pi_user_id = $request->input('pi_user_id');
-        $customer->phone_number = $request->input('phone_number');
-        $customer->formated_phone_number = FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number'));
+        $customer->first_name = $request->input('first_name') ?? $customer->first_name;
+        $customer->last_name =  $request->input('last_name') ?? $customer->last_name;
+        $customer->address_1 = $request->input('address_1') ?? $customer->address_1;
+        $customer->address_2 =  !empty($request->input('address_2')) ? $request->input('address_2') : $customer->address_2;
+        $customer->zip = $request->input('zip') ?? $customer->zip;
+        $customer->state = $request->input('state') ?? $customer->state;
+        $customer->country = $request->input('country') ?? $customer->country;
+        $customer->phone_number = $request->input('phone_number') ?? $customer->phone_number;
+        $customer->formated_phone_number = $request->input('phone_number') ? FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')) : $customer->formated_phone_number;
 
         if ($customer->save())
         {

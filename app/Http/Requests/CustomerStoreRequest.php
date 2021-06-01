@@ -30,12 +30,13 @@ class CustomerStoreRequest extends FormRequest
             'zip' => 'required|max:120',
             'city' => 'required|max:120',
             'state' => 'required||max:20',
-            'email' => 'email|max:120',
+            'email' => 'email|unique:customers|max:120',
             'phone_number' => 'required|max:120|min:10',
             'sales_price' => 'required',
             'subscription_id' => 'required',
             'access_date' => 'required',
-            'cc_number' => 'required|digits:4'
+            'cc_number' => 'required|digits:4',
+            'pi_user_id' => 'required|unique:customers',
         ];
     }
 }
