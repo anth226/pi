@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\ActionsLog;
 use App\Customers;
+use App\CustomersContacts;
+use App\CustomersContactSubscriptions;
 use App\EmailLogs;
 use App\EmailTemplates;
 use App\Errors;
@@ -36,7 +38,7 @@ class InvoicesController extends BaseController
 	function __construct()
 	{
 		$this->middleware(['auth']);
-		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete|generated-invoice-list|generated-invoice-create|generated-invoice-edit|generated-invoice-delete|salespeople-reports-view-own|support-user-view-own|salespeople-report', ['only' => ['index']]);
+		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete|generated-invoice-list|generated-invoice-create|generated-invoice-edit|generated-invoice-delete|salespeople-reports-view-own|support-user-view-own|salespeople-report|unsubscribe_nonprime_customer_from_text', ['only' => ['index']]);
 		$this->middleware('permission:invoice-list|invoice-create|invoice-edit|invoice-delete', ['only' => ['show', 'showPdf', 'showAll']]);
 		$this->middleware('permission:invoice-create', ['only' => ['create','store']]);
 		$this->middleware('permission:invoice-edit', ['only' => ['edit','update']]);
@@ -101,7 +103,7 @@ class InvoicesController extends BaseController
 	public function index(Request $request)
 	{
 		$user = Auth::user();
-		if($user->hasRole('Generated Invoices Only') || $user->hasRole('Salesperson') || $user->hasRole('Support Rep') || $user->hasRole('Salespeople Reports')) {
+		if($user->hasRole('Generated Invoices Only') || $user->hasRole('Salesperson') || $user->hasRole('Support Rep') || $user->hasRole('Salespeople Reports') || $user->hasRole('UnsubscribeSMS')) {
 			if ( $user->hasRole( 'Salesperson' ) ) {
 				$salesperson_id = Salespeople::withTrashed()->where( 'email', $user->email )->value( 'id' );
 				if ( $salesperson_id ) {
@@ -121,6 +123,11 @@ class InvoicesController extends BaseController
 			if ( $user->hasRole( 'Salespeople Reports' ) ) {
 				$salespeople_reports = new SalespeopleReportsController();
 				return $salespeople_reports->index( $request );
+			}
+
+			if ( $user->hasRole( 'UnsubscribeSMS' ) ) {
+				$unsubscribeSMS = new UnsubscribeController();
+				return $unsubscribeSMS->index( $request );
 			}
 			return abort(404);
 		}
@@ -346,9 +353,15 @@ class InvoicesController extends BaseController
 			$task_status = json_encode(SupportTodo::TASK_STATUS);
 			$invoice_status = json_encode(Invoices::STATUS);
 			$subscription_status = json_encode(Invoices::SUBSCRIPTION_SUBS_STATUS);
+
+            $contact_type = json_encode(CustomersContacts::CONTACT_TYPES);
+            $contact_subtype = json_encode(CustomersContacts::CONTACT_SUBTYPES);
+            $subscription_type = json_encode(CustomersContactSubscriptions::SUBSCRIPTION_TYPES);
+
+
 			$user = Auth::user();
 			$user_id = $user->id;
-			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect', 'user_id', 'subscription_status') );
+			return view( 'invoices.show', compact( 'invoice', 'formated_price', 'access_date', 'scheduled_at', 'file_name', 'full_path', 'app_url', 'phone_number', 'total', 'template', 'logs','sentLog', 'states', 'salespeople', 'salespeople_multiple', 'pdftemplates_select', 'supportReps_select', 'tasks_select', 'supportTaskRep_select', 'task_status', 'task_type', 'invoice_status', 'statusSelect', 'user_id', 'subscription_status', 'contact_type', 'contact_subtype', 'subscription_type') );
 		}
 		return abort(404);
 	}
@@ -435,6 +448,8 @@ class InvoicesController extends BaseController
 
 			$salespeople_id = LevelsSalespeople::getSalespersonInfo($request->input('salespeople_id'));
 
+            $vp_salespeople = [];
+            $biz_dev_salespeople = [];
 			$invoice_salespeople = [];
 
 			if($need_update_salespeople) {
@@ -506,8 +521,10 @@ class InvoicesController extends BaseController
 					'level_id' => $salespeople_id->level_id
 				] );
 				$invoice_salespeople[] = Salespeople::where('id', $dataToUpdate['salespeople_id'])->withTrashed()->value('name_for_invoice');
+                $vp_salespeople[] = Salespeople::where('id', $dataToUpdate['salespeople_id'])->withTrashed()->value('pipedrive_user_id');
 
-				if ( ! empty( $request->input( 'second_salespeople_id' ) ) && count( $request->input( 'second_salespeople_id' ) ) ) {
+
+                if ( ! empty( $request->input( 'second_salespeople_id' ) ) && count( $request->input( 'second_salespeople_id' ) ) ) {
 					foreach ( $request->input( 'second_salespeople_id' ) as $val ) {
 						$salespeople_id = LevelsSalespeople::getSalespersonInfo($val);
 						SecondarySalesPeople::create( [
@@ -518,9 +535,25 @@ class InvoicesController extends BaseController
 							'level_id' => $salespeople_id->level_id
 						] );
 						$invoice_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('name_for_invoice');
-					}
+                        $biz_dev_salespeople[] = Salespeople::where('id', $salespeople_id->salespeople_id)->withTrashed()->value('pipedrive_user_id');
+
+                    }
 				}
-				$note_id = SentData::where('service_type', 5)
+
+                $person_id = SentData::where('service_type', 5)
+                    ->where('customer_id', $invoice_before->customer->id)
+                    ->where('field', 'person_id')
+                    ->orderBy('id', 'desc')
+                    ->value('value')
+                ;
+                if($person_id) {
+                    Pipedrive::executeCommand(config('pipedrive.api_key'), new Pipedrive\Commands\UpdatePerson($person_id, [
+                        config('pipedrive.vp_field_id') => $vp_salespeople,
+                        config('pipedrive.biz_dev_field_id') => $biz_dev_salespeople,
+                    ]));
+                }
+
+                $note_id = SentData::where('service_type', 5)
 				                   ->where('customer_id', $invoice_before->customer->id)
 				                   ->where('field', 'note_id')
 				                   ->orderBy('id', 'desc')
@@ -613,9 +646,54 @@ class InvoicesController extends BaseController
 	 */
 	public function destroy($id)
 	{
-		Invoices::where('id',$id)->delete();
-		return redirect()->route('invoices.index')
-		                 ->with('success','Invoice deleted successfully');
+	    try {
+            $customer_id = Invoices::where('id', $id)->withTrashed()->value('customer_id');
+            if($customer_id){
+                $total = Invoices::where('customer_id', $customer_id)->count();
+                if($total <= 1) {
+                    $ifPaid = SecondarySalesPeople::where('invoice_id', $id)->whereNotNull('paid_at')->count();
+                    if(!$ifPaid) {
+                        Customers::where('id', $customer_id)->delete();
+                        Invoices::where('id', $id)->delete();
+                        CustomersContacts::where('customer_id', $customer_id)->delete();
+                        $user = Auth::user();
+                        ActionsLog::create([
+                            'user_id' => $user->id,
+                            'model' => 1,
+                            'action' => 2,
+                            'related_id' => $id
+                        ]);
+                        ActionsLog::create([
+                            'user_id' => $user->id,
+                            'model' => 2,
+                            'action' => 2,
+                            'related_id' => $customer_id
+                        ]);
+                        return $this->sendResponse($id);
+                    }
+                    $err_message = "Can not delete, Salespeople were paid";
+                    return $this->sendError($err_message);
+                }
+                $err_message = "Can not delete, Customer has more than 1 deal.";
+                return $this->sendError($err_message);
+            }
+            $err_message = "Can not delete, No Customer for the deal";
+            Errors::create([
+                'error' => $err_message.": ".$id,
+                'controller' => 'InvoicesController',
+                'function' => 'destroy'
+            ]);
+            return $this->sendError($err_message);
+        }
+        catch (Exception $ex){
+            $error = $ex->getMessage();
+            Errors::create([
+                'error' => $error,
+                'controller' => 'InvoicesController',
+                'function' => 'destroy'
+            ]);
+            return $this->sendError($error);
+        }
 	}
 
 
@@ -900,17 +978,21 @@ class InvoicesController extends BaseController
 
 	public function updateStatus(Request $request){
 		try {
+		    $deal_status = 'won';
 			$this->validate( $request, [
 				'invoice_id' => 'required',
 				'refundRequested' => 'required',
 			] );
 
+            $cc = new CustomersController();
+
+            $res = ['message' => 'done'];
+
 			$user_logged = Auth::user();
 
 			$status_before = Invoices::with('customer')->where('id', $request->input( 'invoice_id' ))->first();
 
-			if($user_logged->id == 1 && $request->input( 'refundRequested' ) == 1111) { // unsubscribe from everywhere (beta) only for dev
-				$cc = new CustomersController();
+			if($request->input( 'refundRequested' ) == 1111) { // unsubscribe from everywhere
 				$res = $cc->refundSequence($status_before);
 				if(!empty($res) && !$res['success']){
 					$errors = 'Unknown Error happen.';
@@ -940,6 +1022,27 @@ class InvoicesController extends BaseController
 				$dataToUpdate['paid'] = 0;
 				$dataToUpdate['own'] = 0;
 				$dataToUpdate['sales_price'] = 0;
+				$deal_status = 'lost';
+
+                $res = $cc->refundSequence($status_before);
+                if(!empty($res) && !$res['success']){
+                    $errors = 'Unknown Error happen.';
+                    if($res['data'] && is_array($res['data'])){
+                        $errors = '';
+                        foreach ($res['data'] as $e){
+                            $errors .= '<div>'.$e.'</div>';
+                        }
+                    }
+                    return $this->sendError($errors);
+                }
+                else{
+                    $messages = '';
+                    foreach ($res['data'] as $e){
+                        $messages .= '<div>'.$e.'</div>';
+                    }
+                    $res['message'] = $messages;
+                    //return response()->json( $res, 200 );
+                }
 			}
 
 			Invoices::where('id', $request->input( 'invoice_id' ))->update($dataToUpdate);
@@ -1012,20 +1115,14 @@ class InvoicesController extends BaseController
 				                   ->value('value')
 				;
 				if($deal_id) {
-					$customersController = new CustomersController();
-					$pipedrive_res = $customersController->updatePipedriveDeal( $deal_id, $status_after->paid );
-					if ( $pipedrive_res['success'] ) {
-						SentData::create( [
-							'customer_id'  => $status_before->customer->id,
-							'value'        => $pipedrive_res['data'],
-							'field'        => 'deal_id',
-							'service_type' => 5 // pipedrive,
-						] );
-					}
+					$cc->updatePipedriveDeal( $deal_id, $status_after->paid, $deal_status );
+					if($deal_status == 'lost'){
+                        Pipedrive::executeCommand(config('pipedrive.api_key'), new Pipedrive\Commands\AddNote($deal_id, 'Person was refunded'));
+                    }
 				}
 			}
 
-			return $this->sendResponse('done');
+			return $this->sendResponse('done', $res['message']);
 		}
 		catch (Exception $ex){
 			Errors::create([

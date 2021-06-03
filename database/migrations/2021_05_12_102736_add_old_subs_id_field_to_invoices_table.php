@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddApiTokenFieldToUsersTable extends Migration
+class AddOldSubsIdFieldToInvoicesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,8 @@ class AddApiTokenFieldToUsersTable extends Migration
      */
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('api_token', 36)->nullable()->unique();
+        Schema::table('invoices', function (Blueprint $table) {
+            $table->string("old_prime_subs_id")->nullable();
         });
     }
 
@@ -25,8 +25,8 @@ class AddApiTokenFieldToUsersTable extends Migration
      */
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('api_token');
+        Schema::table('invoices', function (Blueprint $table) {
+            //
         });
     }
 }

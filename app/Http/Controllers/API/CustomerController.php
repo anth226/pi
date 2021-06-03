@@ -9,7 +9,6 @@ use App\Errors;
 use App\Helpers\StripeHelper;
 use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\InvoicesController;
-use App\Http\Requests\CustomerRequest;
 use App\Http\Requests\CustomerStoreRequest;
 use App\Http\Resources\CustomerCollection;
 use App\Http\Resources\CustomerResource;
@@ -18,13 +17,14 @@ use App\KmClasses\Pipedrive;
 use App\KmClasses\Sms\EmailSender;
 use App\KmClasses\Sms\FormatUsPhoneNumber;
 use App\LevelsSalespeople;
-use App\PdfTemplates;
 use App\Products;
 use App\Salespeople;
 use App\SecondarySalesPeople;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Klaviyo\Klaviyo;
+use Exception;
 
 class CustomerController extends CustomersController
 {
@@ -52,15 +52,12 @@ class CustomerController extends CustomersController
             $currentPeriodEnd = $stripeRes->current_period_end;
             $currentPeriodStart = $stripeRes->current_period_start;
             $stripeStatus = $stripeRes->status;
+            $current_user = Auth::user();
 
             // 1. Customer should be created only if ALL stripe queries finish successfully.
             if (!$stripeRes) {
                 return $this->sendError('Stripe queries failed to finish successfully. Can not create customer');
             }
-
-            $customer = $this->createCustomer($request, $stripeCustomerId);
-
-            log_action(2, 0, $customer->id);
 
             foreach ($dataArr as $item) {
                 $priceId = $item->price->id;
@@ -77,7 +74,7 @@ class CustomerController extends CustomersController
                     // Get latest product sku
                     $latestPro = Products::latest()->first();
                     $latestSku = $latestPro->sku;
-                    $stripeProduct = (new StripeHelper())->retrieveSubscription($stripeProductId);
+                    $stripeProduct = (new StripeHelper())->retrieveProduct($stripeProductId);
 
                     $product = Products::create([
                         'title' => $stripeProduct ? $stripeProduct->name : 'Product ID '.$stripeProductId,
@@ -86,10 +83,13 @@ class CustomerController extends CustomersController
                         'stripe_price_id' => $isProduction ? $priceId : null,
                         'dev_stripe_price_id' => !$isProduction ? $priceId : null,
                     ]);
-                    log_action(9, 0, $product->id);
+                    log_action(9, 0, $product->id, $current_user->id);
                 }
 
-                $salePeopleId = $request->input('salespeople_id') ?? null;
+                $customer = $this->createCustomer($request, $stripeCustomerId);
+                log_action(2, 0, $customer->id, $current_user->id);
+
+                $salePeopleId = $request->input('salespeople_id') ?? 68;
 
                 if ($salePeopleId)
                     $salespeople = LevelsSalespeople::getSalespersonInfo($salePeopleId);
@@ -100,9 +100,9 @@ class CustomerController extends CustomersController
                     'salespeople_id' => $salePeopleId,
                     'product_id' => $product->id,
                     'sales_price' => $request->input('sales_price'),
-                    'qty' => request('qty', 0),
+                    'qty' => request('qty', 1),
                     'access_date' => Carbon::make($request->input('access_date'))->format('Y-m-d'),
-                    'cc_number' => $request->input('cc'),
+                    'cc_number' => $request->input('cc_number'),
                     'paid' => $request->input('sales_price'),
                     'own' => 0,
                     'paid_at' => Carbon::now(),
@@ -119,9 +119,9 @@ class CustomerController extends CustomersController
                 $invoice = Invoices::updateOrCreate([
                     'stripe_subscription_id' => $item->id
                 ], $invoice_data_to_save);
-                log_action(1, 1, $invoice->id);
+                log_action(1, 1, $invoice->id, $current_user->id);
 
-                $this->addContacts($customer, 1,  $invoice->id);
+                $this->addContacts($customer, $current_user->id,  $invoice->id);
 
                 // generate invoice PDF
                 $invoice_instance = new InvoicesController();
@@ -143,7 +143,7 @@ class CustomerController extends CustomersController
                 $biz_dev_salespeople = [];
                 $invoice_salespeople = [];
 
-                $pdfTemplate = PdfTemplates::where('id', 4)->value('slug');
+//                $pdfTemplate = PdfTemplates::where('id', 4)->value('slug');
 
                 $invoice_instance->generatePDF($invoice->id,  'pdfviewmain');
 
@@ -354,9 +354,10 @@ class CustomerController extends CustomersController
         $customer->phone_number = $request->input('phone_number') ?? $customer->phone_number;
         $customer->formated_phone_number = $request->input('phone_number') ? FormatUsPhoneNumber::formatPhoneNumber($request->input('phone_number')) : $customer->formated_phone_number;
 
+        $current_user = Auth::user();
         if ($customer->save())
         {
-            log_action(2, 1, $customer->id);
+            log_action(2, 1, $customer->id, $current_user->id);
             return $this->sendResponse((new CustomerResource($customer)), 'Update customer successfully.');
         }
 
@@ -396,14 +397,14 @@ class CustomerController extends CustomersController
                     $cc = array_map( 'trim', explode( ',', $cc ) );
                     $cc = array_unique( $cc );
                 }
-
+                $current_user = Auth::user();
                 if(count($to)) {
                     foreach ($to as $t) {
                         if($this->validateEMAIL($t)) {
                             $dataToLog[] = [
                                 'invoice_id'        => $invoice_id,
                                 'email_template_id' => $email_template_id,
-                                'user_id'           => 1,
+                                'user_id'           => $current_user->id,
                                 'from'              => $from_email,
                                 'to'                => $t,
                                 'created_at'        => date( 'Y-m-d H:i:s' ),
@@ -421,7 +422,7 @@ class CustomerController extends CustomersController
                             $dataToLog[] = [
                                 'invoice_id'        => $invoice_id,
                                 'email_template_id' => $email_template_id,
-                                'user_id'           => 1,
+                                'user_id'           => $current_user->id,
                                 'from'              => $from_email,
                                 'to'                => $t,
                                 'created_at'        => date( 'Y-m-d H:i:s' ),
@@ -439,7 +440,7 @@ class CustomerController extends CustomersController
                             $dataToLog[] = [
                                 'invoice_id'        => $invoice_id,
                                 'email_template_id' => $email_template_id,
-                                'user_id'           => 1,
+                                'user_id'           => $current_user->id,
                                 'from'              => $from_email,
                                 'to'                => $t,
                                 'created_at'        => date( 'Y-m-d H:i:s' ),

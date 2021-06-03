@@ -310,7 +310,11 @@
                         } },
                     { data: 'id', name: 'id', "searchable": false,  "visible": false },
                     { data: 'product.title', name: 'product.title', "sortable": true, "searchable": false, render: function ( data, type, row ){
-                            let res_str = '<div class="h5">'+data+'</div><div><small>'+row.product.description+'</small></div>';
+                        let descr = '';
+                        if(isSet(row.product.description)){
+                            descr = row.product.description;
+                        }
+                        let res_str = '<div class="h5">'+data+'</div><div><small>'+descr+'</small></div>';
                             if(row.product.id > 1) {
                                 if(isSet(row.stripe_current_period_start)) {
                                     res_str += '<div class="small">Start Date: ' + row.stripe_current_period_start + '</div>';

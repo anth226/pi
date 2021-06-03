@@ -4,10 +4,10 @@ use App\ActionsLog;
 use App\Errors;
 
 if (!function_exists('log_action')) {
-    function log_action($model, $action, $relatedId)
+    function log_action($model, $action, $relatedId, $user)
     {
         return ActionsLog::create([
-            'user_id' => 1, // change to 1 because 0 is invalid with foreign key
+            'user_id' => $user,
             'model' => $model,
             'action' => $action,
             'related_id' => $relatedId

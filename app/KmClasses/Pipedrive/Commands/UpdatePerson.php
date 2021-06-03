@@ -9,34 +9,29 @@ use App\KmClasses\Pipedrive\CommandInterface;
  * Class SearchPerson
  * @package App\KmClasses\Pipedrive\Commands
  */
-class UpdateDeal implements CommandInterface
+class UpdatePerson implements CommandInterface
 {
     /**
      * @var
      */
-    private $person_id, $value, $status;
+    private $person_id, $custom_fields;
 
     /**
      * SearchPerson constructor.
-     * @param $person_id
-     * @param $value
-     * @param $status
+     * @param $email
      */
-    public function __construct($person_id, $value, $status)
+    public function __construct($person_id, array $custom_fields)
     {
         $this->person_id = $person_id;
-        $this->value = $value;
-        $this->status = $status;
+        $this->custom_fields = $custom_fields;
     }
 
 
 	function execute(Client $client)
 	{
-
-		$data = $client->getInstance()->getDeals()->updateADeal([
+		$data = $client->getInstance()->getPersons()->updateAPersonCustomFields([
 			"id" => $this->person_id,
-			"value" => $this->value,
-			"status" => $this->status
+			"custom_fields" => $this->custom_fields
 		]);
 
 		return $data;
